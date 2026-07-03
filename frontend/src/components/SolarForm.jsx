@@ -39,6 +39,8 @@ export default function SolarForm({
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value })
   const setBool = (key) => (e) => setForm({ ...form, [key]: e.target.checked })
   const hasBills = bills.length > 0
+  const hasConsumption = hasBills || Boolean(String(form.consumption || '').trim())
+  const autoSizing = Boolean(form.autoSize) && hasConsumption
 
   return (
     <form
@@ -48,7 +50,10 @@ export default function SolarForm({
       }}
       className="space-y-4"
     >
-      <Field label={t('form.peakPower')}>
+      <Field
+        label={t('form.peakPower')}
+        hint={autoSizing ? t('form.peakPowerAutoHint') : undefined}
+      >
         <input
           type="number"
           min="0.1"
@@ -57,9 +62,20 @@ export default function SolarForm({
           required
           value={form.peakPower}
           onChange={set('peakPower')}
-          className={inputClass}
+          disabled={autoSizing}
+          className={`${inputClass} disabled:bg-stone-100 disabled:text-stone-400`}
         />
       </Field>
+
+      <label className="flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700">
+        <input
+          type="checkbox"
+          checked={Boolean(form.autoSize)}
+          onChange={setBool('autoSize')}
+          className="h-4 w-4 accent-amber-500"
+        />
+        {t('form.autoSize')}
+      </label>
 
       <BillsInput
         bills={bills}

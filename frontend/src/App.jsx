@@ -55,6 +55,7 @@ export default function App() {
     cost: '',
     price: '',
     panelPower: '450',
+    autoSize: true,
     surplusPrice: '',
     costPerKwp: '',
     batteryCost: '',
@@ -129,6 +130,7 @@ export default function App() {
         lon: position.lon,
         peak_power_kwp: requireLocaleNumber(form.peakPower, t('form.peakPower'), t),
         country_code: countryCode,
+        auto_size_power: Boolean(form.autoSize),
       }
       const parsedBills = bills.map((b, index) => ({
         ...b,

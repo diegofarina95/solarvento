@@ -571,7 +571,12 @@ export default function Results({ data, i18n }) {
           title={t('results.analysedPower')}
           value={fmt.nf2.format(data.analysis_power_kwp)}
           unit="kWp"
-          detail={t('results.analysedPowerDetail')}
+          detail={
+            data.requested_peak_power_kwp != null &&
+            Math.abs(data.analysis_power_kwp - data.requested_peak_power_kwp) > 0.01
+              ? t('results.analysedPowerAutoDetail')
+              : t('results.analysedPowerDetail')
+          }
         />
         <Card
           title={t('results.annualProduction')}

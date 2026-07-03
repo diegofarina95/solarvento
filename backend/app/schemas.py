@@ -133,6 +133,13 @@ class SolarEstimateRequest(BaseModel):
     has_heat_pump: bool = Field(False, description="Ajusta consumo a bomba de calor/aerotermia")
     has_ev: bool = Field(False, description="Añade carga nocturna típica de vehículo eléctrico")
     has_pool: bool = Field(False, description="Añade consumo diurno de piscina en meses cálidos")
+    auto_size_power: bool = Field(
+        False,
+        description=(
+            "Si hay consumo conocido, analiza la potencia recomendada (cobertura "
+            "~100%) en vez de peak_power_kwp. peak_power_kwp sigue siendo la semilla."
+        ),
+    )
 
 
 class MonthlyProduction(BaseModel):

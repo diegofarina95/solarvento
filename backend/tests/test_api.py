@@ -1154,3 +1154,38 @@ def test_solar_estimate_accepts_large_annual_bill(respx_mock, client):
     )
     assert resp.status_code == 200
     assert resp.json()["consumption"]["annual_kwh"] == pytest.approx(23712, abs=1)
+
+
+@respx.mock
+def test_auto_size_power_uses_recommended_kwp(respx_mock, client):
+    mock_pvgis(respx_mock)
+    body = {
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0,
+        "annual_consumption_kwh": 12000, "electricity_price_eur_kwh": 0.20,
+    }
+    manual = client.post("/api/solar-estimate", json=body).json()
+    auto = client.post("/api/solar-estimate", json={**body, "auto_size_power": True}).json()
+
+    # Sin auto: analiza los 5 kWp pedidos (comportamiento actual)
+    assert manual["analysis_power_kwp"] == 5.0
+    # Con auto: analiza la potencia recomendada, no el 5 kWp por defecto
+    assert auto["requested_peak_power_kwp"] == 5.0
+    assert auto["analysis_power_kwp"] == auto["panels"]["total_kwp"]
+    assert auto["analysis_power_kwp"] > 5.0
+    # La producción escala linealmente con la potencia (mismo rendimiento/kWp)
+    per_kwp_manual = manual["optimal"]["annual_production_kwh"] / 5.0
+    per_kwp_auto = auto["optimal"]["annual_production_kwh"] / auto["analysis_power_kwp"]
+    assert per_kwp_auto == pytest.approx(per_kwp_manual, rel=0.01)
+    # Mayor sistema → mayor inversión y mayor ahorro
+    assert auto["economics"]["installation_cost_eur"] > manual["economics"]["installation_cost_eur"]
+    assert auto["economics"]["annual_savings_eur"] > manual["economics"]["annual_savings_eur"]
+
+
+@respx.mock
+def test_auto_size_power_ignored_without_consumption(respx_mock, client):
+    mock_pvgis(respx_mock)
+    data = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0, "auto_size_power": True,
+    }).json()
+    # Sin consumo no hay recomendación: se respeta la potencia pedida
+    assert data["analysis_power_kwp"] == 5.0

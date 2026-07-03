@@ -885,6 +885,17 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         recommended_coverage = _coverage_pct(recommended_production, annual_consumption)
         panels["coverage_pct"] = recommended_coverage
         panels["production_to_consumption_pct"] = recommended_coverage
+        # Con consumo conocido y auto-dimensionado, la potencia analizada (y por
+        # tanto producción, ahorro y payload) es la recomendada, no el 5 kWp por
+        # defecto del formulario. La producción PVGIS escala linealmente con la
+        # potencia, así que se reescala el resultado de la semilla.
+        if req.auto_size_power:
+            analysis_power_kwp = panels["total_kwp"]
+
+    if abs(analysis_power_kwp - req.peak_power_kwp) > 1e-9:
+        optimal = _scale_system(optimal, analysis_power_kwp, req.peak_power_kwp)
+        if user_system is not None:
+            user_system = _scale_system(user_system, analysis_power_kwp, req.peak_power_kwp)
     selected = user_system or optimal
 
     # La serie horaria se pide siempre a 1 kWp (la clave de caché no varía con
