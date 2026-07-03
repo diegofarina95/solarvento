@@ -1422,3 +1422,59 @@ def test_battery_incremental_payback_and_surplus_reconcile(respx_mock, client):
     assert ba["recommended_battery_kwh"] == 0.0
     # techo estructural expuesto y positivo
     assert ba["max_battery_value_eur"] >= 0
+
+
+class _FakeNominatim:
+    def __init__(self, results):
+        self.results = results
+        self.last_query = None
+
+    async def search(self, query, limit=5):
+        self.last_query = query
+        return self.results
+
+    async def close(self):
+        pass
+
+
+def test_bill_location_query_uses_cp_and_municipio_not_province():
+    from app.main import _bill_location_query
+    q = _bill_location_query({
+        "postal_code": "15896", "city": "Santiago de Compostela",
+        "region": "A Coruña", "country_code": "ES",
+    })
+    assert "A Coruña" not in q  # BUG P: la provincia nunca es el objetivo
+    assert "15896" in q and "Santiago de Compostela" in q and "España" in q
+
+
+@respx.mock
+def test_geocode_resolves_municipio_not_province(respx_mock, client):
+    import asyncio
+    from app.main import app, _enrich_bill_location, _haversine_km
+    app.state.nominatim = _FakeNominatim([
+        {"display_name": "Santiago de Compostela, A Coruña, España",
+         "lat": 42.8805, "lon": -8.5457, "country_code": "ES"},
+    ])
+    parsed = {"postal_code": "15896", "city": "Santiago de Compostela",
+              "region": "A Coruña", "country_code": "ES"}
+    out = asyncio.run(_enrich_bill_location(dict(parsed)))
+    assert "15896" in app.state.nominatim.last_query
+    assert "A Coruña" not in app.state.nominatim.last_query
+    # pin cerca de Santiago (~42.88, −8.54), NO A Coruña ciudad
+    assert _haversine_km(out["lat"], out["lon"], 42.88, -8.54) < 25
+    assert out["location_confidence"] == "high"
+
+
+@respx.mock
+def test_geocode_province_mismatch_falls_back_to_cp_centroid(respx_mock, client):
+    import asyncio
+    from app.main import app, _enrich_bill_location, _haversine_km
+    # El geocoder devuelve Madrid (otra región) para un CP de A Coruña
+    app.state.nominatim = _FakeNominatim([
+        {"display_name": "Madrid, España", "lat": 40.4168, "lon": -3.7038, "country_code": "ES"},
+    ])
+    parsed = {"postal_code": "15896", "city": "Santiago de Compostela", "country_code": "ES"}
+    out = asyncio.run(_enrich_bill_location(dict(parsed)))
+    # Rechazado por distancia → centroide del CP (provincia 15 = A Coruña), baja confianza
+    assert out["location_confidence"] == "low"
+    assert _haversine_km(out["lat"], out["lon"], 43.36, -8.41) < 5

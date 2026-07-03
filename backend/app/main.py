@@ -341,21 +341,49 @@ def _merge_bill_context(target: dict, source: dict | None) -> None:
 
 
 def _bill_location_query(parsed: dict) -> str | None:
-    country = parsed.get("country_name") or parsed.get("country_code")
-    location_parts = [
+    """Consulta primaria de geocodificado: CP + municipio, nunca la provincia.
+
+    La provincia (p. ej. 'A Coruña', que también es el nombre de la capital)
+    hace que el geocoder devuelva el centroide provincial ignorando el CP; por
+    eso NO se envía como objetivo, solo se usa después como filtro de validación.
+    """
+    # Sin ninguna parte de dirección (calle/CP/municipio) no se geocodifica:
+    # el país solo NO es una ubicación útil.
+    address_parts = [
         parsed.get("supply_address"),
         parsed.get("postal_code"),
         parsed.get("city"),
-        parsed.get("region"),
     ]
-    if not any(str(part or "").strip() for part in location_parts):
+    if not any(str(p or "").strip() for p in address_parts):
         return None
-    parts = [
-        *location_parts,
-        country,
-    ]
-    query = ", ".join(str(part).strip() for part in parts if str(part or "").strip())
+    country = "España" if _is_spanish(parsed) else (
+        str(parsed.get("country_name") or parsed.get("country_code") or "").strip()
+    )
+    # Calle + CP + municipio (NO la provincia, que es el objetivo que confundía al
+    # geocoder). El país ancla la búsqueda; la provincia solo filtra el resultado.
+    parts = [*address_parts, country]
+    query = ", ".join(str(p).strip() for p in parts if str(p or "").strip())
     return query or None
+
+
+def _is_spanish(parsed: dict) -> bool:
+    code = parsed.get("country_code")
+    return bool(code) and normalize_country_code(code) == "ES"
+
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    r = 6371.0
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlambda / 2) ** 2
+    return 2 * r * math.asin(math.sqrt(a))
+
+
+# Un resultado a más de esta distancia del centroide provincial del CP (y cuyo
+# municipio no coincide con el nombre devuelto) se considera de otra región: se
+# rechaza y se cae al centroide del CP, nunca a la capital de provincia en silencio.
+_MAX_REGION_DISTANCE_KM = 120.0
 
 
 def _apply_postal_fallback(parsed: dict) -> dict:
@@ -418,9 +446,37 @@ async def _enrich_bill_location(parsed: dict) -> dict:
         )
         if not selected:
             return _apply_postal_fallback(parsed)
-    selected = selected or candidates[0]
-    parsed["lat"] = round(float(selected["lat"]), 6)
-    parsed["lon"] = round(float(selected["lon"]), 6)
+    # Entre los candidatos del país, preferir el que nombra el municipio del CP.
+    city = str(parsed.get("city") or "").strip().lower()
+    country_matches = [
+        c
+        for c in candidates
+        if not normalized_country
+        or normalized_country == "EU"
+        or normalize_country_code(c.get("country_code")) == normalized_country
+    ]
+    pool = country_matches or candidates
+    if city:
+        named = next(
+            (c for c in pool if city in str(c.get("display_name") or "").lower()), None
+        )
+        selected = named or selected or pool[0]
+    else:
+        selected = selected or pool[0]
+
+    lat, lon = round(float(selected["lat"]), 6), round(float(selected["lon"]), 6)
+    # Guarda de distancia: la provincia se usa como FILTRO, no como objetivo. Un
+    # resultado lejos del centroide provincial del CP y que no nombra el municipio
+    # es de otra región → se descarta al centroide del CP (baja confianza).
+    province = province_from_postal_code(parsed.get("postal_code"))
+    names_city = bool(city) and city in str(selected.get("display_name") or "").lower()
+    if province and not names_city:
+        _name, plat, plon = province
+        if _haversine_km(lat, lon, plat, plon) > _MAX_REGION_DISTANCE_KM:
+            return _apply_postal_fallback(parsed)
+
+    parsed["lat"] = lat
+    parsed["lon"] = lon
     parsed["location_label"] = selected.get("display_name")
     parsed["location_confidence"] = "high"
     if selected.get("country_code") and not parsed.get("country_code"):
