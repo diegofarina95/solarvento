@@ -104,3 +104,85 @@ def test_assumptions_reflect_inputs():
     assert a["inverter_replacement_cost_eur"] == 800.0
     assert a["discount_rate_pct"] == 4.0
     assert a["horizon_years"] == 30
+
+
+def _uniform_profile(daily_kwh_per_hour: float) -> list[list[float]]:
+    return [[daily_kwh_per_hour] * 24 for _ in range(12)]
+
+
+def _solar_profile(peak_kwh: float) -> list[list[float]]:
+    """Producción solo entre las 8 y las 18 h, para que haya excedente a mediodía."""
+    day = [peak_kwh if 8 <= h < 18 else 0.0 for h in range(24)]
+    return [day[:] for _ in range(12)]
+
+
+def test_simulated_savings_decline_without_escalation():
+    savings = cashflow.simulated_yearly_savings(
+        _solar_profile(1.0),
+        _uniform_profile(0.5),
+        0.0,
+        0.20,
+        0.06,
+        "capped_compensation",
+        price_escalation=0.0,
+    )
+    assert len(savings) == 30
+    assert savings[10] < savings[0]
+    assert savings[29] < savings[10]
+
+
+def test_simulated_savings_grow_with_escalation_above_degradation():
+    savings = cashflow.simulated_yearly_savings(
+        _solar_profile(1.0),
+        _uniform_profile(0.5),
+        0.0,
+        0.20,
+        0.06,
+        "capped_compensation",
+        price_escalation=0.03,
+    )
+    assert savings[10] > savings[0]
+
+
+def test_feed_in_surplus_price_does_not_escalate():
+    # Sistema muy excedentario: casi todo el valor viene del vertido
+    production = _solar_profile(2.0)
+    consumption = _uniform_profile(0.05)
+    feed_in = cashflow.simulated_yearly_savings(
+        production, consumption, 0.0, 0.30, 0.08, "feed_in",
+        panel_degradation=0.0, price_escalation=0.05,
+    )
+    market = cashflow.simulated_yearly_savings(
+        production, consumption, 0.0, 0.30, 0.08, "market_price",
+        panel_degradation=0.0, price_escalation=0.05,
+    )
+    # Con feed_in el excedente no escala: el ahorro del año 10 crece menos
+    assert feed_in[9] / feed_in[0] < market[9] / market[0]
+
+
+def test_battery_capacity_degrades_over_years():
+    with_battery = cashflow.simulated_yearly_savings(
+        _solar_profile(1.5),
+        _uniform_profile(0.6),
+        10.0,
+        0.25,
+        0.05,
+        "capped_compensation",
+        price_escalation=0.0,
+        panel_degradation=0.0,
+        battery_degradation=0.03,
+    )
+    # Sin degradación de paneles ni escalada, la única pérdida es la batería
+    assert with_battery[20] < with_battery[0]
+
+
+def test_marginal_battery_payback_interpolates():
+    with_battery = [300.0] * 30
+    without = [200.0] * 30
+    # 100 extra/año, sobrecoste 250: payback marginal 2.5 años
+    assert cashflow.marginal_battery_payback(with_battery, without, 250.0) == 2.5
+
+
+def test_marginal_battery_payback_none_cases():
+    assert cashflow.marginal_battery_payback([100.0] * 30, [100.0] * 30, 500.0) is None
+    assert cashflow.marginal_battery_payback([200.0] * 30, [100.0] * 30, 0.0) is None
