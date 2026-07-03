@@ -218,7 +218,7 @@ export default function SolarForm({
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-stone-950 transition hover:bg-amber-400 disabled:opacity-50"
+        className="btn-solar w-full px-4 py-2.5 text-sm"
       >
         {loading ? t('form.calculating') : t('form.calculate')}
       </button>

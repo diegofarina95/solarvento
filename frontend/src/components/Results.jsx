@@ -19,7 +19,7 @@ function ReportDownload({ data, i18n, fmt }) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-3 print:hidden">
+    <div className="card-solar flex flex-wrap items-center gap-2 px-4 py-3 print:hidden">
       <span className="text-sm font-medium text-stone-700">{t('report.download')}:</span>
       <select
         value={variant}
@@ -74,9 +74,9 @@ function buildFormatters(locale, currency) {
   }
 }
 
-function Card({ title, value, unit, detail, children }) {
+function Card({ title, value, unit, detail, children, hero = false }) {
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4">
+    <div className={`card-solar p-4 ${hero ? 'card-hero' : ''}`}>
       <p className="text-xs font-medium tracking-wide text-stone-500 uppercase">{title}</p>
       <p className="mt-1 text-2xl font-semibold text-stone-900">
         {value}
@@ -189,7 +189,7 @@ function BatterySection({ analysis, i18n, pricing, fmt }) {
   const recommended = analysis.recommended_battery_kwh
   const recommendation = batteryRecommendation(analysis, i18n, fmt)
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4">
+    <div className="card-solar p-4">
       <h3 className="text-sm font-semibold text-stone-700">{t('battery.title')}</h3>
       <p
         className={`mt-2 rounded-lg border p-3 text-sm ${
@@ -264,7 +264,7 @@ function TypicalDaySection({ typicalDay, i18n }) {
   const [month, setMonth] = useState(5)
   const { t, months } = i18n
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4">
+    <div className="card-solar p-4">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-stone-700">
           {t('charts.typicalDayTitle')}
@@ -313,7 +313,7 @@ function ConsumptionSection({ consumption, i18n, currency }) {
   }
 
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4">
+    <div className="card-solar p-4">
       <MonthlyConsumptionChart
         monthlyKwh={consumption.monthly_kwh}
         monthlyEur={consumption.monthly_eur}
@@ -372,7 +372,7 @@ function CalculationBasis({ data, i18n, fmt }) {
   const vatNote = pricing.vat_note ? t(`basis.vatNotes.${pricing.vat_note}`) : null
 
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4">
+    <div className="card-solar p-4">
       <h3 className="text-sm font-semibold text-stone-700">{t('basis.title')}</h3>
       <dl className="mt-2 text-sm">
         <BasisRow label={t('basis.country')} value={t(`countries.${pricing.country_code}`)} />
@@ -470,7 +470,7 @@ export default function Results({ data, i18n }) {
     <div className="space-y-6">
       <ReportDownload data={data} i18n={i18n} fmt={fmt} />
 
-      <div className="rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-600">
+      <div className="card-solar px-4 py-3 text-sm text-stone-600">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span>{pricingMessage(pricing, t)}</span>
           <ConfidenceBadge confidence={data.confidence} t={t} />
@@ -496,12 +496,14 @@ export default function Results({ data, i18n }) {
       {/* Primero lo decisivo (ahorro, amortización, coste); el detalle técnico después */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Card
+          hero
           title={t('results.estimatedSavings')}
           value={fmt.money2.format(eco.annual_savings_eur)}
           detail={`${fmt.money2.format(eco.electricity_price_eur_kwh)}/kWh`}
         />
         {eco.payback_years != null && (
           <Card
+            hero
             title={t('results.payback')}
             value={fmt.nf1.format(eco.payback_years)}
             unit={t('units.years')}
@@ -510,6 +512,7 @@ export default function Results({ data, i18n }) {
         )}
         {eco.installation_cost_eur != null && (
           <Card
+            hero
             title={eco.cost_is_estimated ? t('results.turnkeyCost') : t('results.indicatedCost')}
             value={formatRange(eco.installation_cost_range_eur, fmt.money0)}
             detail={[
@@ -683,7 +686,7 @@ export default function Results({ data, i18n }) {
 
       {data.typical_day && <TypicalDaySection typicalDay={data.typical_day} i18n={i18n} />}
 
-      <div className="grid gap-6 rounded-xl border border-stone-200 bg-white p-4 lg:grid-cols-2">
+      <div className="card-solar grid gap-6 p-4 lg:grid-cols-2">
         <ProductionChart monthly={system.monthly} i18n={i18n} />
         <IrradiationChart monthly={data.plane_irradiation_monthly} i18n={i18n} />
       </div>

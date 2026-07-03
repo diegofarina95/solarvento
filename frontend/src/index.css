@@ -1,15 +1,23 @@
 @import 'tailwindcss';
 @import 'leaflet/dist/leaflet.css';
+@import '@fontsource-variable/bricolage-grotesque';
 
 :root {
+  /* Tema solar */
+  --page: #faf7f0; /* papel cálido */
+  --sky-dawn: #fff3dc; /* luz de amanecer, lavado superior de la página */
+  --sun-400: #fbbf24;
+  --sun-500: #f59e0b;
+  --sun-600: #d97706;
+  --ember: #b45309;
+
   /* Roles de la paleta de datos (referencia dataviz, modo claro) */
   --surface-1: #fcfcfb;
-  --page: #f9f9f7;
-  --text-primary: #0b0b0b;
+  --text-primary: #1c1917;
   --text-secondary: #52514e;
   --text-muted: #898781;
-  --gridline: #e1e0d9;
-  --baseline: #c3c2b7;
+  --gridline: #e7e2d6;
+  --baseline: #c3bdae;
   --series-production: #2a78d6; /* azul, slot 1 */
   --series-irradiation: #c98500; /* paso oscuro del ramp amarillo, legible en claro */
   --series-consumption: #199e70; /* aqua (paso oscuro del ramp, legible en claro) */
@@ -27,12 +35,96 @@ html {
 
 body {
   margin: 0;
-  background: var(--page);
   color: var(--text-primary);
+  /* Amanecer: la página nace en luz cálida y se asienta en papel */
+  background:
+    linear-gradient(to bottom, var(--sky-dawn) 0, rgba(255, 243, 220, 0) 420px),
+    var(--page);
+}
+
+/* Display: Bricolage Grotesque para marca y titulares */
+.font-display {
+  font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+}
+
+/* Eyebrow de sección: tick solar + versalitas */
+.section-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #78716c;
+}
+.section-eyebrow::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, var(--sun-400), var(--sun-600));
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+  flex-shrink: 0;
+}
+
+/* Botón principal: gradiente solar con texto oscuro (contraste AA) */
+.btn-solar {
+  background: linear-gradient(135deg, var(--sun-400), var(--sun-500) 55%, var(--sun-600));
+  color: #1c1917;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 1px 2px rgba(180, 83, 9, 0.25);
+  transition:
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+.btn-solar:hover:not(:disabled) {
+  filter: brightness(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 3px 10px rgba(217, 119, 6, 0.35);
+}
+.btn-solar:disabled {
+  opacity: 0.5;
+}
+
+/* Cards: papel sobre papel, borde cálido, elevación suave al pasar */
+.card-solar {
+  background: #fff;
+  border: 1px solid #eae4d6;
+  border-radius: 1rem;
+  transition: box-shadow 0.15s ease;
+}
+.card-solar:hover {
+  box-shadow: 0 4px 16px rgba(120, 90, 20, 0.07);
+}
+/* Las cards de decisión (ahorro, amortización, coste) llevan el sol encima */
+.card-hero {
+  position: relative;
+  overflow: hidden;
+}
+.card-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--sun-400), var(--sun-600));
 }
 
 .leaflet-container {
   font: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-solar,
+  .card-solar {
+    transition: none;
+  }
 }
 
 /* --- Informe imprimible ---

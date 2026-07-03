@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import AdSlot from './components/AdSlot'
+import SunArc from './components/SunArc'
 import LocationSearch from './components/LocationSearch'
 import MapPicker from './components/MapPicker'
 import SolarForm from './components/SolarForm'
@@ -233,39 +234,38 @@ export default function App() {
   return (
     <div id="app-shell" className="mx-auto max-w-6xl px-4 py-8">
       <header className="mb-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <SunArc />
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-stone-900">
-              Sol<span className="text-amber-500">Vento</span>
+            <h1 className="font-display text-4xl font-bold tracking-tight text-stone-900">
+              Sol<span className="text-amber-600">Vento</span>
             </h1>
-            <p className="mt-1 max-w-3xl text-stone-600">{t('app.subtitle')}</p>
+            <p className="mt-1.5 max-w-3xl text-stone-600">{t('app.subtitle')}</p>
           </div>
-          <label className="min-w-28 text-sm font-medium text-stone-700">
-            <span className="mb-1 block">{t('app.language')}</span>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
-            >
-              {LANGUAGE_OPTIONS.map((option) => (
-                <option key={option.code} value={option.code}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            aria-label={t('app.language')}
+            className="rounded-lg border border-stone-300 bg-white/70 px-3 py-1.5 text-sm text-stone-700 backdrop-blur-sm"
+          >
+            {LANGUAGE_OPTIONS.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
-          <p className="font-semibold">{t('app.europeNotice')}</p>
-          <p className="mt-1">{t('app.disclaimer')}</p>
-        </div>
+        <p className="mt-3 text-xs leading-relaxed text-stone-500">
+          <span className="font-semibold text-stone-600">{t('app.europeNotice')}</span>{' '}
+          {t('app.disclaimer')}
+        </p>
         <AdSlot placement="top" />
       </header>
 
       <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
         <section className="space-y-4">
-          <div className="rounded-xl border border-stone-200 bg-white p-4">
-            <h2 className="mb-3 text-sm font-semibold text-stone-700">
+          <div className="card-solar p-4">
+            <h2 className="section-eyebrow mb-3">
               {t('app.locationSection')}
             </h2>
             <LocationSearch onSelect={handleLocationSelect} i18n={i18n} />
@@ -297,9 +297,9 @@ export default function App() {
             </label>
           </div>
 
-          <div className="rounded-xl border border-stone-200 bg-white p-4">
+          <div className="card-solar p-4">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-stone-700">
+              <h2 className="section-eyebrow">
                 {t('app.installationSection')}
               </h2>
               <div className="flex rounded-lg border border-stone-200 p-0.5 text-xs font-medium">
