@@ -588,3 +588,151 @@ class TestBillTaxRates:
         bill = self._bill()
         result = aggregate_bills([bill], country_code="DE")
         assert result["marginal_price_factor"] == pytest.approx(1.2719, abs=0.001)
+
+
+# --- Bug 2: consumo anual desde el histórico mensual de la factura -----------
+
+_SHARED_HISTORY = """
+Histórico de consumo
+Ene 2.902 kWh
+Mar 2.350 kWh
+Abr 1.898 kWh
+May 1.620 kWh
+Jun 1.450 kWh
+Jul 1.810 kWh
+Ago 1.210 kWh
+Sep 1.358 kWh
+Oct 1.738 kWh
+Nov 2.100 kWh
+Dic 2.650 kWh
+"""
+
+
+def _bill_with_history(period_start, period_end, period_kwh, energy_eur):
+    return f"""
+    COMERCIALIZADORA SOLAR S.A.
+    Factura de electricidad
+    Periodo de facturación: del {period_start} al {period_end}
+    Consumo en el periodo: {period_kwh} kWh
+    Término de energía {energy_eur} €
+    TOTAL IMPORTE FACTURA 500,00 €
+    {_SHARED_HISTORY}
+    """
+
+
+class TestConsumptionHistory:
+    def test_parses_history_table(self):
+        result = parse_bill_text(_bill_with_history("01/01/2026", "31/01/2026", 2902, "486,09"))
+        history = {e["month"]: e["kwh"] for e in result["consumption_history"]}
+        assert history[1] == 2902
+        assert history[3] == 2350
+        assert history[12] == 2650
+        assert 2 not in history  # febrero no aparece en el histórico
+        assert len(history) == 11
+
+    def test_period_kwh_not_corrupted_by_history_values(self):
+        # El consumo del periodo (etiquetado) no debe confundirse con el histórico
+        result = parse_bill_text(_bill_with_history("01/07/2026", "31/07/2026", 1810, "369,24"))
+        assert result["kwh"] == 1810
+
+    def test_no_history_returns_empty_list(self):
+        result = parse_bill_text(SAMPLE_BILL)
+        assert result["consumption_history"] == []
+
+
+class TestConsumptionFromHistory:
+    def _parse(self, *bills):
+        return [parse_bill_text(b) for b in bills]
+
+    def _agg(self, parsed):
+        return aggregate_bills(parsed, country_code="ES")
+
+    def test_annual_is_deterministic_across_upload_subsets(self):
+        enero = _bill_with_history("01/01/2026", "31/01/2026", 2902, "486,09")
+        febrero = _bill_with_history("01/02/2026", "28/02/2026", 2680, "450,00")
+        marzo = _bill_with_history("01/03/2026", "31/03/2026", 2350, "467,65")
+        julio = _bill_with_history("01/07/2026", "31/07/2026", 1810, "369,24")
+
+        subset_a = self._agg(self._parse(enero, julio))
+        subset_b = self._agg(self._parse(febrero, marzo, julio))
+        assert subset_a["annual_kwh"] == subset_b["annual_kwh"]
+        assert subset_a["seasonality_source"] == "bill_history"
+
+    def test_eleven_real_months_sum_and_estimated_february(self):
+        enero = _bill_with_history("01/01/2026", "31/01/2026", 2902, "486,09")
+        julio = _bill_with_history("01/07/2026", "31/07/2026", 1810, "369,24")
+        agg = self._agg(self._parse(enero, julio))
+
+        # 11 meses reales suman 21.086; con febrero estimado el anual cae en
+        # 23.500-24.000, NO en ~25.600 (que daría la extrapolación x(12/N))
+        real = sum(agg["monthly_kwh"][m - 1] for m in agg["observed_months"])
+        assert real == pytest.approx(21086, abs=1)
+        assert 2 in agg["estimated_months"]
+        assert 23500 <= agg["annual_kwh"] <= 24000
+        assert agg["annual_kwh"] != pytest.approx(25600, abs=500)
+
+    def test_estimated_february_interpolates_neighbours(self):
+        enero = _bill_with_history("01/01/2026", "31/01/2026", 2902, "486,09")
+        agg = self._agg(self._parse(enero))
+        # Febrero entre enero (2902) y marzo (2350): media 2626
+        assert agg["monthly_kwh"][1] == pytest.approx(2626, abs=1)
+
+    def test_conflict_prefers_most_recent_bill(self):
+        older = f"""
+        Factura de electricidad
+        Periodo de facturación: del 01/01/2026 al 31/01/2026
+        Consumo en el periodo: 2000 kWh
+        Término de energía 400,00 €
+        TOTAL IMPORTE FACTURA 500,00 €
+        Histórico de consumo
+        Ene 2.000 kWh
+        """
+        newer = f"""
+        Factura de electricidad
+        Periodo de facturación: del 01/06/2026 al 30/06/2026
+        Consumo en el periodo: 1500 kWh
+        Término de energía 300,00 €
+        TOTAL IMPORTE FACTURA 400,00 €
+        Histórico de consumo
+        Ene 2.500 kWh
+        """
+        agg = self._agg(self._parse(older, newer))
+        # Enero aparece en ambas: gana la factura más reciente (junio → 2.500)
+        assert agg["monthly_kwh"][0] == pytest.approx(2500, abs=1)
+
+    def test_twelve_months_summed_directly_without_estimation(self):
+        full = """
+        Factura de electricidad
+        Periodo de facturación: del 01/01/2026 al 31/01/2026
+        Consumo en el periodo: 300 kWh
+        Término de energía 60,00 €
+        TOTAL IMPORTE FACTURA 100,00 €
+        Histórico de consumo
+        Ene 300 kWh
+        Feb 280 kWh
+        Mar 260 kWh
+        Abr 240 kWh
+        May 220 kWh
+        Jun 200 kWh
+        Jul 210 kWh
+        Ago 230 kWh
+        Sep 250 kWh
+        Oct 270 kWh
+        Nov 290 kWh
+        Dic 310 kWh
+        """
+        agg = self._agg(self._parse(full))
+        assert agg["estimated_months"] == []
+        assert agg["annual_kwh"] == pytest.approx(3060, abs=1)
+        assert agg["seasonality_source"] == "bill_history"
+
+    def test_bills_without_history_keep_extrapolation_path(self):
+        agg = aggregate_bills(
+            [
+                {"month": 1, "kwh": 612, "energy_eur": 105.15, "amount_eur": 155.15},
+                {"month": 6, "kwh": 344, "energy_eur": 54.04, "amount_eur": 94.04},
+            ],
+            country_code="ES",
+        )
+        assert agg["seasonality_source"] == "estimated_from_sampled_months"
+        assert agg["estimated_months"] == []

@@ -100,6 +100,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         iva_eur: parsed.iva_eur ?? null,
         iva_rate: parsed.iva_rate ?? null,
         vat_base_eur: parsed.vat_base_eur ?? null,
+        consumptionHistory: parsed.consumption_history ?? null,
       }))
       if (parsed.warnings?.length) {
         problems.push(t('errors.billNeedsReview', { file: file.name }))

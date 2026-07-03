@@ -23,6 +23,18 @@ MONTH_NAMES = {
     "novembre": 11, "décembre": 12, "decembre": 12,
 }
 
+# Abreviaturas de 3 letras del histórico mensual español (Ene, Feb, ... Dic).
+MONTH_ABBR = {
+    "ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6,
+    "jul": 7, "ago": 8, "sep": 9, "set": 9, "oct": 10, "nov": 11, "dic": 12,
+}
+# Token de mes para el histórico: nombre completo español o abreviatura de 3 letras.
+_HISTORY_MONTH_TOKEN = (
+    r"ene(?:ro)?|feb(?:rero)?|mar(?:zo)?|abr(?:il)?|may(?:o)?|jun(?:io)?"
+    r"|jul(?:io)?|ago(?:sto)?|sep(?:tiembre)?|set(?:iembre)?|oct(?:ubre)?"
+    r"|nov(?:iembre)?|dic(?:iembre)?"
+)
+
 COUNTRY_HINTS = [
     ("GB", r"\b(?:united kingdom|great britain|reino unido|uk vat|gb)\b|£"),
     ("ES", r"\b(?:españa|spain|cnmc|endesa|iberdrola|naturgy)\b"),
@@ -42,6 +54,11 @@ LANGUAGE_HINTS = [
 ]
 
 _NUM = r"(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d{1,3}(?:[.\s]\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?)"
+
+# Fila del histórico mensual: 'Ene 2.902 kWh'. Requiere _NUM, ya definido.
+_HISTORY_LINE_RE = re.compile(
+    rf"\b({_HISTORY_MONTH_TOKEN})\.?\s*[:\-]?\s*{_NUM}\s*kWh", re.IGNORECASE
+)
 
 # Monedas europeas tal como aparecen junto al total (símbolo o código ISO)
 _CURRENCY = r"(?:€|EUR|£|GBP|zł|PLN|Kč|CZK|CHF|Ft|HUF|lei|RON|лв|BGN|kn|kr\.?|DKK|NOK|SEK|ISK)"
@@ -322,6 +339,36 @@ def _consumption_table_candidates(text: str) -> list[float]:
     return candidates
 
 
+def _month_from_token(token: str) -> int | None:
+    normalized = token.lower()
+    return MONTH_NAMES.get(normalized) or MONTH_ABBR.get(normalized[:3])
+
+
+def parse_consumption_history(text: str) -> list[dict]:
+    """Histórico mensual de consumo de la factura: [{month, kwh}, ...].
+
+    Las facturas españolas incluyen una tabla/gráfico 'Histórico de consumo' con
+    los últimos meses (mes → kWh). Se extrae dentro de la sección para no
+    confundir estos valores con el consumo del periodo. Devuelve un mes por
+    entrada (el último valor gana si un mes se repite dentro de la misma factura).
+    """
+    header = re.search(
+        r"hist[oó]rico(?:\s+reciente)?\s+de\s+consumo", text, re.IGNORECASE
+    )
+    if not header:
+        return []
+    # Ventana tras la cabecera: cubre una tabla de ~14 meses aunque venga en
+    # líneas separadas o en una sola con separadores (· , |).
+    segment = text[header.end():header.end() + 800]
+    by_month: dict[int, float] = {}
+    for match in _HISTORY_LINE_RE.finditer(segment):
+        month = _month_from_token(match.group(1))
+        kwh = _to_float(match.group(2))
+        if month is not None and 1 <= kwh <= MAX_BILL_KWH:
+            by_month[month] = kwh
+    return [{"month": m, "kwh": by_month[m]} for m in sorted(by_month)]
+
+
 def _reading_kind(label: str) -> str:
     normalized = label.lower()
     if re.search(r"anterior|ancien|pr[ée]c[ée]dent|previous|precedente", normalized):
@@ -371,6 +418,10 @@ def _fallback_kwh_candidates(text: str) -> list[float]:
             line,
             re.IGNORECASE,
         ):
+            continue
+        # Las filas del histórico mensual ('Ene 2.902 kWh') no son el consumo
+        # del periodo: se excluyen del último recurso de detección de kWh.
+        if _HISTORY_LINE_RE.search(line):
             continue
         candidates.extend(_to_float(m) for m in re.findall(rf"{_NUM}\s*kWh", line, re.IGNORECASE))
     return [v for v in candidates if 1 <= v <= MAX_BILL_KWH]
@@ -647,6 +698,7 @@ def parse_bill_text(text: str) -> dict:
         "iva_eur": None,
         "iva_rate": None,
         "vat_base_eur": None,
+        "consumption_history": [],
         "currency": _detect_currency(text),
         "month": None,
         "start_date": None,
@@ -677,6 +729,7 @@ def parse_bill_text(text: str) -> dict:
     result["iva_eur"] = _find_charge_amount(text, _IVA_AMOUNT_LABELS)
     result["iva_rate"] = _find_iva_rate(text)
     result["vat_base_eur"] = _find_charge_amount(text, _VAT_BASE_LABELS)
+    result["consumption_history"] = parse_consumption_history(text)
 
     # --- kWh: consumo del periodo > diferencia de lecturas > kWh no acumulados ---
     period_candidates = _period_consumption_candidates(text)
@@ -872,6 +925,63 @@ def derive_bill_tax_rates(bill: dict, country_code: str | None = None) -> dict |
     }
 
 
+def _bill_recency_key(bill: dict) -> date:
+    """Fecha para resolver conflictos del histórico: la más reciente gana."""
+    end, start = bill.get("end_date"), bill.get("start_date")
+    if end:
+        return end
+    if start:
+        return start
+    month = bill.get("month")
+    if month:
+        return date(1900, int(month), 1)
+    return date.min
+
+
+def _merge_consumption_history(bills: list[dict]) -> dict[int, float]:
+    """Une los históricos de todas las facturas en un mapa mes→kWh.
+
+    Ante el mismo mes en varias facturas, gana el de la factura más reciente.
+    El resultado es independiente del orden y del subconjunto de facturas subido.
+    """
+    merged: dict[int, float] = {}
+    # Orden ascendente por fecha: las facturas más recientes se aplican al final
+    # y sobrescriben a las antiguas para el mismo mes.
+    for bill in sorted(bills, key=_bill_recency_key):
+        for entry in bill.get("consumption_history") or []:
+            merged[int(entry["month"])] = float(entry["kwh"])
+    return merged
+
+
+def _twelve_months_from_history(
+    known: dict[int, float],
+) -> tuple[list[float], list[int]]:
+    """Curva de 12 meses a partir de los meses conocidos del histórico.
+
+    Los meses ausentes se interpolan linealmente entre los vecinos conocidos
+    más cercanos en el eje circular de meses. Devuelve (monthly, estimated).
+    """
+    monthly = [0.0] * 12
+    estimated: list[int] = []
+    present = sorted(known)
+    for month in range(1, 13):
+        if month in known:
+            monthly[month - 1] = known[month]
+            continue
+        estimated.append(month)
+        # Vecino conocido más cercano hacia atrás y hacia delante en el círculo
+        # de 12 meses (las distancias caen en 1..11 porque month no está presente).
+        prev_month = min(present, key=lambda m, month=month: (month - m) % 12)
+        next_month = min(present, key=lambda m, month=month: (m - month) % 12)
+        prev_dist = (month - prev_month) % 12
+        next_dist = (next_month - month) % 12
+        span = prev_dist + next_dist
+        monthly[month - 1] = round(
+            (known[prev_month] * next_dist + known[next_month] * prev_dist) / span, 1
+        )
+    return monthly, estimated
+
+
 def aggregate_bills(
     bills: list[dict],
     default_currency: str | None = None,
@@ -977,10 +1087,31 @@ def aggregate_bills(
     if total_kwh <= 0 or total_days <= 0:
         raise BillParseError("Las facturas no contienen consumos válidos")
 
-    annual_from_months, monthly, observed_months = _estimate_monthly_from_samples(
-        monthly_kwh, monthly_days
-    )
-    annual_kwh = annual_from_months if annual_from_months is not None else total_kwh / total_days * 365.25
+    # Consumo anual: si alguna factura trae el histórico mensual, es la fuente
+    # de verdad (determinista, no depende de qué meses se suban); si no, se cae
+    # a la estimación por meses muestreados con el perfil estacional.
+    history = _merge_consumption_history(bills)
+    estimated_months: list[int] = []
+    if history:
+        monthly, estimated_months = _twelve_months_from_history(history)
+        observed_months = sorted(history)
+        annual_kwh = sum(monthly)
+        seasonality_source = "bill_history"
+    else:
+        annual_from_months, monthly, observed_months = _estimate_monthly_from_samples(
+            monthly_kwh, monthly_days
+        )
+        annual_kwh = (
+            annual_from_months
+            if annual_from_months is not None
+            else total_kwh / total_days * 365.25
+        )
+        if len(observed_months) == 12:
+            seasonality_source = "full_year_bills"
+        elif observed_months:
+            seasonality_source = "estimated_from_sampled_months"
+        else:
+            seasonality_source = "annualized_by_days"
     price = (
         round(total_variable_amount / kwh_with_variable_amount, 4)
         if kwh_with_variable_amount > 0
@@ -1012,13 +1143,6 @@ def aggregate_bills(
         elif total_amount_days > 0:
             annual_amount = round(total_bill_amount / total_amount_days * 365.25, 1)
 
-    if len(observed_months) == 12:
-        seasonality_source = "full_year_bills"
-    elif observed_months:
-        seasonality_source = "estimated_from_sampled_months"
-    else:
-        seasonality_source = "annualized_by_days"
-
     return {
         "annual_kwh": round(annual_kwh, 1),
         "avg_price_eur_kwh": price,
@@ -1037,6 +1161,7 @@ def aggregate_bills(
         "days_covered": round(total_days),
         "monthly_kwh": monthly,
         "observed_months": observed_months,
+        "estimated_months": estimated_months,
         "seasonality_source": seasonality_source,
         "currency": currencies[0] if currencies else (default_currency or DEFAULT_CURRENCY),
     }

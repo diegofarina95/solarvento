@@ -310,6 +310,12 @@ def _merge_bill_context(target: dict, source: dict | None) -> None:
         "energy_eur",
         "fixed_eur",
         "taxes_eur",
+        "power_eur",
+        "iee_eur",
+        "iva_eur",
+        "iva_rate",
+        "vat_base_eur",
+        "consumption_history",
         "total_eur",
         "currency",
         "month",
@@ -326,7 +332,7 @@ def _merge_bill_context(target: dict, source: dict | None) -> None:
         "lat",
         "lon",
     ):
-        if target.get(key) in (None, "") and source.get(key) not in (None, ""):
+        if target.get(key) in (None, "", []) and source.get(key) not in (None, "", []):
             target[key] = source[key]
 
 
@@ -456,6 +462,7 @@ def _resolve_consumption(
             "annual_amount": agg["annual_amount"],
             "currency": agg["currency"],
             "observed_months": agg["observed_months"],
+            "estimated_months": agg["estimated_months"],
             "seasonality_source": agg["seasonality_source"],
             "profile": _profile_summary(req, country_code),
         }
@@ -479,6 +486,7 @@ def _resolve_consumption(
                 "annual_amount": None,
                 "currency": default_currency,
                 "observed_months": [],
+                "estimated_months": [],
                 "seasonality_source": "manual_annual",
                 "profile": _profile_summary(req, country_code),
             },

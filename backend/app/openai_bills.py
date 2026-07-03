@@ -33,6 +33,14 @@ Rules:
   not the supplier's office address. Do not invent an address.
 - Extract postal code, city and region/state if clear. Use null when absent or uncertain.
 - Extract the main language as a two-letter code when clear.
+- Extract the contracted-power charge (término de potencia) as power_eur, the electricity excise
+  (Impuesto especial sobre la electricidad / impuesto eléctrico) as iee_eur ONLY when itemised on its
+  own line (null if it is lumped with other regulated charges), the VAT amount as iva_eur, the VAT
+  rate as a fraction (e.g. 0.21 or 0.10) as iva_rate, and the VAT taxable base (base imponible) as
+  vat_base_eur. These let the app compute the tax-inclusive avoided cost per kWh.
+- Extract the monthly consumption history table/chart ("Histórico de consumo" / "Histórico reciente
+  de consumo") as consumption_history: a list of {month: 1-12, kwh}. Use the month number and the kWh
+  for each bar/row. Return an empty list when there is no history table.
 - Add short warnings for uncertain values, missing values, mixed utilities, or non-electricity invoices.
 """
 
@@ -59,6 +67,39 @@ BILL_SCHEMA: dict[str, Any] = {
         "taxes_eur": {
             "type": ["number", "null"],
             "description": "Taxes and VAT shown on the bill.",
+        },
+        "power_eur": {
+            "type": ["number", "null"],
+            "description": "Contracted-power charge (término de potencia).",
+        },
+        "iee_eur": {
+            "type": ["number", "null"],
+            "description": "Electricity excise (impuesto eléctrico), only if itemised alone.",
+        },
+        "iva_eur": {
+            "type": ["number", "null"],
+            "description": "VAT amount shown on the bill.",
+        },
+        "iva_rate": {
+            "type": ["number", "null"],
+            "description": "VAT rate as a fraction, e.g. 0.21 or 0.10.",
+        },
+        "vat_base_eur": {
+            "type": ["number", "null"],
+            "description": "VAT taxable base (base imponible).",
+        },
+        "consumption_history": {
+            "type": ["array", "null"],
+            "description": "Monthly consumption history: list of {month, kwh}.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "month": {"type": "integer", "description": "Month number 1-12."},
+                    "kwh": {"type": "number", "description": "Consumption in kWh."},
+                },
+                "required": ["month", "kwh"],
+                "additionalProperties": False,
+            },
         },
         "total_eur": {
             "type": ["number", "null"],
@@ -120,6 +161,12 @@ BILL_SCHEMA: dict[str, Any] = {
         "energy_eur",
         "fixed_eur",
         "taxes_eur",
+        "power_eur",
+        "iee_eur",
+        "iva_eur",
+        "iva_rate",
+        "vat_base_eur",
+        "consumption_history",
         "total_eur",
         "currency",
         "month",
@@ -285,6 +332,12 @@ def _normalize_openai_bill(parsed: dict[str, Any]) -> dict[str, Any]:
         "energy_eur": energy,
         "fixed_eur": fixed,
         "taxes_eur": taxes,
+        "power_eur": _optional_float(parsed.get("power_eur")),
+        "iee_eur": _optional_float(parsed.get("iee_eur")),
+        "iva_eur": _optional_float(parsed.get("iva_eur")),
+        "iva_rate": _optional_float(parsed.get("iva_rate")),
+        "vat_base_eur": _optional_float(parsed.get("vat_base_eur")),
+        "consumption_history": _optional_history(parsed.get("consumption_history")),
         "total_eur": total,
         "currency": currency,
         "month": month,
@@ -300,6 +353,21 @@ def _normalize_openai_bill(parsed: dict[str, Any]) -> dict[str, Any]:
         "parser": "openai",
         "warnings": _dedupe(warnings),
     }
+
+
+def _optional_history(value: Any) -> list[dict[str, float]]:
+    """Normaliza el histórico mensual del parser IA a [{month, kwh}, ...]."""
+    if not isinstance(value, list):
+        return []
+    entries: dict[int, float] = {}
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        month = _optional_month(item.get("month"))
+        kwh = _optional_float(item.get("kwh"))
+        if month is not None and kwh is not None and 0 < kwh <= MAX_BILL_KWH:
+            entries[month] = kwh
+    return [{"month": m, "kwh": entries[m]} for m in sorted(entries)]
 
 
 def _optional_float(value: Any) -> float | None:

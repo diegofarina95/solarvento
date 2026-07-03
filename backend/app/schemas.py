@@ -6,6 +6,13 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, model_validator
 
 
+class BillHistoryEntry(BaseModel):
+    """Un mes del histórico de consumo impreso en la factura."""
+
+    month: int = Field(..., ge=1, le=12)
+    kwh: float = Field(..., ge=0, le=20000)
+
+
 class BillInput(BaseModel):
     """Una factura de la luz: consumo y, opcionalmente, importe y periodo."""
 
@@ -47,6 +54,9 @@ class BillInput(BaseModel):
     )
     vat_base_eur: float | None = Field(
         None, ge=0, le=100000, description="Base imponible del IVA."
+    )
+    consumption_history: list[BillHistoryEntry] | None = Field(
+        None, max_length=24, description="Histórico mensual de consumo (mes → kWh)."
     )
     currency: str | None = Field(None, min_length=3, max_length=3)
     # Alias histórico. Se conserva para clientes antiguos, pero el precio
@@ -224,6 +234,7 @@ class ConsumptionSummary(BaseModel):
     annual_amount: float | None = None
     currency: str | None = None
     observed_months: list[int] = Field(default_factory=list)
+    estimated_months: list[int] = Field(default_factory=list)
     seasonality_source: str | None = None
     profile: dict | None = None
 
@@ -357,6 +368,7 @@ class ParsedBill(BaseModel):
     iva_eur: float | None = None
     iva_rate: float | None = None
     vat_base_eur: float | None = None
+    consumption_history: list[BillHistoryEntry] = []
     currency: str | None = None
     month: int | None = None
     start_date: date | None = None

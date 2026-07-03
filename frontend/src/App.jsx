@@ -176,6 +176,8 @@ export default function App() {
           iva_eur: b.iva_eur ?? null,
           iva_rate: b.iva_rate ?? null,
           vat_base_eur: b.vat_base_eur ?? null,
+          // Histórico mensual del parser: fuente determinista del consumo anual
+          consumption_history: b.consumptionHistory ?? null,
         }))
       }
       if (advanced) {
