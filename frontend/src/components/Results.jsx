@@ -146,6 +146,62 @@ function ConfidenceBadge({ confidence, t }) {
   )
 }
 
+function SizingSection({ analysis, i18n, fmt }) {
+  const { t } = i18n
+  const byKwp = new Map(analysis.scenarios.map((s) => [s.power_kwp, s]))
+  const optimum = byKwp.get(analysis.economic_optimum_kwp)
+  const maxSavings = byKwp.get(analysis.max_savings_kwp)
+  if (!optimum || !maxSavings || optimum.power_kwp === maxSavings.power_kwp) return null
+  const rows = [
+    { key: 'optimum', label: t('sizing.optimum'), s: optimum, highlight: true },
+    { key: 'maxSavings', label: t('sizing.maxSavings'), s: maxSavings, highlight: false },
+  ]
+  return (
+    <div className="card-solar p-4">
+      <h3 className="text-sm font-semibold text-stone-700">{t('sizing.title')}</h3>
+      <p className="mt-1 text-xs text-stone-500">{t('sizing.intro')}</p>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full min-w-[720px] text-sm">
+          <thead>
+            <tr className="border-b border-stone-200 text-left text-xs text-stone-500">
+              <th className="py-2 pr-3 font-medium">{t('sizing.scenario')}</th>
+              <th className="py-2 pr-3 font-medium">{t('sizing.power')}</th>
+              <th className="py-2 pr-3 font-medium">{t('sizing.investment')}</th>
+              <th className="py-2 pr-3 font-medium">{t('sizing.savingsYear')}</th>
+              <th className="py-2 pr-3 font-medium">{t('sizing.payback')}</th>
+              <th className="py-2 pr-3 font-medium">{t('sizing.roi')}</th>
+              <th className="py-2 font-medium">{t('sizing.selfConsumption')}</th>
+            </tr>
+          </thead>
+          <tbody className="tabular-nums">
+            {rows.map(({ key, label, s, highlight }) => (
+              <tr key={key} className={`border-b border-stone-100 ${highlight ? 'bg-amber-50' : ''}`}>
+                <td className="py-2 pr-3 font-medium text-stone-800">
+                  {label}
+                  {highlight && (
+                    <span className="ml-1.5 rounded bg-amber-200 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
+                      {t('sizing.recommended')}
+                    </span>
+                  )}
+                </td>
+                <td className="py-2 pr-3">{fmt.nf2.format(s.power_kwp)} kWp</td>
+                <td className="py-2 pr-3">{fmt.money0.format(s.investment_eur)}</td>
+                <td className="py-2 pr-3">{fmt.money0.format(s.annual_savings_eur)}</td>
+                <td className="py-2 pr-3">
+                  {s.payback_years != null ? t('sizing.years', { value: fmt.nf1.format(s.payback_years) }) : '—'}
+                </td>
+                <td className="py-2 pr-3">{s.roi_pct != null ? `${fmt.nf1.format(s.roi_pct)}%` : '—'}</td>
+                <td className="py-2">{fmt.nf1.format(s.self_consumption_pct)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-xs text-stone-500">{t('sizing.note')}</p>
+    </div>
+  )
+}
+
 function BatterySection({ analysis, i18n, pricing, fmt }) {
   const { t } = i18n
   const recommended = analysis.recommended_battery_kwh
@@ -751,6 +807,10 @@ export default function Results({ data, i18n }) {
         i18n={i18n}
         currency={pricing.currency_symbol || pricing.currency}
       />
+
+      {data.sizing_analysis && (
+        <SizingSection analysis={data.sizing_analysis} i18n={i18n} fmt={fmt} />
+      )}
 
       {data.battery_analysis && (
         <BatterySection analysis={data.battery_analysis} i18n={i18n} pricing={pricing} fmt={fmt} />
