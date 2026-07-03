@@ -169,6 +169,13 @@ export default function App() {
           month: b.month ? Number(b.month) : null,
           start_date: b.start || null,
           end_date: b.end || null,
+          // Líneas de impuestos del parser (coste marginal evitado): se
+          // reenvían tal cual; si faltan, el backend usa los tipos normativos.
+          power_eur: b.power_eur ?? null,
+          iee_eur: b.iee_eur ?? null,
+          iva_eur: b.iva_eur ?? null,
+          iva_rate: b.iva_rate ?? null,
+          vat_base_eur: b.vat_base_eur ?? null,
         }))
       }
       if (advanced) {

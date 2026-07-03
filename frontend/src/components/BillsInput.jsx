@@ -93,6 +93,13 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         currency: parsed.currency ?? '',
         start: parsed.start_date ?? '',
         end: parsed.end_date ?? '',
+        // Líneas de impuestos del parser: viajan con la fila (no editables) para
+        // que el backend derive el coste marginal evitado por factura.
+        power_eur: parsed.power_eur ?? null,
+        iee_eur: parsed.iee_eur ?? null,
+        iva_eur: parsed.iva_eur ?? null,
+        iva_rate: parsed.iva_rate ?? null,
+        vat_base_eur: parsed.vat_base_eur ?? null,
       }))
       if (parsed.warnings?.length) {
         problems.push(t('errors.billNeedsReview', { file: file.name }))

@@ -517,7 +517,9 @@ export default function Results({ data, i18n }) {
           value={fmt.money2.format(eco.annual_savings_eur)}
           detail={
             eco.marginal_price_factor > 1 && eco.effective_price_eur_kwh != null
-              ? `${fmt.money2.format(eco.effective_price_eur_kwh)}/kWh · ${t('results.taxInclusivePrice')}`
+              ? t('results.marginalAvoidedCost', {
+                  price: `${fmt.money2.format(eco.effective_price_eur_kwh)}/kWh`,
+                })
               : `${fmt.money2.format(eco.electricity_price_eur_kwh)}/kWh`
           }
         />

@@ -417,3 +417,174 @@ class TestMultiLanguageTotals:
         text = "Total consumption for the period 312 kWh\nTotal amount due 71.39 €"
         result = parse_bill_text(text)
         assert result["amount_eur"] == 71.39
+
+
+FEBRERO_2026 = """
+COMERCIALIZADORA SOLAR S.A.
+Factura de electricidad
+Periodo de facturación: del 01/02/2026 al 28/02/2026
+Consumo en el periodo: 2.455 kWh
+Desglose económico
+Término de energía 486,09 €
+Término de potencia 62,00 €
+Impuesto especial sobre la electricidad 28,02 €
+Alquiler de contador 0,81 €
+Base imponible 576,92 €
+IVA (21%) 121,15 €
+TOTAL IMPORTE FACTURA 698,07 €
+"""
+
+ABRIL_2026_REDUCIDA = """
+COMERCIALIZADORA SOLAR S.A.
+Factura de electricidad
+Periodo de facturación: del 01/04/2026 al 30/04/2026
+Consumo en el periodo: 1.898 kWh
+Desglose económico
+Término de energía 379,60 €
+Término de potencia 60,00 €
+Impuesto especial sobre la electricidad 2,20 €
+Alquiler de contador 0,81 €
+Base imponible 442,61 €
+IVA (10%) 44,26 €
+TOTAL IMPORTE FACTURA 486,87 €
+"""
+
+
+class TestParseBillTaxLines:
+    def test_extracts_itemised_tax_lines_standard(self):
+        result = parse_bill_text(FEBRERO_2026)
+        assert result["energy_eur"] == 486.09
+        assert result["power_eur"] == 62.00
+        assert result["iee_eur"] == 28.02
+        assert result["iva_eur"] == 121.15
+        assert result["iva_rate"] == 0.21
+        assert result["vat_base_eur"] == 576.92
+
+    def test_extracts_itemised_tax_lines_reduced_window(self):
+        result = parse_bill_text(ABRIL_2026_REDUCIDA)
+        assert result["iee_eur"] == 2.20
+        assert result["iva_eur"] == 44.26
+        assert result["iva_rate"] == 0.10
+        assert result["vat_base_eur"] == 442.61
+
+    def test_lumped_electricity_tax_is_not_used_as_iee(self):
+        text = """
+        Factura de electricidad
+        Periodo facturado 01/01/2026 - 31/01/2026
+        Término de energía 497,91 €
+        Impuesto eléctrico y cargos regulados 27,41 €
+        TOTAL FACTURA 829,17 €
+        """
+        result = parse_bill_text(text)
+        # La línea agrupa IEE con cargos regulados: no sirve para derivar el tipo
+        assert result["iee_eur"] is None
+
+    def test_simple_iee_line_is_extracted(self):
+        result = parse_bill_text(SAMPLE_BILL)
+        assert result["iee_eur"] == 2.83
+        assert result["power_eur"] == 12.30
+        assert result["iva_rate"] == 0.21
+
+
+class TestBillTaxRates:
+    """Derivación por factura del coste marginal evitado (IEE + IVA)."""
+
+    def _bill(self, **kwargs):
+        base = {
+            "kwh": 2455,
+            "energy_eur": 486.09,
+            "power_eur": 62.00,
+            "iee_eur": 28.02,
+            "iva_eur": 121.15,
+            "iva_rate": 0.21,
+            "vat_base_eur": 576.92,
+            "start_date": date(2026, 2, 1),
+            "end_date": date(2026, 2, 28),
+        }
+        base.update(kwargs)
+        return base
+
+    def test_rates_derived_from_itemised_lines(self):
+        result = aggregate_bills([self._bill()], country_code="ES")
+        assert result["marginal_price_factor"] == pytest.approx(1.2719, abs=0.001)
+        assert result["marginal_price_eur_kwh"] == pytest.approx(
+            (486.09 / 2455) * 1.2719, abs=0.001
+        )
+        assert result["tax_rates_source"] == "bill"
+
+    def test_reduced_window_bill_derives_lower_rates_than_standard(self):
+        reduced = {
+            "kwh": 1898,
+            "energy_eur": 379.60,
+            "power_eur": 60.00,
+            "iee_eur": 2.20,
+            "iva_eur": 44.26,
+            "iva_rate": 0.10,
+            "vat_base_eur": 442.61,
+            "start_date": date(2026, 4, 1),
+            "end_date": date(2026, 4, 30),
+        }
+        result_reduced = aggregate_bills([reduced], country_code="ES")
+        result_standard = aggregate_bills([self._bill()], country_code="ES")
+        assert result_reduced["marginal_price_factor"] == pytest.approx(1.1055, abs=0.001)
+        assert (
+            result_reduced["marginal_price_factor"]
+            < result_standard["marginal_price_factor"]
+        )
+
+    def test_statutory_fallback_by_period_dates_reduced_window(self):
+        # Sin líneas de impuestos: el periodo (mayo 2026) cae en la ventana reducida
+        bill = {
+            "kwh": 1500,
+            "energy_eur": 300.0,
+            "start_date": date(2026, 5, 1),
+            "end_date": date(2026, 5, 31),
+        }
+        result = aggregate_bills([bill], country_code="ES")
+        assert result["marginal_price_factor"] == pytest.approx(1.1055, abs=0.001)
+        assert result["tax_rates_source"] == "statutory"
+
+    def test_statutory_fallback_standard_when_no_dates(self):
+        bill = {"kwh": 300, "energy_eur": 60.0, "month": 1}
+        result = aggregate_bills([bill], country_code="ES")
+        assert result["marginal_price_factor"] == pytest.approx(1.2719, abs=0.001)
+
+    def test_bill_lines_preferred_over_statutory_table(self):
+        # Periodo dentro de la ventana reducida pero con IVA 21% detallado:
+        # manda la factura, no la tabla
+        bill = self._bill(
+            start_date=date(2026, 4, 1), end_date=date(2026, 4, 30)
+        )
+        result = aggregate_bills([bill], country_code="ES")
+        assert result["marginal_price_factor"] == pytest.approx(1.2719, abs=0.001)
+
+    def test_blend_weights_by_kwh(self):
+        standard = self._bill()  # 2455 kWh, factor 1.2719
+        reduced = {
+            "kwh": 1898,
+            "energy_eur": 379.60,
+            "power_eur": 60.00,
+            "iee_eur": 2.20,
+            "iva_eur": 44.26,
+            "iva_rate": 0.10,
+            "vat_base_eur": 442.61,
+            "start_date": date(2026, 4, 1),
+            "end_date": date(2026, 4, 30),
+        }
+        result = aggregate_bills([standard, reduced], country_code="ES")
+        expected = (2455 * 1.27186 + 1898 * 1.10550) / (2455 + 1898)
+        assert result["marginal_price_factor"] == pytest.approx(expected, abs=0.001)
+        # Ambas facturas derivan sus tipos de las propias líneas
+        assert result["tax_rates_source"] == "bill"
+
+    def test_non_spanish_bills_without_tax_lines_have_no_factor(self):
+        bill = {"kwh": 300, "energy_eur": 60.0, "month": 1}
+        result = aggregate_bills([bill], country_code="DE")
+        assert result["marginal_price_factor"] is None
+        assert result["marginal_price_eur_kwh"] is None
+
+    def test_non_spanish_bills_with_itemised_lines_derive_factor(self):
+        # La derivación por líneas es válida en cualquier país
+        bill = self._bill()
+        result = aggregate_bills([bill], country_code="DE")
+        assert result["marginal_price_factor"] == pytest.approx(1.2719, abs=0.001)

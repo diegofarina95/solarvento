@@ -169,6 +169,27 @@ _TAX_CHARGE_LABELS = [
     r"steuer",
 ]
 
+# Líneas necesarias para derivar el coste marginal evitado por factura:
+# IEE_rate ≈ impuesto eléctrico / (término energía + término potencia)
+# IVA_rate ≈ IVA / base imponible (o el % impreso en la etiqueta)
+_POWER_CHARGE_LABELS = [
+    r"t[ée]rmino\s+de\s+potencia",
+    r"potencia\s+contratada",
+]
+
+_IEE_LABELS = [
+    r"impuesto\s+(?:especial\s+)?(?:sobre\s+la\s+)?electricidad",
+    r"impuesto\s+el[ée]ctrico",
+]
+
+# Si el IEE viene agrupado con otros conceptos ("y cargos regulados"), el
+# importe no sirve para derivar el tipo: se cae al fallback normativo.
+_IEE_LUMPED_LABELS = [r"cargos", r"regulad"]
+
+_VAT_BASE_LABELS = [r"base\s+imponible"]
+
+_IVA_AMOUNT_LABELS = [r"\biva\b"]
+
 _CHARGE_EXCLUDE_LABELS = [
     r"total",
     r"importe\s+total",
@@ -486,10 +507,13 @@ def _line_matches_any(line: str, patterns: list[str]) -> bool:
     return any(re.search(pattern, line, re.IGNORECASE) for pattern in patterns)
 
 
-def _find_charge_amount(text: str, labels: list[str]) -> float | None:
+def _find_charge_amount(
+    text: str, labels: list[str], exclude: list[str] | None = None
+) -> float | None:
     lines = _clean_lines(text)
     values: list[float] = []
     seen: set[float] = set()
+    exclude_labels = _CHARGE_EXCLUDE_LABELS + (exclude or [])
 
     def add_amounts(amounts: list[float]) -> None:
         for amount in amounts:
@@ -501,7 +525,7 @@ def _find_charge_amount(text: str, labels: list[str]) -> float | None:
 
     for index, line in enumerate(lines):
         normalized = line.strip()
-        if _line_matches_any(normalized, _CHARGE_EXCLUDE_LABELS):
+        if _line_matches_any(normalized, exclude_labels):
             continue
         if not _line_matches_any(normalized, labels):
             continue
@@ -513,7 +537,7 @@ def _find_charge_amount(text: str, labels: list[str]) -> float | None:
 
         lookahead: list[float] = []
         for next_line in lines[index + 1:index + 4]:
-            if _line_matches_any(next_line, _CHARGE_EXCLUDE_LABELS):
+            if _line_matches_any(next_line, exclude_labels):
                 break
             if _line_matches_any(next_line, _ENERGY_CHARGE_LABELS + _FIXED_CHARGE_LABELS + _TAX_CHARGE_LABELS):
                 break
@@ -525,6 +549,15 @@ def _find_charge_amount(text: str, labels: list[str]) -> float | None:
             add_amounts([lookahead[-1]])
 
     return round(sum(values), 2) if values else None
+
+
+def _find_iva_rate(text: str) -> float | None:
+    """Tipo de IVA impreso en la etiqueta, p. ej. 'IVA (21%)' → 0.21."""
+    match = re.search(r"\biva\b[^\n%]{0,15}?(\d{1,2}(?:[.,]\d+)?)\s*%", text, re.IGNORECASE)
+    if not match:
+        return None
+    rate = _to_float(match.group(1)) / 100
+    return round(rate, 4) if 0.0 < rate <= 0.30 else None
 
 
 def _period_end_exclusive(start: date, end: date) -> bool:
@@ -609,6 +642,11 @@ def parse_bill_text(text: str) -> dict:
         "fixed_eur": None,
         "taxes_eur": None,
         "total_eur": None,
+        "power_eur": None,
+        "iee_eur": None,
+        "iva_eur": None,
+        "iva_rate": None,
+        "vat_base_eur": None,
         "currency": _detect_currency(text),
         "month": None,
         "start_date": None,
@@ -633,6 +671,12 @@ def parse_bill_text(text: str) -> dict:
     result["energy_eur"] = _find_charge_amount(text, _ENERGY_CHARGE_LABELS)
     result["fixed_eur"] = _find_charge_amount(text, _FIXED_CHARGE_LABELS)
     result["taxes_eur"] = _find_charge_amount(text, _TAX_CHARGE_LABELS)
+    # Líneas para derivar el coste marginal evitado (IEE + IVA por factura)
+    result["power_eur"] = _find_charge_amount(text, _POWER_CHARGE_LABELS)
+    result["iee_eur"] = _find_charge_amount(text, _IEE_LABELS, exclude=_IEE_LUMPED_LABELS)
+    result["iva_eur"] = _find_charge_amount(text, _IVA_AMOUNT_LABELS)
+    result["iva_rate"] = _find_iva_rate(text)
+    result["vat_base_eur"] = _find_charge_amount(text, _VAT_BASE_LABELS)
 
     # --- kWh: consumo del periodo > diferencia de lecturas > kWh no acumulados ---
     period_candidates = _period_consumption_candidates(text)
@@ -739,7 +783,100 @@ def _estimate_monthly_from_samples(
     return round(sum(monthly), 1), monthly, [m + 1 for m in observed]
 
 
-def aggregate_bills(bills: list[dict], default_currency: str | None = None) -> dict:
+# --- Coste marginal evitado: IEE + IVA derivados por factura -----------------
+#
+# El término de energía de la factura va sin impuestos. Cada kWh autoconsumido
+# evita también el impuesto eléctrico (IEE) y el IVA que se aplicarían sobre él,
+# así que el ahorro debe valorarse al coste marginal:
+#   marginal = precio_energía × (1 + IEE) × (1 + IVA)
+# Los tipos NO se fijan como constantes: cambiaron a mitad de 2026 y pueden
+# volver a cambiar. Se derivan de las líneas detalladas de cada factura y, solo
+# si faltan, se cae a los tipos normativos vigentes en el periodo facturado.
+
+IEE_STANDARD_RATE = 0.0511269632
+IEE_REDUCED_RATE = 0.005
+IVA_STANDARD_RATE = 0.21
+IVA_REDUCED_RATE = 0.10
+# Rebaja temporal española: devengos del 22-mar-2026 al 31-may-2026.
+# (El IVA al 10% exigía potencia contratada ≤ 10 kW: se asume, esta calculadora
+# es residencial. Una posible reaparición del 10% en ago-sep 2026 era
+# condicional: se prefiere siempre el valor derivado de la propia factura.)
+_ES_REDUCED_TAX_WINDOW = (date(2026, 3, 22), date(2026, 5, 31))
+
+_IVA_KNOWN_RATES = (IVA_REDUCED_RATE, IVA_STANDARD_RATE)
+
+
+def _statutory_rates_es(period_mid: date | None) -> tuple[float, float]:
+    """(IEE, IVA) normativos para el periodo facturado; estándar si no hay fecha."""
+    if period_mid and _ES_REDUCED_TAX_WINDOW[0] <= period_mid <= _ES_REDUCED_TAX_WINDOW[1]:
+        return IEE_REDUCED_RATE, IVA_REDUCED_RATE
+    return IEE_STANDARD_RATE, IVA_STANDARD_RATE
+
+
+def _bill_period_mid(bill: dict) -> date | None:
+    start, end = bill.get("start_date"), bill.get("end_date")
+    if start and end:
+        return start + (end - start) / 2
+    return None
+
+
+def _derived_iva_rate(bill: dict) -> float | None:
+    """IVA de la factura: % impreso en la etiqueta o importe / base imponible."""
+    labelled = bill.get("iva_rate")
+    if labelled and 0.0 < float(labelled) <= 0.30:
+        return float(labelled)
+    iva, base = bill.get("iva_eur"), bill.get("vat_base_eur")
+    if not iva or not base:
+        return None
+    ratio = float(iva) / float(base)
+    # El cociente se ajusta al tipo legal más próximo (21% o 10%): el redondeo
+    # de importes en factura desplaza el cociente unas décimas.
+    nearest = min(_IVA_KNOWN_RATES, key=lambda rate: abs(rate - ratio))
+    if abs(nearest - ratio) <= 0.01:
+        return nearest
+    return round(ratio, 4) if 0.03 <= ratio <= 0.30 else None
+
+
+def _derived_iee_rate(bill: dict) -> float | None:
+    """IEE de la factura: impuesto eléctrico / (término energía + potencia)."""
+    iee, energy = bill.get("iee_eur"), bill.get("energy_eur")
+    if not iee or not energy:
+        return None
+    taxable = float(energy) + float(bill.get("power_eur") or 0.0)
+    if taxable <= 0:
+        return None
+    ratio = float(iee) / taxable
+    return ratio if 0.001 <= ratio <= 0.08 else None
+
+
+def derive_bill_tax_rates(bill: dict, country_code: str | None = None) -> dict | None:
+    """Tipos impositivos de una factura: derivados de sus líneas o normativos.
+
+    Devuelve {"iee_rate", "iva_rate", "source"} con source "bill" (ambos
+    derivados), "statutory" (ambos de la tabla por fechas) o "mixed".
+    Para países sin tabla normativa propia solo se derivan de las líneas.
+    """
+    iva = _derived_iva_rate(bill)
+    iee = _derived_iee_rate(bill)
+    if iva is not None and iee is not None:
+        return {"iee_rate": iee, "iva_rate": iva, "source": "bill"}
+    if (country_code or "").upper() != "ES" and (iva is None or iee is None):
+        # Sin tabla normativa fuera de España: exige ambas líneas en la factura
+        return None
+    statutory_iee, statutory_iva = _statutory_rates_es(_bill_period_mid(bill))
+    source = "statutory" if iva is None and iee is None else "mixed"
+    return {
+        "iee_rate": iee if iee is not None else statutory_iee,
+        "iva_rate": iva if iva is not None else statutory_iva,
+        "source": source,
+    }
+
+
+def aggregate_bills(
+    bills: list[dict],
+    default_currency: str | None = None,
+    country_code: str | None = None,
+) -> dict:
     """Agrega facturas a consumo anual, gasto total y precio variable medio.
 
     Cada factura: {kwh, energy_eur/total_eur/amount_eur (opcional), month (opcional),
@@ -761,6 +898,9 @@ def aggregate_bills(bills: list[dict], default_currency: str | None = None) -> d
     monthly_total_amount = [0.0] * 12
     monthly_total_amount_days = [0.0] * 12
     currencies: list[str] = []
+    tax_factor_weighted = 0.0
+    tax_factor_kwh = 0.0
+    tax_sources: set[str] = set()
 
     for bill in bills:
         kwh = float(bill["kwh"])
@@ -801,6 +941,13 @@ def aggregate_bills(bills: list[dict], default_currency: str | None = None) -> d
                 total_variable_amount += variable_amount
                 kwh_with_variable_amount += kwh
                 priced_bill_count += 1
+                # Coste marginal evitado: tipos de ESTA factura, ponderados por kWh
+                rates = derive_bill_tax_rates(bill, country_code)
+                if rates is not None:
+                    factor = (1 + rates["iee_rate"]) * (1 + rates["iva_rate"])
+                    tax_factor_weighted += kwh * factor
+                    tax_factor_kwh += kwh
+                    tax_sources.add(rates["source"])
         if total_amount is not None:
             total_bill_amount += total_amount
             total_amount_days += days
@@ -839,6 +986,20 @@ def aggregate_bills(bills: list[dict], default_currency: str | None = None) -> d
         if kwh_with_variable_amount > 0
         else None
     )
+    marginal_factor = (
+        round(tax_factor_weighted / tax_factor_kwh, 4) if tax_factor_kwh > 0 else None
+    )
+    marginal_price = (
+        round(price * marginal_factor, 4)
+        if price is not None and marginal_factor is not None
+        else None
+    )
+    if not tax_sources:
+        tax_rates_source = None
+    elif len(tax_sources) == 1:
+        tax_rates_source = next(iter(tax_sources))
+    else:
+        tax_rates_source = "mixed"
 
     annual_amount = None
     monthly_amount = None
@@ -862,6 +1023,9 @@ def aggregate_bills(bills: list[dict], default_currency: str | None = None) -> d
         "annual_kwh": round(annual_kwh, 1),
         "avg_price_eur_kwh": price,
         "avg_price_kwh": price,
+        "marginal_price_eur_kwh": marginal_price,
+        "marginal_price_factor": marginal_factor,
+        "tax_rates_source": tax_rates_source,
         "annual_amount_eur": annual_amount,
         "annual_amount": annual_amount,
         "monthly_eur": monthly_amount,

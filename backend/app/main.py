@@ -432,6 +432,7 @@ def _resolve_consumption(
             agg = bills_mod.aggregate_bills(
                 [b.model_dump() for b in req.bills],
                 default_currency=default_currency,
+                country_code=country_code,
             )
         except bills_mod.BillParseError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -440,6 +441,9 @@ def _resolve_consumption(
             "source": "bills",
             "avg_price_eur_kwh": agg["avg_price_eur_kwh"],
             "avg_price_kwh": agg["avg_price_kwh"],
+            "marginal_price_eur_kwh": agg["marginal_price_eur_kwh"],
+            "marginal_price_factor": agg["marginal_price_factor"],
+            "tax_rates_source": agg["tax_rates_source"],
             "bill_count": agg["bill_count"],
             "priced_bill_count": agg["priced_bill_count"],
             "total_amount_bill_count": agg["total_amount_bill_count"],
@@ -892,11 +896,18 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         price_quote.get("electricity_price_kwh") or settings.electricity_price_eur_kwh,
     )
     # El término de energía de las facturas va sin impuestos: cada kWh
-    # autoconsumido evita también impuesto eléctrico + IVA. Los precios por
-    # defecto ya los incluyen y el manual se asume final.
-    marginal_price_factor = (
-        price_quote.get("electricity_tax_factor", 1.0) if price_source == "bills" else 1.0
-    )
+    # autoconsumido evita también impuesto eléctrico + IVA (coste marginal
+    # evitado). Los tipos se derivan de las propias facturas (o de la tabla
+    # normativa por fechas); la tabla fija por país queda como último recurso
+    # para facturas sin datos de países sin tabla normativa propia. Los precios
+    # por defecto ya incluyen impuestos y el manual se asume final.
+    if price_source == "bills":
+        marginal_price_factor = (
+            (consumption_summary or {}).get("marginal_price_factor")
+            or price_quote.get("electricity_tax_factor", 1.0)
+        )
+    else:
+        marginal_price_factor = 1.0
     effective_price = round(price * marginal_price_factor, 4)
     _attach_consumption_costs(consumption_summary, effective_price)
 
@@ -918,13 +929,9 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         else price_quote["surplus_price_eur_kwh"]
     )
     export_scheme = price_quote.get("export_scheme", "capped_compensation")
-    # En esquemas que descuentan de la factura, la compensación reduce también
-    # la base imponible; en feed-in/mercado el vertido es un ingreso sin IVA evitado.
-    effective_surplus = (
-        round(surplus_price * marginal_price_factor, 4)
-        if export_scheme in ("capped_compensation", "net_metering")
-        else surplus_price
-    )
+    # El excedente se paga a la tarifa de compensación tal cual (con su tope
+    # mensual): el factor fiscal solo aplica al kWh autoconsumido evitado.
+    effective_surplus = surplus_price
     subsidy = req.subsidy_eur or 0.0
     om_eur = round(cost * cashflow.OM_PCT_PER_YEAR, 2)
     inverter_replacement_cost = round(

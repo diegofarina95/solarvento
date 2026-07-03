@@ -34,6 +34,20 @@ class BillInput(BaseModel):
         le=10000,
         description="Total final de la factura, en la moneda local.",
     )
+    # Líneas detalladas para derivar el coste marginal evitado (IEE + IVA)
+    power_eur: float | None = Field(
+        None, ge=0, le=10000, description="Término de potencia del periodo."
+    )
+    iee_eur: float | None = Field(
+        None, ge=0, le=10000, description="Impuesto especial sobre la electricidad."
+    )
+    iva_eur: float | None = Field(None, ge=0, le=10000, description="Importe de IVA.")
+    iva_rate: float | None = Field(
+        None, ge=0, le=0.3, description="Tipo de IVA impreso en la factura (0-0.3)."
+    )
+    vat_base_eur: float | None = Field(
+        None, ge=0, le=100000, description="Base imponible del IVA."
+    )
     currency: str | None = Field(None, min_length=3, max_length=3)
     # Alias histórico. Se conserva para clientes antiguos, pero el precio
     # marginal solo usa energy_eur.
@@ -194,6 +208,10 @@ class ConsumptionSummary(BaseModel):
     source: str  # 'bills' | 'input'
     avg_price_eur_kwh: float | None = None
     avg_price_kwh: float | None = None
+    # Coste marginal evitado derivado de las facturas (término energía × IEE × IVA)
+    marginal_price_eur_kwh: float | None = None
+    marginal_price_factor: float | None = None
+    tax_rates_source: str | None = None  # 'bill' | 'statutory' | 'mixed'
     bill_count: int = 0
     priced_bill_count: int = 0
     total_amount_bill_count: int = 0
@@ -334,6 +352,11 @@ class ParsedBill(BaseModel):
     fixed_eur: float | None = None
     taxes_eur: float | None = None
     total_eur: float | None = None
+    power_eur: float | None = None
+    iee_eur: float | None = None
+    iva_eur: float | None = None
+    iva_rate: float | None = None
+    vat_base_eur: float | None = None
     currency: str | None = None
     month: int | None = None
     start_date: date | None = None
