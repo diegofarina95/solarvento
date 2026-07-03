@@ -40,7 +40,7 @@ class PricingService:
         self.cache.close()
 
     async def get_prices(self, country: Country, *, force_refresh: bool = False) -> dict[str, Any]:
-        key = f"pricing:{country.code}:v5"  # v5: +export_scheme, precios 2025 revisados
+        key = f"pricing:{country.code}:v6"  # v6: precios verificados con fuentes jul-2026
         if not force_refresh:
             cached = self.cache.get(key)
             if cached is not None:

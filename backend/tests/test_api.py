@@ -99,12 +99,12 @@ def test_solar_estimate_basic_mode(respx_mock, client):
     assert data["economics"]["electricity_price_eur_kwh"] == 0.17
     assert data["economics"]["electricity_price_source"] == "default"
     assert data["economics"]["annual_savings_eur"] > 0
-    # Sin coste indicado se estima por kWp (5 kWp × 1250 €)
-    assert data["economics"]["installation_cost_eur"] == 6250.0
+    # Sin coste indicado se estima por kWp (ES verificado jul-2026: 800/1100/1500)
+    assert data["economics"]["installation_cost_eur"] == 5500.0
     assert data["economics"]["installation_cost_range_eur"] == {
-        "low": 5250.0,
-        "medium": 6250.0,
-        "high": 7250.0,
+        "low": 4000.0,
+        "medium": 5500.0,
+        "high": 7500.0,
     }
     assert data["economics"]["cost_is_estimated"] is True
     assert data["economics"]["roi_pct"] is not None
@@ -112,7 +112,7 @@ def test_solar_estimate_basic_mode(respx_mock, client):
     assert data["pricing"]["country_code"] == "ES"
     assert data["pricing"]["source_type"] == "market_average"
     assert data["pricing"]["fallback_used"] is True
-    assert data["pricing"]["turnkey_cost_per_kwp"]["medium"] == 1250.0
+    assert data["pricing"]["turnkey_cost_per_kwp"]["medium"] == 1100.0
     assert data["pricing"]["battery_cost_per_kwh"]["medium"] == 650.0
     assert data["panels"] is None
     # Sin consumo no hay simulación de baterías
@@ -266,7 +266,7 @@ def test_solar_estimate_january_june_bills_regression(respx_mock, client):
 
     # El coste estimado, la simulación horaria y la amortización usan la potencia recomendada.
     assert data["economics"]["installation_cost_eur"] == pytest.approx(
-        data["analysis_power_kwp"] * 1250
+        data["analysis_power_kwp"] * 1100
     )
     assert data["economics"]["installation_cost_range_eur"]["medium"] == pytest.approx(
         data["analysis_power_kwp"] * data["pricing"]["turnkey_cost_per_kwp"]["medium"]

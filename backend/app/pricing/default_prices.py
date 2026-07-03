@@ -9,7 +9,7 @@ from datetime import date
 from typing import Any
 
 
-DEFAULT_PRICE_REVIEW_DATE = date(2026, 7, 2)
+DEFAULT_PRICE_REVIEW_DATE = date(2026, 7, 3)
 
 
 def price_range(low: float, medium: float, high: float) -> dict[str, float]:
@@ -25,7 +25,7 @@ DEFAULT_PRICING_BY_COUNTRY: dict[str, dict[str, Any]] = {
         "battery_price_per_kwh": price_range(550, 650, 780),
         "mounting_price_per_kwp": price_range(140, 190, 260),
         "labour_price_per_kwp": price_range(260, 360, 500),
-        "turnkey_cost_per_kwp": price_range(1050, 1250, 1450),
+        "turnkey_cost_per_kwp": price_range(800, 1100, 1500),
         "installation_labour_factor": 0.30,
         "surplus_price_eur_kwh": 0.06,
         "electricity_price_kwh": 0.17,
@@ -39,9 +39,9 @@ DEFAULT_PRICING_BY_COUNTRY: dict[str, dict[str, Any]] = {
         "battery_price_per_kwh": price_range(650, 790, 950),
         "mounting_price_per_kwp": price_range(180, 260, 360),
         "labour_price_per_kwp": price_range(420, 620, 850),
-        "turnkey_cost_per_kwp": price_range(1700, 2100, 2500),
+        "turnkey_cost_per_kwp": price_range(1400, 1900, 2500),
         "installation_labour_factor": 0.36,
-        "surplus_price_eur_kwh": 0.04,
+        "surplus_price_eur_kwh": 0.011,
         "electricity_price_kwh": 0.25,
         "export_scheme": "feed_in",
     },
@@ -53,7 +53,7 @@ DEFAULT_PRICING_BY_COUNTRY: dict[str, dict[str, Any]] = {
         "battery_price_per_kwh": price_range(620, 760, 950),
         "mounting_price_per_kwp": price_range(290, 360, 420),
         "labour_price_per_kwp": price_range(90, 110, 150),
-        "turnkey_cost_per_kwp": price_range(1360, 1600, 1890),
+        "turnkey_cost_per_kwp": price_range(1300, 1900, 2500),
         "installation_labour_factor": 0.18,
         "surplus_price_eur_kwh": 0.1,
         "electricity_price_kwh": 0.31,
@@ -67,9 +67,9 @@ DEFAULT_PRICING_BY_COUNTRY: dict[str, dict[str, Any]] = {
         "battery_price_per_kwh": price_range(500, 620, 780),
         "mounting_price_per_kwp": price_range(160, 240, 330),
         "labour_price_per_kwp": price_range(430, 600, 850),
-        "turnkey_cost_per_kwp": price_range(1300, 1550, 1850),
+        "turnkey_cost_per_kwp": price_range(1000, 1300, 1600),
         "installation_labour_factor": 0.39,
-        "surplus_price_eur_kwh": 0.079,
+        "surplus_price_eur_kwh": 0.078,
         "electricity_price_kwh": 0.39,
         "export_scheme": "feed_in",
     },
@@ -81,7 +81,7 @@ DEFAULT_PRICING_BY_COUNTRY: dict[str, dict[str, Any]] = {
         "battery_price_per_kwh": price_range(560, 670, 820),
         "mounting_price_per_kwp": price_range(145, 200, 280),
         "labour_price_per_kwp": price_range(260, 380, 540),
-        "turnkey_cost_per_kwp": price_range(1050, 1300, 1550),
+        "turnkey_cost_per_kwp": price_range(900, 1100, 1300),
         "installation_labour_factor": 0.31,
         "surplus_price_eur_kwh": 0.05,
         "electricity_price_kwh": 0.19,
@@ -95,9 +95,9 @@ DEFAULT_PRICING_BY_COUNTRY: dict[str, dict[str, Any]] = {
         "battery_price_per_kwh": price_range(700, 900, 1150),
         "mounting_price_per_kwp": price_range(170, 250, 360),
         "labour_price_per_kwp": price_range(500, 720, 980),
-        "turnkey_cost_per_kwp": price_range(1375, 1700, 2200),
+        "turnkey_cost_per_kwp": price_range(1200, 1550, 1700),
         "installation_labour_factor": 0.42,
-        "surplus_price_eur_kwh": 0.1,
+        "surplus_price_eur_kwh": 0.15,
         "electricity_price_kwh": 0.27,
         "export_scheme": "feed_in",
     },
@@ -191,6 +191,20 @@ _MARKET_TIERS_EUR = {
         "turnkey_cost_per_kwp": price_range(1700, 2200, 2800),
         "installation_labour_factor": 0.41,
     },
+}
+
+
+# Rangos llave en mano verificados con fuentes de mercado (jul-2026), en
+# moneda local; tienen prioridad sobre el tier genérico del país.
+# NL/BE: comparadores nacionales; AT: Dachgold; IE: GES/PureVolt (sin restar
+# subvención SEAI); PL: Aforenergy; SE: HemSol (antes de grönt avdrag).
+_TURNKEY_OVERRIDES = {
+    "NL": price_range(1000, 1250, 1500),
+    "BE": price_range(1000, 1400, 1800),
+    "AT": price_range(1100, 1560, 1800),
+    "IE": price_range(1400, 1700, 2000),
+    "PL": price_range(4000, 5000, 6000),
+    "SE": price_range(9000, 13000, 18000),
 }
 
 
@@ -357,7 +371,7 @@ def export_scheme_for(country_code: str) -> str:
 _SURPLUS_PRICE_EUR_KWH = {
     "AL": 0.04,
     "AD": 0.05,
-    "AT": 0.06,
+    "AT": 0.068,
     "BY": 0.03,
     "BE": 0.04,
     "BA": 0.04,
@@ -384,14 +398,14 @@ _SURPLUS_PRICE_EUR_KWH = {
     "NL": 0.05,
     "MK": 0.04,
     "NO": 0.04,
-    "PL": 0.05,
+    "PL": 0.088,  # net-billing RCE media 2025 ~0,38 zł/kWh
     "RO": 0.05,
     "RU": 0.03,
     "SM": 0.06,
     "RS": 0.04,
     "SK": 0.05,
     "SI": 0.06,
-    "SE": 0.05,
+    "SE": 0.062,  # spot+prima ~0,7 kr/kWh (skattereduktion eliminada 2026)
     "CH": 0.07,
     "TR": 0.04,
     "UA": 0.04,
@@ -418,7 +432,9 @@ def _country_market_average(country_code: str, tier: str) -> dict[str, Any]:
         "battery_price_per_kwh": _scale_range(base["battery_price_per_kwh"], factor),
         "mounting_price_per_kwp": _scale_range(base["mounting_price_per_kwp"], factor),
         "labour_price_per_kwp": _scale_range(base["labour_price_per_kwp"], factor),
-        "turnkey_cost_per_kwp": _scale_range(base["turnkey_cost_per_kwp"], factor),
+        "turnkey_cost_per_kwp": _TURNKEY_OVERRIDES.get(
+            country_code, _scale_range(base["turnkey_cost_per_kwp"], factor)
+        ),
         "installation_labour_factor": base["installation_labour_factor"],
         # Surplus y precio eléctrico también en moneda local: sin escalar, en
         # países sin euro se mezclaban EUR con PLN/CZK/SEK en la economía.

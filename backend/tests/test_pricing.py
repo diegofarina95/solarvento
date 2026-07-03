@@ -89,7 +89,8 @@ async def test_pricing_service_uses_country_market_average_without_feed(tmp_path
     assert quote["country_code"] == "BE"
     assert quote["source_type"] == "market_average"
     assert quote["fallback_used"] is True
-    assert quote["turnkey_cost_per_kwp"]["medium"] == 1900.0
+    # BE verificado jul-2026 (comparadores nacionales): 1000/1400/1800
+    assert quote["turnkey_cost_per_kwp"]["medium"] == 1400.0
     assert quote["provider_names"]
 
 
