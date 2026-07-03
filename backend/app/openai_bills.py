@@ -30,8 +30,10 @@ Rules:
 - Extract the billing period start and end dates as YYYY-MM-DD. Set month to the midpoint month of
   that period, or the invoice month if no period is clear.
 - Extract the country of the supply/invoice as an ISO 3166-1 alpha-2 code. Use GB for the United Kingdom.
-- Extract the supply/service address when present. Prefer the address where electricity is consumed,
-  not the supplier's office address. Do not invent an address.
+- Extract the SUPPLY-POINT address ("dirección/lugar/punto de suministro"), the place where the
+  electricity is consumed. If the bill shows both a supply address and a billing/fiscal address
+  ("dirección fiscal / de facturación"), ALWAYS use the supply one — they can differ. Never use the
+  supplier's office address. Do not invent an address.
 - Extract postal code, city and region/state if clear. Use null when absent or uncertain.
 - Extract the main language as a two-letter code when clear.
 - Extract the contracted-power charge (término de potencia) as power_eur, the electricity excise

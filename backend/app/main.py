@@ -27,6 +27,7 @@ from .pricing import (
 )
 from .profiles import DAYS_PER_MONTH, consumption_profile
 from .pvgis import PVGISClient, PVGISError
+from .spain_postal import province_from_postal_code
 from .ratelimit import RateLimiter
 from .schemas import (
     GeocodeResult,
@@ -331,6 +332,7 @@ def _merge_bill_context(target: dict, source: dict | None) -> None:
         "city",
         "region",
         "location_label",
+        "location_confidence",
         "lat",
         "lon",
     ):
@@ -356,26 +358,51 @@ def _bill_location_query(parsed: dict) -> str | None:
     return query or None
 
 
+def _apply_postal_fallback(parsed: dict) -> dict:
+    """Sin geocodificar: sesga el mapa al centroide provincial del CP español.
+
+    Baja confianza; solo para CP que mapean a provincia ES (evita colisión con
+    CP de otros países). No fuerza país si ya viene otro.
+    """
+    if normalize_country_code(parsed.get("country_code") or "ES") not in ("ES", "EU"):
+        return parsed
+    province = province_from_postal_code(parsed.get("postal_code"))
+    if not province:
+        return parsed
+    name, lat, lon = province
+    parsed["lat"] = lat
+    parsed["lon"] = lon
+    parsed["location_label"] = f"{name} ({parsed.get('postal_code')})"
+    parsed["location_confidence"] = "low"
+    parsed["country_code"] = parsed.get("country_code") or "ES"
+    return parsed
+
+
 async def _enrich_bill_location(parsed: dict) -> dict:
-    """Attach coordinates to parsed bills when the invoice contains an address."""
+    """Attach coordinates to parsed bills when the invoice contains an address.
+
+    Prefers a precise geocode of the supply address; if that fails but a Spanish
+    postal code parsed, biases the map to the province centroid (low confidence).
+    """
     if _is_european_geocode_result(parsed):
+        parsed.setdefault("location_confidence", "high")
         return parsed
     parsed.pop("lat", None)
     parsed.pop("lon", None)
 
     query = _bill_location_query(parsed)
     if not query:
-        return parsed
+        return _apply_postal_fallback(parsed)
 
     try:
         candidates = await app.state.nominatim.search(query, limit=5)
     except GeocodeError as exc:
         logger.warning("Bill address geocoding failed: %s", exc)
-        return parsed
+        return _apply_postal_fallback(parsed)
 
     candidates = _european_geocode_results(candidates)
     if not candidates:
-        return parsed
+        return _apply_postal_fallback(parsed)
 
     country_code = parsed.get("country_code")
     normalized_country = normalize_country_code(country_code) if country_code else None
@@ -390,11 +417,12 @@ async def _enrich_bill_location(parsed: dict) -> dict:
             None,
         )
         if not selected:
-            return parsed
+            return _apply_postal_fallback(parsed)
     selected = selected or candidates[0]
     parsed["lat"] = round(float(selected["lat"]), 6)
     parsed["lon"] = round(float(selected["lon"]), 6)
     parsed["location_label"] = selected.get("display_name")
+    parsed["location_confidence"] = "high"
     if selected.get("country_code") and not parsed.get("country_code"):
         parsed["country_code"] = selected["country_code"]
     return parsed

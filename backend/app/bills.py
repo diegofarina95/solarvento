@@ -14,6 +14,7 @@ from datetime import date, timedelta
 from pypdf import PdfReader
 
 from .profiles import DAYS_PER_MONTH, MONTHLY_WEIGHTS
+from .spain_postal import province_from_postal_code
 
 logger = logging.getLogger(__name__)
 
@@ -664,6 +665,51 @@ def _find_charge_amount(
     return round(sum(values), 2) if values else None
 
 
+_SUPPLY_ADDRESS_LABELS = (
+    r"(?:punto|direcci[oó]n|lugar|domicilio)\s+de\s+suministro"
+    r"|punto\s+de\s+suministro"
+)
+_FISCAL_ADDRESS_LABELS = (
+    r"direcci[oó]n\s+fiscal|domicilio\s+fiscal|direcci[oó]n\s+de\s+facturaci[oó]n"
+)
+_SPANISH_CP_RE = re.compile(r"\b(\d{5})\b")
+
+
+def _find_supply_location(text: str) -> dict | None:
+    """Domicilio del PUNTO DE SUMINISTRO, con preferencia sobre el fiscal.
+
+    Devuelve {postal_code, city, supply_address, source}. El CP (5 dígitos) es
+    el ancla; se busca primero junto a una etiqueta de suministro, luego junto a
+    una fiscal, y por último el primero del documento.
+    """
+    for label, source in (
+        (_SUPPLY_ADDRESS_LABELS, "supply"),
+        (_FISCAL_ADDRESS_LABELS, "fiscal"),
+        (None, "any"),
+    ):
+        if label is not None:
+            match = re.search(label, text, re.IGNORECASE)
+            if not match:
+                continue
+            window = text[match.start(): match.end() + 160]
+        else:
+            window = text
+        cp_match = _SPANISH_CP_RE.search(window)
+        if not cp_match:
+            continue
+        cp = cp_match.group(1)
+        after = window[cp_match.end():cp_match.end() + 60]
+        city_match = re.match(r"[\s,]*([A-Za-zÁÉÍÓÚÑáéíóúñ'.\- ]{2,40})", after)
+        city = city_match.group(1).strip(" ,.-\n") if city_match else None
+        return {
+            "postal_code": cp,
+            "city": city or None,
+            "supply_address": " ".join(window.split())[:120],
+            "source": source,
+        }
+    return None
+
+
 def _find_contracted_power_kw(text: str) -> float | None:
     """Potencia contratada en kW (la mayor entre punta/valle si difieren)."""
     values = []
@@ -789,6 +835,7 @@ def parse_bill_text(text: str) -> dict:
         "city": None,
         "region": None,
         "location_label": None,
+        "location_confidence": None,
         "lat": None,
         "lon": None,
         "language": _detect_from_hints(text, LANGUAGE_HINTS),
@@ -810,6 +857,21 @@ def parse_bill_text(text: str) -> dict:
     result["vat_base_eur"] = _find_charge_amount(text, _VAT_BASE_LABELS)
     result["contracted_power_kw"] = _find_contracted_power_kw(text)
     result["consumption_history"] = parse_consumption_history(text)
+
+    # Domicilio del punto de suministro (preferido sobre el fiscal) para geocodar
+    supply = _find_supply_location(text)
+    if supply:
+        result["postal_code"] = supply["postal_code"]
+        result["city"] = result["city"] or supply["city"]
+        result["supply_address"] = supply["supply_address"]
+        province = province_from_postal_code(supply["postal_code"])
+        # El CP fija país=ES solo en contexto español (evita colisión con CP de
+        # otros países que comparten los dos primeros dígitos, p. ej. FR 33xxx).
+        if province and result["country_code"] in (None, "ES") and (
+            result["country_code"] == "ES" or result["language"] == "es"
+        ):
+            result["country_code"] = "ES"
+            result["region"] = result["region"] or province[0]
 
     # --- kWh: consumo del periodo > diferencia de lecturas > kWh no acumulados ---
     period_candidates = _period_consumption_candidates(text)

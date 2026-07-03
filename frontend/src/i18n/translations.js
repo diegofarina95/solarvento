@@ -138,6 +138,10 @@ export const translations = {
       noResults: 'Sin resultados. Prueba con otro término.',
       defaultHint: 'Haz clic en el mapa o arrastra el marcador para elegir el punto.',
       fromBillCountry: ({ country }) => `Ubicación aproximada detectada desde la factura: ${country}.`,
+      detectedFromBill: 'Ubicación detectada de la factura (editable).',
+      billSuggests: ({ city }) => `La factura indica ${city}.`,
+      useBill: 'Usar',
+      dismiss: 'Descartar',
     },
     form: {
       peakPower: 'Potencia pico (kWp)',
@@ -517,6 +521,10 @@ export const translations = {
       noResults: 'No results. Try another term.',
       defaultHint: 'Click the map or drag the marker to choose the point.',
       fromBillCountry: ({ country }) => `Approximate location detected from the bill: ${country}.`,
+      detectedFromBill: 'Location detected from the bill (editable).',
+      billSuggests: ({ city }) => `The bill indicates ${city}.`,
+      useBill: 'Use',
+      dismiss: 'Dismiss',
     },
     form: {
       peakPower: 'Peak power (kWp)',
@@ -896,6 +904,10 @@ export const translations = {
       noResults: 'Aucun résultat. Essayez un autre terme.',
       defaultHint: 'Cliquez sur la carte ou déplacez le marqueur pour choisir le point.',
       fromBillCountry: ({ country }) => `Emplacement approximatif détecté depuis la facture : ${country}.`,
+      detectedFromBill: 'Emplacement détecté depuis la facture (modifiable).',
+      billSuggests: ({ city }) => `La facture indique ${city}.`,
+      useBill: 'Utiliser',
+      dismiss: 'Ignorer',
     },
     form: {
       peakPower: 'Puissance crête (kWc)',
@@ -1275,6 +1287,10 @@ export const translations = {
       noResults: 'Nessun risultato. Prova un altro termine.',
       defaultHint: 'Clicca sulla mappa o trascina il marcatore per scegliere il punto.',
       fromBillCountry: ({ country }) => `Posizione approssimativa rilevata dalla bolletta: ${country}.`,
+      detectedFromBill: 'Posizione rilevata dalla bolletta (modificabile).',
+      billSuggests: ({ city }) => `La bolletta indica ${city}.`,
+      useBill: 'Usa',
+      dismiss: 'Ignora',
     },
     form: {
       peakPower: 'Potenza di picco (kWp)',

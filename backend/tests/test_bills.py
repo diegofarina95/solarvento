@@ -1033,3 +1033,39 @@ class TestConsolidatedMonthlyTable:
         assert history[3] == 2115
         assert history[7] == 1810
         assert parsed["kwh"] == 1810  # consumo del periodo intacto
+
+
+# --- FEATURE J: detección del domicilio de suministro ------------------------
+
+class TestSupplyAddressDetection:
+    def test_prefers_supply_over_fiscal_address(self):
+        text = """
+        Factura de electricidad Endesa
+        Periodo de facturación: del 01/01/2026 al 31/01/2026
+        Consumo en el periodo: 300 kWh
+        Dirección fiscal: Gran Vía 1, 28013 Madrid
+        Dirección de suministro: Lugar de Abaixo 12, 15896 Santiago de Compostela, A Coruña
+        TOTAL FACTURA 90,00 €
+        """
+        result = parse_bill_text(text)
+        # Gana el CP de suministro (15896), no el fiscal (28013 Madrid)
+        assert result["postal_code"] == "15896"
+        assert result["country_code"] == "ES"
+        assert "Santiago" in (result["city"] or "") or "Santiago" in result["supply_address"]
+
+    def test_postal_code_maps_to_province(self):
+        from app.spain_postal import province_from_postal_code
+        name, lat, lon = province_from_postal_code("15896")
+        assert name == "A Coruña"
+        assert 42.5 < lat < 43.8 and -9.5 < lon < -7.5
+        assert province_from_postal_code("75001") is None  # CP francés, fuera de 01-52
+
+    def test_spanish_cp_sets_country_only_in_spanish_context(self):
+        # Contexto español (Endesa/es) → CP fija país ES
+        es = parse_bill_text(
+            "Factura Endesa\nPeriodo del 01/01/2026 al 31/01/2026\n"
+            "Consumo en el periodo: 300 kWh\nSuministro: Rúa Nova 3, 36001 Pontevedra\n"
+            "Total factura 90,00 €"
+        )
+        assert es["postal_code"] == "36001"
+        assert es["country_code"] == "ES"

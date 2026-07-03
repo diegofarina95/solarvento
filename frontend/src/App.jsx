@@ -45,6 +45,10 @@ export default function App() {
   const [position, setPosition] = useState(INITIAL_POSITION)
   const [locationLabel, setLocationLabel] = useState(null)
   const [countryCode, setCountryCode] = useState('ES')
+  // 'initial' | 'manual' (usuario) | 'bill' (detectada de la factura)
+  const [locationSource, setLocationSource] = useState('initial')
+  // Sugerencia de ubicación de la factura cuando el usuario ya puso una a mano
+  const [billLocationSuggestion, setBillLocationSuggestion] = useState(null)
   const [advanced, setAdvanced] = useState(false)
   const [form, setForm] = useState({
     peakPower: '5',
@@ -90,35 +94,61 @@ export default function App() {
     setPosition({ lat, lon })
     setLocationLabel(label ?? null)
     if (detectedCountry) setCountryCode(normalizeCountryCode(detectedCountry))
+    setLocationSource('manual')
+    setBillLocationSuggestion(null)
   }
 
-  function handleBillLocationDetected(parsedBill) {
-    const detectedCountry = parsedBill?.country_code
-    const normalizedCountry = detectedCountry ? normalizeCountryCode(detectedCountry) : null
-    if (normalizedCountry) setCountryCode(normalizedCountry)
-
+  // Traduce una factura a un objetivo de ubicación (o null si no hay pista).
+  function billLocationTarget(parsedBill) {
+    const normalizedCountry = parsedBill?.country_code
+      ? normalizeCountryCode(parsedBill.country_code)
+      : null
+    const cityLabel =
+      parsedBill?.location_label
+      ?? parsedBill?.supply_address
+      ?? [parsedBill?.postal_code, parsedBill?.city].filter(Boolean).join(' ')
+      ?? null
     const lat = Number(parsedBill?.lat)
     const lon = Number(parsedBill?.lon)
     if (isSupportedEuropeanLocation(lat, lon)) {
-      const billLocationLabel =
-        [parsedBill.postal_code, parsedBill.city].filter(Boolean).join(' ') || null
-      setPosition({ lat, lon })
-      setLocationLabel(
-        parsedBill.location_label
-          ?? parsedBill.supply_address
-          ?? billLocationLabel
-          ?? null,
-      )
-      return
+      return {
+        position: { lat, lon },
+        label: cityLabel,
+        country: normalizedCountry,
+        cityName: parsedBill?.city || cityLabel,
+        confidence: parsedBill?.location_confidence ?? 'high',
+      }
     }
-
     const center = normalizedCountry ? COUNTRY_MAP_CENTERS[normalizedCountry] : null
     if (center) {
-      setPosition(center)
-      setLocationLabel(
-        t('location.fromBillCountry', { country: t(`countries.${normalizedCountry}`) }),
-      )
+      return {
+        position: center,
+        label: t('location.fromBillCountry', { country: t(`countries.${normalizedCountry}`) }),
+        country: normalizedCountry,
+        cityName: t(`countries.${normalizedCountry}`),
+        confidence: 'low',
+      }
     }
+    return null
+  }
+
+  function applyLocationTarget(target) {
+    if (target.country) setCountryCode(target.country)
+    setPosition(target.position)
+    setLocationLabel(target.label ?? null)
+    setLocationSource('bill')
+    setBillLocationSuggestion(null)
+  }
+
+  function handleBillLocationDetected(parsedBill) {
+    const target = billLocationTarget(parsedBill)
+    if (!target) return
+    // No pisar una ubicación puesta a mano: ofrecer usarla en un aviso.
+    if (locationSource === 'manual') {
+      setBillLocationSuggestion(target)
+      return
+    }
+    applyLocationTarget(target)
   }
 
   async function calculate() {
@@ -299,6 +329,35 @@ export default function App() {
                 ({position.lat.toFixed(4)}, {position.lon.toFixed(4)})
               </span>
             </p>
+            {locationSource === 'bill' && (
+              <p className="mt-1 text-xs font-medium text-emerald-700">
+                {t('location.detectedFromBill')}
+              </p>
+            )}
+            {billLocationSuggestion && (
+              <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                <span>
+                  {t('location.billSuggests', { city: billLocationSuggestion.cityName })}
+                </span>
+                <span className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => applyLocationTarget(billLocationSuggestion)}
+                    className="rounded bg-amber-200 px-2 py-0.5 font-semibold text-amber-900 hover:bg-amber-300"
+                  >
+                    {t('location.useBill')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBillLocationSuggestion(null)}
+                    className="text-amber-700 hover:text-amber-900"
+                    aria-label={t('location.dismiss')}
+                  >
+                    ✕
+                  </button>
+                </span>
+              </div>
+            )}
             <label className="mt-3 block">
               <span className="mb-1 block text-sm font-medium text-stone-700">
                 {t('countries.label')}

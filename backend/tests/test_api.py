@@ -1367,3 +1367,17 @@ def test_sizing_scenarios_flag_grid_oversize(respx_mock, client):
     assert cov["exceeds_contracted"] is True
     assert cov["exceeds_tariff"] is True
     assert opt["exceeds_tariff"] is False
+
+
+def test_apply_postal_fallback_uses_province_centroid():
+    """FEATURE J: si el geocodificado no da coordenadas, se usa el centroide del CP."""
+    from app.main import _apply_postal_fallback
+    parsed = {"postal_code": "15896", "country_code": "ES"}
+    out = _apply_postal_fallback(parsed)
+    assert 42.5 < out["lat"] < 43.8 and -9.5 < out["lon"] < -7.5
+    assert out["location_confidence"] == "low"
+    assert out["country_code"] == "ES"
+    # CP que no mapea (francés) no aplica fallback
+    assert _apply_postal_fallback({"postal_code": "75001", "country_code": "FR"}) == {
+        "postal_code": "75001", "country_code": "FR"
+    }

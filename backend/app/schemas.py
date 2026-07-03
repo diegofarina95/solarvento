@@ -450,6 +450,7 @@ class ParsedBill(BaseModel):
     city: str | None = None
     region: str | None = None
     location_label: str | None = None
+    location_confidence: str | None = None  # 'high' (geocoded) | 'low' (CP centroid)
     lat: float | None = None
     lon: float | None = None
     language: str | None = None
