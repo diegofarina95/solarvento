@@ -7,7 +7,12 @@ import httpx
 
 from ..cache import TTLCache
 from .countries import Country
-from .default_prices import DEFAULT_PRICE_REVIEW_DATE, DEFAULT_PRICING_BY_COUNTRY
+from .default_prices import (
+    DEFAULT_ELECTRICITY_TAX_FACTOR,
+    DEFAULT_PRICE_REVIEW_DATE,
+    DEFAULT_PRICING_BY_COUNTRY,
+    ELECTRICITY_TAX_FACTOR_BY_COUNTRY,
+)
 from .providers import ProviderPriceRecord, parse_provider_records, provider_names
 
 
@@ -40,7 +45,7 @@ class PricingService:
         self.cache.close()
 
     async def get_prices(self, country: Country, *, force_refresh: bool = False) -> dict[str, Any]:
-        key = f"pricing:{country.code}:v6"  # v6: precios verificados con fuentes jul-2026
+        key = f"pricing:{country.code}:v7"  # v7: factor fiscal del kWh evitado
         if not force_refresh:
             cached = self.cache.get(key)
             if cached is not None:
@@ -85,6 +90,9 @@ def _build_quote(country: Country, records: list[ProviderPriceRecord]) -> dict[s
         "surplus_price_eur_kwh": defaults["surplus_price_eur_kwh"],
         "electricity_price_kwh": defaults.get("electricity_price_kwh", 0.20),
         "export_scheme": defaults.get("export_scheme", "capped_compensation"),
+        "electricity_tax_factor": ELECTRICITY_TAX_FACTOR_BY_COUNTRY.get(
+            country.code, DEFAULT_ELECTRICITY_TAX_FACTOR
+        ),
         "source_type": "providers" if has_provider_records else "market_average",
         "fallback_used": not has_provider_records,
         "provider_names": _source_names(country.code, records),

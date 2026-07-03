@@ -244,6 +244,7 @@ class PricingSummary(BaseModel):
     surplus_price_eur_kwh: float
     electricity_price_kwh: float | None = None
     export_scheme: str = "capped_compensation"
+    electricity_tax_factor: float = 1.0
     system_cost_source: str
     battery_cost_source: str
     battery_option_costs: list[BatteryOptionCost] = Field(default_factory=list)

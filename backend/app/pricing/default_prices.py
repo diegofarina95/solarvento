@@ -118,6 +118,23 @@ DEFAULT_PRICING_BY_COUNTRY: dict[str, dict[str, Any]] = {
 }
 
 
+# Factor fiscal del kWh evitado: (1 + impuesto eléctrico) x (1 + IVA de la
+# electricidad). Se aplica SOLO cuando el precio €/kWh se deriva del término de
+# energía de las facturas (que va sin impuestos): cada kWh autoconsumido evita
+# también sus impuestos. Los impuestos por kWh (accisas) se aproximan como % del
+# precio doméstico medio del país. Solo países con dato verificado; el resto no
+# corrige (factor 1.0, comportamiento conservador).
+ELECTRICITY_TAX_FACTOR_BY_COUNTRY: dict[str, float] = {
+    "ES": 1.27,  # impuesto eléctrico 5,11% x IVA 21%
+    "PT": 1.23,  # IVA 23% (tramo general de energía)
+    "FR": 1.28,  # accise ~0,021 €/kWh (~8% del precio) x TVA 20%
+    "DE": 1.25,  # Stromsteuer 0,0205 €/kWh (~5%) x USt 19%
+    "IT": 1.18,  # accisa 0,0227 €/kWh (~7%) x IVA 10%
+    "GB": 1.05,  # VAT 5% en electricidad doméstica
+}
+DEFAULT_ELECTRICITY_TAX_FACTOR = 1.0
+
+
 _MARKET_TIERS_EUR = {
     "western": {
         "panel_price_per_w": price_range(0.21, 0.30, 0.42),
