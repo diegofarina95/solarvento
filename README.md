@@ -127,3 +127,37 @@ La imagen es multi-stage (Node compila el frontend, Python ejecuta la API) y per
 - **Paneles recomendados**: `⌈(consumo / kWh-por-kWp-local) × 1000 / W-panel⌉` (~2,2 m²/panel +15% de margen).
 
 > ⚠️ Es una estimación orientativa para decidir si pedir presupuestos, no un estudio técnico.
+
+## Límites de uso
+
+| Endpoint | Por equipo (IP) | Global diario |
+|---|---|---|
+| `/api/parse-bill` (facturas → OpenAI) | 10/día | 100/día |
+| `/api/solar-estimate` (→ PVGIS) | 60/día | 1000/día |
+
+Configurables por `.env` (`SOLVENTO_UPLOAD_RATELIMIT_*`, `SOLVENTO_ESTIMATE_RATELIMIT_*`).
+Ventana deslizante de 24 h persistida en SQLite; al superar el límite la API responde 429
+con un mensaje claro.
+
+## Anuncios (AdSense)
+
+La web lleva tres huecos de anuncio (cabecera, entre resultados, pie) que **no renderizan
+nada** hasta que se configuran en el build:
+
+```bash
+VITE_ADSENSE_CLIENT=ca-pub-XXXXXXXXXXXXXXXX \
+VITE_ADSENSE_SLOT_TOP=1111111111 \
+VITE_ADSENSE_SLOT_RESULTS=2222222222 \
+VITE_ADSENSE_SLOT_FOOTER=3333333333 \
+npm run build
+```
+
+Pasos cuando esté en su dominio definitivo: (1) alta del dominio en AdSense, (2) crear
+`frontend/public/ads.txt` con la línea que da AdSense, (3) rebuild con las variables de
+arriba. Los anuncios se excluyen automáticamente de los informes impresos.
+
+## Dominio propio
+
+El build usa el prefijo `/solvento/` (así se publica hoy tras el funnel). Para servirla
+en la raíz de un dominio propio: `SOLVENTO_BASE=/ npm run build`. El backend acepta
+las rutas con y sin prefijo, así que no hay que tocar nada más.

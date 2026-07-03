@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import AdSlot from './components/AdSlot'
 import LocationSearch from './components/LocationSearch'
 import MapPicker from './components/MapPicker'
 import SolarForm from './components/SolarForm'
@@ -258,6 +259,7 @@ export default function App() {
           <p className="font-semibold">{t('app.europeNotice')}</p>
           <p className="mt-1">{t('app.disclaimer')}</p>
         </div>
+        <AdSlot placement="top" />
       </header>
 
       <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
@@ -373,6 +375,7 @@ export default function App() {
           )}
 
           <p className="mt-4 text-xs text-stone-500">{t('app.professionalDisclaimer')}</p>
+          <AdSlot placement="footer" />
         </section>
       </div>
     </div>

@@ -798,3 +798,41 @@ def test_confidence_hints_guide_the_user(respx_mock, client):
     data2 = resp2.json()
     assert data2["confidence"]["level"] == "medium"
     assert "add_seasonal_bills" in data2["confidence"]["improvement_hints"]
+
+
+@respx.mock
+def test_estimate_rate_limited_per_ip(respx_mock, client, monkeypatch):
+    monkeypatch.setenv("SOLVENTO_ESTIMATE_RATELIMIT_MAX", "2")
+    get_settings.cache_clear()
+    from app.main import app
+
+    mock_pvgis(respx_mock)
+    with TestClient(app) as c:
+        body = {"lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0}
+        assert c.post("/api/solar-estimate", json=body).status_code == 200
+        assert c.post("/api/solar-estimate", json=body).status_code == 200
+        blocked = c.post("/api/solar-estimate", json=body)
+        assert blocked.status_code == 429
+    get_settings.cache_clear()
+
+
+def test_upload_global_cap(client, monkeypatch):
+    monkeypatch.setenv("SOLVENTO_UPLOAD_RATELIMIT_MAX", "10")
+    monkeypatch.setenv("SOLVENTO_UPLOAD_RATELIMIT_GLOBAL_MAX", "2")
+    get_settings.cache_clear()
+    from app.main import app
+
+    with TestClient(app) as c:
+        for _ in range(2):
+            r = c.post(
+                "/api/parse-bill",
+                files={"file": ("f.pdf", b"%PDF-1.4 x", "application/pdf")},
+            )
+            assert r.status_code == 422  # parseo falla pero cuenta
+        blocked = c.post(
+            "/api/parse-bill",
+            files={"file": ("f.pdf", b"%PDF-1.4 x", "application/pdf")},
+        )
+        assert blocked.status_code == 429
+        assert "cupo diario" in blocked.json()["detail"]
+    get_settings.cache_clear()

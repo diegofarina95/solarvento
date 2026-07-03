@@ -5,6 +5,7 @@ import {
   TypicalDayChart,
   MonthlyConsumptionChart,
 } from './Charts'
+import AdSlot from './AdSlot'
 import PrintReport from './PrintReport'
 
 function ReportDownload({ data, i18n, fmt }) {
@@ -665,6 +666,8 @@ export default function Results({ data, i18n }) {
           </Card>
         )}
       </div>
+
+      <AdSlot placement="results" />
 
       <CalculationBasis data={data} i18n={i18n} fmt={fmt} />
 

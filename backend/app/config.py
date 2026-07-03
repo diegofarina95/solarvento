@@ -20,10 +20,15 @@ class Settings(BaseSettings):
     pricing_cache_db_path: str = "pricing_cache.db"
     pricing_feed_url: str | None = None
 
-    # Límite de subidas de factura por IP (cada una es una llamada de pago a OpenAI)
+    # Límite de subidas de factura: por equipo (IP) y global diario
+    # (cada subida es una llamada de pago a OpenAI)
     upload_ratelimit_max: int = 10
+    upload_ratelimit_global_max: int = 100
     upload_ratelimit_window_seconds: int = 24 * 3600
     upload_ratelimit_db_path: str = "upload_ratelimit.db"
+    # Límite de cálculos por equipo (cada uno lanza hasta 4 llamadas a PVGIS)
+    estimate_ratelimit_max: int = 60
+    estimate_ratelimit_global_max: int = 1000
 
     # Parser IA opcional de facturas. Si no hay clave, se usa solo el extractor local.
     openai_api_key: str | None = None

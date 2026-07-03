@@ -78,6 +78,15 @@ async def lifespan(app: FastAPI):
         settings.upload_ratelimit_db_path,
         limit=settings.upload_ratelimit_max,
         window_seconds=settings.upload_ratelimit_window_seconds,
+        global_limit=settings.upload_ratelimit_global_max,
+        table="upload_events",
+    )
+    app.state.estimate_limiter = RateLimiter(
+        settings.upload_ratelimit_db_path,
+        limit=settings.estimate_ratelimit_max,
+        window_seconds=settings.upload_ratelimit_window_seconds,
+        global_limit=settings.estimate_ratelimit_global_max,
+        table="estimate_events",
     )
     yield
     await app.state.pvgis.close()
@@ -86,6 +95,7 @@ async def lifespan(app: FastAPI):
     if app.state.openai_bill_parser:
         await app.state.openai_bill_parser.close()
     app.state.upload_limiter.close()
+    app.state.estimate_limiter.close()
     cache.close()
 
 
@@ -159,15 +169,16 @@ def _client_ip(request: Request) -> str:
 @app.post("/api/parse-bill", response_model=ParsedBill)
 async def parse_bill(request: Request, file: UploadFile):
     limiter: RateLimiter = app.state.upload_limiter
-    allowed, _remaining = limiter.check_and_record(_client_ip(request))
+    allowed, blocked_by = limiter.check_and_record(_client_ip(request))
     if not allowed:
-        raise HTTPException(
-            status_code=429,
-            detail=(
-                f"Has alcanzado el límite de {limiter.limit} facturas subidas. "
-                "Introduce el resto de datos a mano o inténtalo más tarde."
-            ),
+        detail = (
+            "El servicio de lectura de facturas ha alcanzado su cupo diario. "
+            "Introduce los datos a mano o inténtalo mañana."
+            if blocked_by == "global"
+            else f"Has alcanzado el límite de {limiter.limit} facturas subidas. "
+            "Introduce el resto de datos a mano o inténtalo más tarde."
         )
+        raise HTTPException(status_code=429, detail=detail)
 
     content_type = (file.content_type or "").lower()
     is_pdf = content_type in _PDF_TYPES or content_type == ""
@@ -666,7 +677,18 @@ def _validate_estimate_consistency(
 
 
 @app.post("/api/solar-estimate", response_model=SolarEstimateResponse)
-async def solar_estimate(req: SolarEstimateRequest):
+async def solar_estimate(req: SolarEstimateRequest, request: Request):
+    estimate_limiter: RateLimiter = app.state.estimate_limiter
+    allowed, blocked_by = estimate_limiter.check_and_record(_client_ip(request))
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                "El servicio ha alcanzado su cupo diario de cálculos; inténtalo mañana."
+                if blocked_by == "global"
+                else "Has hecho demasiados cálculos seguidos; espera un rato e inténtalo de nuevo."
+            ),
+        )
     settings = get_settings()
     pvgis: PVGISClient = app.state.pvgis
     pricing_service: PricingService = app.state.pricing
