@@ -256,7 +256,8 @@ export default function PrintReport({ data, i18n, fmt, variant }) {
                   <th>{t('battery.scenario')}</th>
                   <th>{t('battery.investment')}</th>
                   <th>{t('battery.savingsYear')}</th>
-                  <th>{t('battery.payback')}</th>
+                  <th>{t('battery.paybackBattery')}</th>
+                  <th>{t('battery.paybackSystem')}</th>
                   <th>{t('battery.selfSufficiency')}</th>
                   <th>{t('battery.selfConsumption')}</th>
                 </tr>
@@ -271,6 +272,7 @@ export default function PrintReport({ data, i18n, fmt, variant }) {
                     </td>
                     <td>{formatRange(s.investment_range_eur, fmt.money0) ?? fmt.money0.format(s.investment_eur)}</td>
                     <td>{fmt.money0.format(s.annual_savings_eur)}</td>
+                    <td>{s.battery_incremental_payback_years != null ? t('battery.years', { value: fmt.nf1.format(s.battery_incremental_payback_years) }) : '—'}</td>
                     <td>{s.payback_years != null ? t('battery.years', { value: fmt.nf1.format(s.payback_years) }) : '—'}</td>
                     <td>{fmt.nf1.format(s.self_sufficiency_pct)} %</td>
                     <td>{fmt.nf1.format(s.self_consumption_pct)} %</td>

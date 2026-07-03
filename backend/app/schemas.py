@@ -268,7 +268,11 @@ class BatteryScenario(BaseModel):
     battery_discharged_kwh: float
     exported_kwh: float
     imported_kwh: float
-    battery_marginal_payback_years: float | None = None
+    # Payback INCREMENTAL de la batería (coste extra / ahorro extra), distinto
+    # del payback del sistema completo (payback_years).
+    battery_incremental_payback_years: float | None = None
+    battery_extra_cost_eur: float | None = None
+    battery_extra_savings_eur: float | None = None
     npv_eur: float | None = None
 
 
@@ -288,7 +292,14 @@ class BatteryAnalysis(BaseModel):
     scenarios: list[BatteryScenario]
     recommended_battery_kwh: float
     recommendation: str
-    battery_lifetime_years: int = 10
+    # Garantía y vida útil son parámetros DISTINTOS (no se fusionan).
+    battery_warranty_years: int = 10
+    battery_useful_life_years: int = 12
+    # Cifras de ESTA casa para la narrativa y el techo estructural del valor.
+    base_self_consumption_pct: float | None = None
+    base_surplus_kwh: float | None = None
+    max_battery_value_eur: float | None = None
+    marginal_avoided_cost_eur_kwh: float | None = None
     export_scheme: str = "capped_compensation"
     surplus_price_eur_kwh: float
     battery_cost_per_kwh_eur: float

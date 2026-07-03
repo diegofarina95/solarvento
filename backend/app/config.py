@@ -12,6 +12,11 @@ class Settings(BaseSettings):
     electricity_price_eur_kwh: float = 0.15
     # Potencia por panel por defecto (W)
     panel_power_w: int = 450
+    # Batería doméstica: la GARANTÍA (típico 10 años) y la VIDA ÚTIL real (LFP
+    # ~12–15 años / 4.000–6.000 ciclos) son cosas distintas; no se fusionan. La
+    # decisión de recomendar batería se toma contra la vida útil.
+    battery_warranty_years: int = 10
+    battery_useful_life_years: int = 12
     # TTL de la caché de PVGIS (segundos). Las coordenadas dan siempre el mismo
     # resultado, así que el TTL es largo por defecto: 90 días.
     cache_ttl_seconds: int = 90 * 24 * 3600

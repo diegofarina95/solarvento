@@ -100,11 +100,27 @@ class TestBatteryScenarios:
         )
         assert [s["battery_kwh"] for s in scenarios] == [0, 5, 10]
         base = scenarios[0]
-        assert "battery_marginal_payback_years" not in base
+        assert "battery_incremental_payback_years" not in base
         for s in scenarios[1:]:
             assert s["investment_eur"] == 6000 + s["battery_kwh"] * 600
             assert s["annual_savings_eur"] >= base["annual_savings_eur"]
             assert s["self_sufficiency_pct"] >= base["self_sufficiency_pct"]
+            # BUG L: payback incremental = coste extra / ahorro extra (simple),
+            # distinto del payback del sistema completo (investment / savings)
+            extra_cost = s["investment_eur"] - base["investment_eur"]
+            extra_savings = s["annual_savings_eur"] - base["annual_savings_eur"]
+            if extra_savings > 0:
+                assert s["battery_incremental_payback_years"] == pytest.approx(
+                    round(extra_cost / extra_savings, 1), abs=0.05
+                )
+            # BUG M: excedente = producción × (1 − autoconsumo%) en toda fila
+            assert s["exported_kwh"] == pytest.approx(
+                s["production_kwh"] * (1 - s["self_consumption_pct"] / 100), abs=s["production_kwh"] * 0.001 + 1
+            )
+        # también en la fila sin batería
+        assert base["exported_kwh"] == pytest.approx(
+            base["production_kwh"] * (1 - base["self_consumption_pct"] / 100), abs=base["production_kwh"] * 0.001 + 1
+        )
 
 
 class TestExportSchemes:

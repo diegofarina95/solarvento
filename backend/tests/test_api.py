@@ -1381,3 +1381,44 @@ def test_apply_postal_fallback_uses_province_centroid():
     assert _apply_postal_fallback({"postal_code": "75001", "country_code": "FR"}) == {
         "postal_code": "75001", "country_code": "FR"
     }
+
+
+@respx.mock
+def test_battery_incremental_payback_and_surplus_reconcile(respx_mock, client):
+    """BUG L/M/N: payback incremental ≠ sistema; excedente reconcilia; params distintos."""
+    mock_pvgis(respx_mock)
+    real = {m: v for m, v in zip(range(1, 13),
+            [2902, 2640, 2210, 1874, 1632, 1542, 1810, 1948, 1765, 2009, 2430, 2875])}
+    history = [{"month": m, "kwh": k} for m, k in real.items()]
+    data = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0, "auto_size_power": True,
+        "bills": [{"kwh": 25637, "energy_eur": 5350.51, "total_eur": 7332.17,
+                   "start_date": "2026-01-01", "end_date": "2026-12-31",
+                   "consumption_history": history}],
+    }).json()
+    ba = data["battery_analysis"]
+    # BUG L: garantía y vida útil son parámetros DISTINTOS
+    assert ba["battery_warranty_years"] == 10
+    assert ba["battery_useful_life_years"] == 12
+    assert ba["battery_warranty_years"] != ba["battery_useful_life_years"]
+    scenarios = {s["battery_kwh"]: s for s in ba["scenarios"]}
+    base = scenarios[0.0]
+    for kwh, s in scenarios.items():
+        # BUG M: excedente = producción × (1 − autoconsumo%) en TODA fila
+        assert s["exported_kwh"] == pytest.approx(
+            s["production_kwh"] * (1 - s["self_consumption_pct"] / 100), abs=s["production_kwh"] * 0.001 + 1
+        )
+        if kwh > 0:
+            # BUG L: payback incremental presente y distinto del del sistema
+            inc = s["battery_incremental_payback_years"]
+            assert inc is not None
+            assert inc != s["payback_years"]  # no es el whole-system (4.5/5.5)
+            # BUG N: incremental == coste extra / ahorro extra (ratio simple)
+            expected = round(
+                (s["investment_eur"] - base["investment_eur"])
+                / (s["annual_savings_eur"] - base["annual_savings_eur"]), 1)
+            assert inc == pytest.approx(expected, abs=0.1)
+    # decisión: con autoconsumo alto, batería no rentable → recomendación 0
+    assert ba["recommended_battery_kwh"] == 0.0
+    # techo estructural expuesto y positivo
+    assert ba["max_battery_value_eur"] >= 0

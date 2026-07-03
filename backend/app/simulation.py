@@ -83,11 +83,20 @@ def simulate_self_consumption(
         totals["consumption_kwh"] += month["consumption"]
 
     self_consumed = totals["direct_kwh"] + totals["battery_kwh"]
+    # Autoconsumo (SCR, def. estándar) = fracción de la producción NO vertida, de
+    # modo que SIEMPRE se cumple: excedente = producción × (1 − autoconsumo%).
+    # Con batería, la pérdida de ciclado (round-trip) cuenta como "no vertida"
+    # (se quedó en tu lado), no como excedente; por eso no basta direct+descarga.
     totals["self_consumption_pct"] = (
-        round(min(100.0, max(0.0, 100 * self_consumed / totals["production_kwh"])), 1)
+        round(
+            min(100.0, max(0.0, 100 * (totals["production_kwh"] - totals["exported_kwh"]) / totals["production_kwh"])),
+            1,
+        )
         if totals["production_kwh"] > 0
         else 0.0
     )
+    # Autosuficiencia = parte del CONSUMO realmente cubierta (energía que sirvió
+    # a la carga: directa + descarga de batería); la pérdida de ciclado no cuenta.
     totals["self_sufficiency_pct"] = (
         round(min(100.0, max(0.0, 100 * self_consumed / totals["consumption_kwh"])), 1)
         if totals["consumption_kwh"] > 0
@@ -194,10 +203,15 @@ def battery_scenarios(
         if capacity == 0:
             base = scenario
         if base is not None and capacity > 0:
+            # Payback INCREMENTAL de la batería (simple): lo que cuesta la batería
+            # dividido por lo que AÑADE de ahorro frente al sistema sin batería.
+            # No es el payback del sistema completo (inversión total / ahorro total).
             extra_savings = savings - base["annual_savings_eur"]
-            extra_cost = capacity * _unit_cost(capacity)
-            scenario["battery_marginal_payback_years"] = (
+            extra_cost = investment - base["investment_eur"]
+            scenario["battery_incremental_payback_years"] = (
                 round(extra_cost / extra_savings, 1) if extra_savings > 0 else None
             )
+            scenario["battery_extra_cost_eur"] = round(extra_cost, 2)
+            scenario["battery_extra_savings_eur"] = round(extra_savings, 2)
         scenarios.append(scenario)
     return scenarios

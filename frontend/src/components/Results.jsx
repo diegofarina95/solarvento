@@ -235,7 +235,8 @@ function BatterySection({ analysis, i18n, pricing, fmt }) {
               <th className="py-2 pr-3 font-medium">{t('battery.scenario')}</th>
               <th className="py-2 pr-3 font-medium">{t('battery.investment')}</th>
               <th className="py-2 pr-3 font-medium">{t('battery.savingsYear')}</th>
-              <th className="py-2 pr-3 font-medium">{t('battery.payback')}</th>
+              <th className="py-2 pr-3 font-medium">{t('battery.paybackBattery')}</th>
+              <th className="py-2 pr-3 font-medium">{t('battery.paybackSystem')}</th>
               <th className="py-2 pr-3 font-medium">{t('battery.exported')}</th>
               <th className="py-2 pr-3 font-medium">{t('battery.selfSufficiency')}</th>
               <th className="py-2 font-medium">{t('battery.selfConsumption')}</th>
@@ -263,6 +264,11 @@ function BatterySection({ analysis, i18n, pricing, fmt }) {
                   {formatRange(s.investment_range_eur, fmt.money0) ?? fmt.money0.format(s.investment_eur)}
                 </td>
                 <td className="py-2 pr-3">{fmt.money0.format(s.annual_savings_eur)}</td>
+                <td className="py-2 pr-3">
+                  {s.battery_incremental_payback_years != null
+                    ? t('battery.years', { value: fmt.nf1.format(s.battery_incremental_payback_years) })
+                    : '—'}
+                </td>
                 <td className="py-2 pr-3">
                   {s.payback_years != null
                     ? t('battery.years', { value: fmt.nf1.format(s.payback_years) })

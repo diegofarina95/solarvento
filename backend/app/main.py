@@ -592,41 +592,44 @@ def _panels_explanation(panels: dict) -> str:
     )
 
 
-BATTERY_LIFETIME_YEARS = 10  # garantía típica de una batería doméstica
+def _battery_recommendation(
+    scenarios: list[dict], useful_life_years: int
+) -> tuple[float, str]:
+    """Recomienda una batería si su payback INCREMENTAL cabe en la vida útil.
 
-
-def _battery_recommendation(scenarios: list[dict]) -> tuple[float, str]:
-    """Recomienda la batería con mejor payback marginal si baja de la vida útil."""
-    LIFETIME = BATTERY_LIFETIME_YEARS
-    base = next((s for s in scenarios if s["battery_kwh"] == 0), scenarios[0])
+    La decisión se toma con el payback incremental (coste extra / ahorro extra),
+    no con el del sistema completo. Devuelve (kWh recomendados, texto de reserva;
+    la UI construye su propia narrativa con las cifras de esta casa).
+    """
     candidates = [
         s
         for s in scenarios
-        if s["battery_kwh"] > 0 and s.get("battery_marginal_payback_years") is not None
+        if s["battery_kwh"] > 0
+        and s.get("battery_incremental_payback_years") is not None
     ]
     best = min(
-        candidates, key=lambda s: s["battery_marginal_payback_years"], default=None
+        candidates,
+        key=lambda s: s["battery_incremental_payback_years"],
+        default=None,
     )
-    if best and best["battery_marginal_payback_years"] <= LIFETIME:
+    if best and best["battery_incremental_payback_years"] <= useful_life_years:
         return best["battery_kwh"], (
-            f"Recomendamos una batería de {best['battery_kwh']:g} kWh porque aumenta "
-            f"la autosuficiencia del {base['self_sufficiency_pct']:g}% al "
-            f"{best['self_sufficiency_pct']:g}% y se amortiza en unos "
-            f"{best['battery_marginal_payback_years']:g} años, dentro de su vida útil "
-            f"estimada (~{LIFETIME} años)."
+            f"Una batería de {best['battery_kwh']:g} kWh se amortiza en "
+            f"~{best['battery_incremental_payback_years']:g} años (payback incremental), "
+            f"dentro de su vida útil estimada (~{useful_life_years} años)."
         )
     detail = ""
     if best:
-        extra_savings = max(0.0, best["annual_savings_eur"] - base["annual_savings_eur"])
-        extra_investment = max(0.0, best["investment_eur"] - base["investment_eur"])
         detail = (
-            f" La mejor opción no recomendada ({best['battery_kwh']:g} kWh) exigiría "
-            f"{extra_investment:,.0f} adicionales para ahorrar {extra_savings:,.0f}/año "
-            f"y tardaría {best['battery_marginal_payback_years']:g} años en amortizarse."
+            f" La mejor opción ({best['battery_kwh']:g} kWh) cuesta "
+            f"{best.get('battery_extra_cost_eur', 0):,.0f} extra y solo añade "
+            f"{best.get('battery_extra_savings_eur', 0):,.0f}/año: payback incremental "
+            f"~{best['battery_incremental_payback_years']:g} años, por encima de la "
+            f"vida útil (~{useful_life_years} años)."
         )
     return 0.0, (
-        "No recomendamos instalar batería porque el ahorro adicional frente a la inversión "
-        f"no permite amortizarla durante su vida útil estimada (~{LIFETIME} años).{detail}"
+        "Una batería no se amortiza aquí: el ahorro extra no cubre su coste dentro de "
+        f"la vida útil estimada (~{useful_life_years} años).{detail}"
     )
 
 
@@ -1187,17 +1190,18 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
                 om_eur_per_year=om_eur,
                 replacements=replacements,
             )
+            # payback_years = del SISTEMA COMPLETO (multi-año); se muestra como
+            # columna aparte. El payback INCREMENTAL de la batería (simple) lo
+            # calcula battery_scenarios y NO se sobrescribe aquí.
             s["payback_years"] = analysis["payback_years"]
             s["npv_eur"] = analysis["npv_eur"]
             if s["battery_kwh"] == 0:
                 base_analysis = analysis
-            else:
-                s["battery_marginal_payback_years"] = cashflow.marginal_battery_payback(
-                    scenario_yearly[s["battery_kwh"]],
-                    base_yearly,
-                    s["investment_eur"] - cost,
-                )
-        recommended_kwh, recommendation = _battery_recommendation(scenarios)
+        warranty_years = settings.battery_warranty_years
+        useful_life_years = settings.battery_useful_life_years
+        recommended_kwh, recommendation = _battery_recommendation(
+            scenarios, useful_life_years
+        )
         base_scenario = scenarios[0]
         annual_energy.update(
             {
@@ -1210,11 +1214,22 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
                 "self_sufficiency_pct": base_scenario["self_sufficiency_pct"],
             }
         )
+        # Techo estructural del valor de CUALQUIER batería: solo puede desplazar
+        # el excedente actual del precio de exportación al coste marginal evitado.
+        base_surplus = base_scenario["exported_kwh"]
+        max_battery_value = round(
+            max(0.0, base_surplus * (effective_price - effective_surplus)), 0
+        )
         battery_analysis = {
             "scenarios": scenarios,
             "recommended_battery_kwh": recommended_kwh,
             "recommendation": recommendation,
-            "battery_lifetime_years": BATTERY_LIFETIME_YEARS,
+            "battery_warranty_years": warranty_years,
+            "battery_useful_life_years": useful_life_years,
+            "base_self_consumption_pct": base_scenario["self_consumption_pct"],
+            "base_surplus_kwh": base_surplus,
+            "max_battery_value_eur": max_battery_value,
+            "marginal_avoided_cost_eur_kwh": effective_price,
             "export_scheme": export_scheme,
             "surplus_price_eur_kwh": surplus_price,
             "battery_cost_per_kwh_eur": battery_cost_per_kwh,
