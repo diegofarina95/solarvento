@@ -350,29 +350,85 @@ def _month_from_token(token: str) -> int | None:
     return MONTH_NAMES.get(normalized) or MONTH_ABBR.get(normalized[:3])
 
 
-def parse_consumption_history(text: str) -> list[dict]:
-    """Histórico mensual de consumo de la factura: [{month, kwh}, ...].
+def _month_line_to_number(line: str) -> int | None:
+    """Nº de mes si la línea es SOLO un nombre/abreviatura de mes (con año opcional).
 
-    Las facturas españolas incluyen una tabla/gráfico 'Histórico de consumo' con
-    los últimos meses (mes → kWh). Se extrae dentro de la sección para no
-    confundir estos valores con el consumo del periodo. Devuelve un mes por
-    entrada (el último valor gana si un mes se repite dentro de la misma factura).
+    Reconoce 'Enero', 'Ene', 'Marzo 2026', 'Ago', etc. — no texto en prosa que
+    contenga un mes.
     """
+    match = re.fullmatch(
+        rf"({_HISTORY_MONTH_TOKEN})\.?(?:\s+(?:de\s+)?\d{{4}})?", line.strip(), re.IGNORECASE
+    )
+    return _month_from_token(match.group(1)) if match else None
+
+
+def _parse_vertical_month_table(text: str) -> dict[int, tuple[float, float | None]]:
+    """Tabla mensual en formato vertical: mes → (kWh, importe|None).
+
+    Cubre 'Detalle mensual consolidado' (Mes / kWh / importe) e históricos
+    verticales ('Marzo 2026' / '2.115', o 'Ago' / '1210' de un gráfico de barras),
+    donde el mes y su valor van en líneas separadas. Filas no-mes (MES, CONSUMO,
+    IMPORTE, TOTAL 2026…) se saltan.
+    """
+    lines = _clean_lines(text)
+    result: dict[int, tuple[float, float | None]] = {}
+    i = 0
+    while i < len(lines):
+        month = _month_line_to_number(lines[i])
+        if month is None or i + 1 >= len(lines) or not _line_is_plain_number(lines[i + 1]):
+            i += 1
+            continue
+        kwh = _to_float(lines[i + 1])
+        eur = None
+        step = 2
+        if i + 2 < len(lines) and re.search(_CURRENCY, lines[i + 2]):
+            amounts = _line_amount_candidates(lines[i + 2])
+            if amounts:
+                eur = amounts[-1]
+                step = 3
+        if 1 <= kwh <= MAX_BILL_KWH and month not in result:
+            result[month] = (kwh, eur)
+        i += step
+    return result
+
+
+def parse_consumption_history(text: str) -> list[dict]:
+    """Histórico mensual de consumo de la factura: [{month, kwh, eur?}, ...].
+
+    Combina el histórico en línea ('Ene 2.902 kWh' bajo la cabecera 'Histórico de
+    consumo') con las tablas verticales ('Detalle mensual consolidado' de las
+    facturas anuales, y los históricos verticales). Un mes por entrada.
+    """
+    by_month: dict[int, float] = {}
+    spend: dict[int, float] = {}
+
     header = re.search(
         r"hist[oó]rico(?:\s+reciente)?\s+de\s+consumo", text, re.IGNORECASE
     )
-    if not header:
-        return []
-    # Ventana tras la cabecera: cubre una tabla de ~14 meses aunque venga en
-    # líneas separadas o en una sola con separadores (· , |).
-    segment = text[header.end():header.end() + 800]
-    by_month: dict[int, float] = {}
-    for match in _HISTORY_LINE_RE.finditer(segment):
-        month = _month_from_token(match.group(1))
-        kwh = _to_float(match.group(2))
-        if month is not None and 1 <= kwh <= MAX_BILL_KWH:
-            by_month[month] = kwh
-    return [{"month": m, "kwh": by_month[m]} for m in sorted(by_month)]
+    if header:
+        segment = text[header.end():header.end() + 800]
+        for match in _HISTORY_LINE_RE.finditer(segment):
+            month = _month_from_token(match.group(1))
+            kwh = _to_float(match.group(2))
+            if month is not None and 1 <= kwh <= MAX_BILL_KWH:
+                by_month[month] = kwh
+
+    # Tablas verticales (rellenan meses no vistos y aportan el importe mensual).
+    # Solo se aceptan si hay ≥2 meses, para no confundir un mes suelto en prosa.
+    vertical = _parse_vertical_month_table(text)
+    if len(vertical) >= 2:
+        for month, (kwh, eur) in vertical.items():
+            by_month.setdefault(month, kwh)
+            if eur is not None:
+                spend.setdefault(month, eur)
+
+    entries = []
+    for month in sorted(by_month):
+        entry = {"month": month, "kwh": by_month[month]}
+        if month in spend:
+            entry["eur"] = spend[month]
+        entries.append(entry)
+    return entries
 
 
 def _reading_kind(label: str) -> str:
@@ -1061,6 +1117,17 @@ def _merge_consumption_history(bills: list[dict]) -> dict[int, float]:
     return merged
 
 
+def _merge_history_spend(bills: list[dict]) -> dict[int, float]:
+    """Importe mensual del histórico (mes→€), cuando la factura lo trae."""
+    merged: dict[int, float] = {}
+    for bill in sorted(bills, key=_bill_recency_key):
+        for entry in bill.get("consumption_history") or []:
+            eur = entry.get("eur")
+            if eur is not None:
+                merged[int(entry["month"])] = float(eur)
+    return merged
+
+
 def _twelve_months_from_history(
     known: dict[int, float],
 ) -> tuple[list[float], list[int]]:
@@ -1121,7 +1188,15 @@ def aggregate_bills(
     tax_sources: set[str] = set()
 
     for bill in bills:
-        kwh = float(bill["kwh"])
+        raw_kwh = bill.get("kwh")
+        bill_history = bill.get("consumption_history") or []
+        if raw_kwh in (None, "") and bill_history:
+            # Factura con histórico pero sin consumo de periodo legible (p. ej.
+            # una consolidada anual): el propio histórico da el kWh de la factura.
+            raw_kwh = sum(float(entry["kwh"]) for entry in bill_history)
+        if raw_kwh in (None, ""):
+            raise BillParseError("Las facturas no contienen consumos válidos")
+        kwh = float(raw_kwh)
         currency = (bill.get("currency") or default_currency or DEFAULT_CURRENCY).upper()
         currencies.append(currency)
         variable_amount = float(bill["energy_eur"]) if bill.get("energy_eur") else None
@@ -1253,7 +1328,13 @@ def aggregate_bills(
 
     annual_amount = None
     monthly_amount = None
-    if total_amount_bill_count > 0:
+    # El importe mensual del histórico (si la factura lo trae) es la mejor fuente
+    # del gasto por mes: real, no reconstruido.
+    history_spend = _merge_history_spend(bills) if history else {}
+    if history_spend:
+        monthly_amount, _spend_estimated = _twelve_months_from_history(history_spend)
+        annual_amount = round(sum(monthly_amount), 1)
+    elif total_amount_bill_count > 0:
         if annual_only:
             # El importe de una factura anual ya es el gasto anual; no hay reparto
             # mensual fiable, coherente con monthly_kwh=None.

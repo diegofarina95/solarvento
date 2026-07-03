@@ -38,9 +38,11 @@ Rules:
   own line (null if it is lumped with other regulated charges), the VAT amount as iva_eur, the VAT
   rate as a fraction (e.g. 0.21 or 0.10) as iva_rate, and the VAT taxable base (base imponible) as
   vat_base_eur. These let the app compute the tax-inclusive avoided cost per kWh.
-- Extract the monthly consumption history table/chart ("Histórico de consumo" / "Histórico reciente
-  de consumo") as consumption_history: a list of {month: 1-12, kwh}. Use the month number and the kWh
-  for each bar/row. Return an empty list when there is no history table.
+- Extract the monthly consumption history/detail table as consumption_history: a list of
+  {month: 1-12, kwh, eur}. This includes "Histórico de consumo" / "Histórico reciente de consumo"
+  charts AND the "Detalle mensual consolidado" table on annual/consolidated bills (month, kWh and
+  the monthly importe). Fill eur with the monthly amount when the table shows it, else null. Return
+  an empty list when there is no such table.
 - Add short warnings for uncertain values, missing values, mixed utilities, or non-electricity invoices.
 """
 
@@ -96,8 +98,12 @@ BILL_SCHEMA: dict[str, Any] = {
                 "properties": {
                     "month": {"type": "integer", "description": "Month number 1-12."},
                     "kwh": {"type": "number", "description": "Consumption in kWh."},
+                    "eur": {
+                        "type": ["number", "null"],
+                        "description": "Amount for that month, if the table shows it.",
+                    },
                 },
-                "required": ["month", "kwh"],
+                "required": ["month", "kwh", "eur"],
                 "additionalProperties": False,
             },
         },
@@ -359,15 +365,19 @@ def _optional_history(value: Any) -> list[dict[str, float]]:
     """Normaliza el histórico mensual del parser IA a [{month, kwh}, ...]."""
     if not isinstance(value, list):
         return []
-    entries: dict[int, float] = {}
+    entries: dict[int, dict[str, float]] = {}
     for item in value:
         if not isinstance(item, dict):
             continue
         month = _optional_month(item.get("month"))
         kwh = _optional_float(item.get("kwh"))
         if month is not None and kwh is not None and 0 < kwh <= MAX_BILL_KWH:
-            entries[month] = kwh
-    return [{"month": m, "kwh": entries[m]} for m in sorted(entries)]
+            entry: dict[str, float] = {"month": month, "kwh": kwh}
+            eur = _optional_float(item.get("eur"))
+            if eur is not None:
+                entry["eur"] = eur
+            entries[month] = entry
+    return [entries[m] for m in sorted(entries)]
 
 
 def _optional_float(value: Any) -> float | None:

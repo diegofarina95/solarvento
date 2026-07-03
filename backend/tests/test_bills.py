@@ -918,3 +918,118 @@ class TestTaxPlausibilityGuards:
         TOTAL FACTURA 160,00 €
         """
         assert parse_bill_text(text)["contracted_power_kw"] == 14.49
+
+
+# --- BUG B: tabla "Detalle mensual consolidado" (factura anual) --------------
+
+_ANNUAL_CONSOLIDATED = """
+RESUMEN / FACTURA ANUAL DE ELECTRICIDAD 2026 (DOCUMENTO FICTICIO)
+Periodo consolidado
+01/01/2026 - 31/12/2026
+Potencia contratada
+14,49 kW punta / 14,49 kW valle
+Consumo anual total
+25.637 kWh
+Importe anual total
+7.332,17 €
+Detalle mensual consolidado
+MES
+CONSUMO (kWh)
+IMPORTE
+Enero
+2.902
+829,97 €
+Febrero
+2.640
+755,04 €
+Marzo
+2.210
+632,06 €
+Abril
+1.874
+535,96 €
+Mayo
+1.632
+466,75 €
+Junio
+1.542
+441,01 €
+Julio
+1.810
+517,66 €
+Agosto
+1.948
+557,13 €
+Septiembre
+1.765
+504,79 €
+Octubre
+2.009
+574,57 €
+Noviembre
+2.430
+694,98 €
+Diciembre
+2.875
+822,25 €
+TOTAL 2026
+25.637
+7.332,17 €
+DESGLOSE ANUAL ORIENTATIVO
+Término de energía 5.350,51 €
+Impuesto electricidad 22,50 €
+Base imponible 6.059,65 €
+IVA (21%) 1.272,53 €
+TOTAL ANUAL 7.332,18 €
+"""
+
+
+class TestConsolidatedMonthlyTable:
+    def test_local_parser_reads_all_12_months_with_spend(self):
+        parsed = parse_bill_text(_ANNUAL_CONSOLIDATED)
+        history = {e["month"]: e for e in parsed["consumption_history"]}
+        assert len(history) == 12
+        assert history[1]["kwh"] == 2902
+        assert history[8]["kwh"] == 1948  # agosto
+        assert history[7]["kwh"] == 1810  # julio
+        assert history[8]["kwh"] > history[7]["kwh"]  # bump de verano
+        # importe mensual también capturado
+        assert history[1]["eur"] == pytest.approx(829.97, abs=0.01)
+        assert history[12]["eur"] == pytest.approx(822.25, abs=0.01)
+
+    def test_annual_consumption_exact_no_interpolation(self):
+        parsed = parse_bill_text(_ANNUAL_CONSOLIDATED)
+        agg = aggregate_bills([parsed], country_code="ES")
+        assert agg["annual_kwh"] == pytest.approx(25637, abs=1)
+        assert agg["seasonality_source"] == "bill_history"
+        assert agg["estimated_months"] == []  # 12 meses reales, sin estimación
+        # el mes de agosto supera al de julio (perfil genérico no lo haría)
+        assert agg["monthly_kwh"][7] > agg["monthly_kwh"][6]
+        # gasto mensual real del histórico, no reconstruido plano
+        assert agg["monthly_eur"][0] == pytest.approx(829.97, abs=0.5)
+
+    def test_vertical_history_with_year(self):
+        # Histórico vertical 'Marzo 2026 / 2.115' (formato factura de Julio)
+        text = """
+        Factura de electricidad
+        Periodo de facturación: del 01/07/2026 al 31/07/2026
+        Consumo en el periodo: 1.810 kWh
+        TOTAL FACTURA 532,27 €
+        HISTÓRICO DE CONSUMO
+        kWh
+        Marzo 2026
+        2.115
+        Abril 2026
+        1.874
+        Mayo 2026
+        1.632
+        Junio 2026
+        1.542
+        Julio 2026
+        1.810
+        """
+        parsed = parse_bill_text(text)
+        history = {e["month"]: e["kwh"] for e in parsed["consumption_history"]}
+        assert history[3] == 2115
+        assert history[7] == 1810
+        assert parsed["kwh"] == 1810  # consumo del periodo intacto

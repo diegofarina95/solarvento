@@ -11,6 +11,7 @@ class BillHistoryEntry(BaseModel):
 
     month: int = Field(..., ge=1, le=12)
     kwh: float = Field(..., ge=0, le=20000)
+    eur: float | None = Field(None, ge=0, le=100000, description="Importe del mes, si consta.")
 
 
 class BillInput(BaseModel):
