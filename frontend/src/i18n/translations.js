@@ -334,6 +334,11 @@ export const translations = {
     grid: {
       note: ({ power, contracted, threshold }) => `Aviso: la potencia recomendada más alta (${power} kWp) roza o supera tu potencia contratada (${contracted} kW) y el techo de ${threshold} kW de la tarifa 2.0TD. Puede implicar límites de inyección o un trámite de conexión distinto; consúltalo con tu instalador y distribuidora.`,
     },
+    subsidies: {
+      consult: ({ organismo }) => `Ayudas autonómicas: consulta la convocatoria de ${organismo}. Aún no verificadas; los números mostrados NO incluyen ayudas.`,
+      applied: ({ organismo, grant, verified }) => `Subvención ${organismo} aplicada: ${grant} sobre la inversión (verificada ${verified}). La deducción de IRPF va aparte.`,
+      regionalGeneric: 'tu comunidad',
+    },
     sizing: {
       title: 'Tamaño del sistema: escenarios',
       intro: 'La cobertura del 100% no es la más rentable: vierte mucho excedente barato. El óptimo económico prioriza autoconsumo, ROI y amortización.',
@@ -351,6 +356,7 @@ export const translations = {
       overGridTitle: 'Supera la potencia contratada o el techo de 15 kW de la tarifa 2.0TD (implicaría 3.0TD y otro trámite de conexión).',
       overGridNote: 'Algún escenario supera tu potencia contratada o el techo de 15 kW de la 2.0TD: pasarías a tarifa 3.0TD (peajes distintos, término de potencia más alto todo el año) y el trámite de conexión sería otro. Solo informativo; no cambia los números.',
       years: ({ value }) => `${value} años`,
+      withSubsidy: ({ value }) => `(con ayuda: ${value} a)`,
       note: 'El óptimo maximiza rentabilidad; el de máximo ahorro cubre ~100% del consumo pero amortiza más despacio.',
     },
     battery: {
@@ -722,6 +728,11 @@ export const translations = {
     grid: {
       note: ({ power, contracted, threshold }) => `Note: the largest recommended power (${power} kWp) approaches or exceeds your contracted power (${contracted} kW) and the ${threshold} kW ceiling of the 2.0TD tariff. This can imply injection limits or a different connection procedure; check with your installer and DSO.`,
     },
+    subsidies: {
+      consult: ({ organismo }) => `Regional grants: check the ${organismo} call. Not yet verified; the figures shown do NOT include any grant.`,
+      applied: ({ organismo, grant, verified }) => `${organismo} grant applied: ${grant} off the investment (verified ${verified}). Income-tax deduction is separate.`,
+      regionalGeneric: 'your region',
+    },
     sizing: {
       title: 'System size: scenarios',
       intro: '100% coverage is not the most profitable: it exports a lot of cheap surplus. The economic optimum favours self-consumption, ROI and payback.',
@@ -739,6 +750,7 @@ export const translations = {
       overGridTitle: 'Exceeds contracted power or the 15 kW ceiling of the 2.0TD tariff (would move to 3.0TD and a different connection procedure).',
       overGridNote: 'A scenario exceeds your contracted power or the 15 kW 2.0TD ceiling: you would move to the 3.0TD tariff (different tolls, higher year-round power term) and a different connection procedure. Informational only; it does not change the numbers.',
       years: ({ value }) => `${value} yrs`,
+      withSubsidy: ({ value }) => `(with grant: ${value} y)`,
       note: 'The optimum maximises return; the max-savings size covers ~100% of consumption but pays back more slowly.',
     },
     battery: {
@@ -1110,6 +1122,11 @@ export const translations = {
     grid: {
       note: ({ power, contracted, threshold }) => `Remarque : la puissance recommandée la plus élevée (${power} kWp) approche ou dépasse votre puissance souscrite (${contracted} kW) et le plafond de ${threshold} kW du tarif 2.0TD. Cela peut impliquer des limites d’injection ou une procédure de raccordement différente ; vérifiez avec votre installateur et le gestionnaire de réseau.`,
     },
+    subsidies: {
+      consult: ({ organismo }) => `Aides régionales : consultez l'appel de ${organismo}. Non vérifiées ; les chiffres affichés n'incluent AUCUNE aide.`,
+      applied: ({ organismo, grant, verified }) => `Aide ${organismo} appliquée : ${grant} sur l'investissement (vérifiée ${verified}). La déduction d'impôt est à part.`,
+      regionalGeneric: 'votre région',
+    },
     sizing: {
       title: 'Taille du système : scénarios',
       intro: 'La couverture à 100% n’est pas la plus rentable : elle injecte beaucoup de surplus bon marché. L’optimum économique privilégie l’autoconsommation, le ROI et le retour.',
@@ -1127,6 +1144,7 @@ export const translations = {
       overGridTitle: 'Dépasse la puissance souscrite ou le plafond de 15 kW du tarif 2.0TD (passage en 3.0TD et procédure de raccordement différente).',
       overGridNote: 'Un scénario dépasse votre puissance souscrite ou le plafond de 15 kW du 2.0TD : passage au tarif 3.0TD (péages différents, terme de puissance plus élevé toute l’année) et procédure de raccordement différente. Informatif ; ne change pas les chiffres.',
       years: ({ value }) => `${value} ans`,
+      withSubsidy: ({ value }) => `(avec aide : ${value} a)`,
       note: 'L’optimum maximise la rentabilité ; la taille max-économies couvre ~100% de la consommation mais s’amortit plus lentement.',
     },
     battery: {
@@ -1498,6 +1516,11 @@ export const translations = {
     grid: {
       note: ({ power, contracted, threshold }) => `Nota: la potenza consigliata più alta (${power} kWp) sfiora o supera la potenza impegnata (${contracted} kW) e il tetto di ${threshold} kW della tariffa 2.0TD. Può comportare limiti di immissione o un iter di connessione diverso; verifica con l’installatore e il distributore.`,
     },
+    subsidies: {
+      consult: ({ organismo }) => `Incentivi regionali: consulta il bando di ${organismo}. Non ancora verificati; i numeri mostrati NON includono incentivi.`,
+      applied: ({ organismo, grant, verified }) => `Incentivo ${organismo} applicato: ${grant} sull'investimento (verificato ${verified}). La detrazione fiscale è separata.`,
+      regionalGeneric: 'la tua regione',
+    },
     sizing: {
       title: 'Dimensione impianto: scenari',
       intro: 'La copertura al 100% non è la più redditizia: immette molto surplus a basso prezzo. L’ottimo economico privilegia autoconsumo, ROI e rientro.',
@@ -1515,6 +1538,7 @@ export const translations = {
       overGridTitle: 'Supera la potenza impegnata o il tetto di 15 kW della tariffa 2.0TD (passaggio a 3.0TD e diverso iter di connessione).',
       overGridNote: 'Uno scenario supera la potenza impegnata o il tetto di 15 kW della 2.0TD: passeresti alla tariffa 3.0TD (oneri diversi, termine di potenza più alto tutto l’anno) e diverso iter di connessione. Solo informativo; non cambia i numeri.',
       years: ({ value }) => `${value} anni`,
+      withSubsidy: ({ value }) => `(con incentivo: ${value} a)`,
       note: 'L’ottimo massimizza la redditività; la taglia max-risparmio copre ~100% del consumo ma rientra più lentamente.',
     },
     battery: {

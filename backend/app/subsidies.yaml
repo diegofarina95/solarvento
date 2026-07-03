@@ -1,0 +1,49 @@
+# Ayudas autonómicas al autoconsumo, por comunidad. VERSIONADO.
+#
+# DISCIPLINA (igual que la guarda fiscal): NO inventar cifras. Cada registro
+# lleva verified_on y status. Si status != open, o falta window_end vigente, o
+# los importes son null → NO se aplica ninguna ayuda: la app muestra
+# "convocatoria cerrada/no verificada — consultar" y usa los números sin ayuda.
+#
+# Capas de ayuda SEPARADAS (no se colapsan en un único %):
+#   (a) Subvención autonómica (INEGA…) → reduce la inversión neta inicial.
+#   (b) Deducción IRPF → flujo recuperado en 1-4 años sobre base limitada, neto
+#       de la subvención ya recibida.
+#   (c) Bonificación municipal IBI/ICIO → v1: nota, no cálculo.
+version: 1
+regions:
+  # Galicia: estructura lista; importes PENDIENTES de la convocatoria real de
+  # INEGA. status=unverified → no se aplica nada hasta introducir datos reales.
+  GALICIA:
+    organismo: "INEGA (Instituto Enerxético de Galicia)"
+    convocatoria_id: null
+    eur_per_kwp: null
+    eur_per_kwh_battery: null
+    cap_absolute_eur: null
+    cap_pct_of_cost: null
+    max_subsidised_kwp: null
+    window_start: null
+    window_end: null
+    status: unverified
+    source_url: "https://www.inega.gal"
+    verified_on: null
+    irpf_deduction_pct: null
+    irpf_base_cap_eur: null
+    irpf_years: null
+  # Resto de comunidades: marcador → la UI muestra "ayudas disponibles, consultar".
+  _default:
+    organismo: null
+    convocatoria_id: null
+    eur_per_kwp: null
+    eur_per_kwh_battery: null
+    cap_absolute_eur: null
+    cap_pct_of_cost: null
+    max_subsidised_kwp: null
+    window_start: null
+    window_end: null
+    status: unverified
+    source_url: null
+    verified_on: null
+    irpf_deduction_pct: null
+    irpf_base_cap_eur: null
+    irpf_years: null

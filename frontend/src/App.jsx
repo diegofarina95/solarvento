@@ -49,6 +49,7 @@ export default function App() {
   const [locationSource, setLocationSource] = useState('initial')
   // Sugerencia de ubicación de la factura cuando el usuario ya puso una a mano
   const [billLocationSuggestion, setBillLocationSuggestion] = useState(null)
+  const [postalCode, setPostalCode] = useState(null)
   const [advanced, setAdvanced] = useState(false)
   const [form, setForm] = useState({
     peakPower: '5',
@@ -141,6 +142,8 @@ export default function App() {
   }
 
   function handleBillLocationDetected(parsedBill) {
+    // El CP resuelve la comunidad para las ayudas autonómicas.
+    if (parsedBill?.postal_code) setPostalCode(String(parsedBill.postal_code))
     const target = billLocationTarget(parsedBill)
     if (!target) return
     // No pisar una ubicación puesta a mano: ofrecer usarla en un aviso.
@@ -161,6 +164,7 @@ export default function App() {
         peak_power_kwp: requireLocaleNumber(form.peakPower, t('form.peakPower'), t),
         country_code: countryCode,
         auto_size_power: Boolean(form.autoSize),
+        ...(postalCode ? { postal_code: postalCode } : {}),
       }
       const parsedBills = bills.map((b, index) => ({
         ...b,

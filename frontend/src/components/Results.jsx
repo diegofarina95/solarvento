@@ -199,6 +199,11 @@ function SizingSection({ analysis, i18n, fmt }) {
                 <td className="py-2 pr-3">{fmt.money0.format(s.annual_savings_eur)}</td>
                 <td className="py-2 pr-3">
                   {s.payback_years != null ? t('sizing.years', { value: fmt.nf1.format(s.payback_years) }) : '—'}
+                  {s.subsidy_grant_eur > 0 && s.payback_with_subsidy_years != null && (
+                    <span className="ml-1 text-emerald-700">
+                      {t('sizing.withSubsidy', { value: fmt.nf1.format(s.payback_with_subsidy_years) })}
+                    </span>
+                  )}
                 </td>
                 <td className="py-2 pr-3">{s.roi_pct != null ? `${fmt.nf1.format(s.roi_pct)}%` : '—'}</td>
                 <td className="py-2">{fmt.nf1.format(s.self_consumption_pct)}%</td>
@@ -846,6 +851,20 @@ export default function Results({ data, i18n }) {
 
       {data.sizing_analysis && (
         <SizingSection analysis={data.sizing_analysis} i18n={i18n} fmt={fmt} />
+      )}
+
+      {data.subsidies && (
+        <div className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900">
+          {data.subsidies.applicable
+            ? t('subsidies.applied', {
+                organismo: data.subsidies.organismo ?? '',
+                grant: fmt.money0.format(data.subsidies.grant_eur),
+                verified: data.subsidies.verified_on ?? '—',
+              })
+            : t('subsidies.consult', {
+                organismo: data.subsidies.organismo || t('subsidies.regionalGeneric'),
+              })}
+        </div>
       )}
 
       {data.grid_limits && (

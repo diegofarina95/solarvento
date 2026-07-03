@@ -1509,3 +1509,72 @@ def test_annual_energy_exposes_seasonal_self_sufficiency(respx_mock, client):
     assert e["summer_self_sufficiency_pct"] is not None
     for v in (e["winter_self_sufficiency_pct"], e["summer_self_sufficiency_pct"]):
         assert 0 <= v <= 100
+
+
+@respx.mock
+def test_subsidies_galicia_unverified_shows_no_amount(respx_mock, client):
+    """FEATURE S: registro sin verificar → sin ayuda aplicada, estado 'unverified'."""
+    mock_pvgis(respx_mock)
+    real = {m: v for m, v in zip(range(1, 13),
+            [2902, 2640, 2210, 1874, 1632, 1542, 1810, 1948, 1765, 2009, 2430, 2875])}
+    history = [{"month": m, "kwh": k} for m, k in real.items()]
+    data = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0, "auto_size_power": True,
+        "postal_code": "15896",
+        "bills": [{"kwh": 25637, "energy_eur": 5350.51, "total_eur": 7332.17,
+                   "start_date": "2026-01-01", "end_date": "2026-12-31",
+                   "consumption_history": history}],
+    }).json()
+    sub = data["subsidies"]
+    assert sub["region"] == "GALICIA"
+    assert sub["status"] == "unverified"
+    assert sub["applicable"] is False
+    assert sub["grant_eur"] == 0.0
+    # sin ayuda: payback con ayuda == sin ayuda en cada escenario
+    for s in data["sizing_analysis"]["scenarios"]:
+        assert s["subsidy_grant_eur"] == 0.0
+        assert s["payback_with_subsidy_years"] == s["payback_years"]
+
+
+@respx.mock
+def test_subsidies_valid_record_applies_per_scenario(respx_mock, client, monkeypatch):
+    """FEATURE S: con registro válido, la ayuda baja el payback por escenario y
+    el óptimo recibe grant completo mientras el grande queda topado."""
+    mock_pvgis(respx_mock)
+    from app import subsidies as subsidies_mod
+
+    valid = {
+        "organismo": "INEGA", "convocatoria_id": "FV-2026",
+        "eur_per_kwp": 300.0, "eur_per_kwh_battery": 200.0,
+        "cap_absolute_eur": 4000.0, "cap_pct_of_cost": 0.40,
+        "max_subsidised_kwp": 8.0,
+        "window_start": "2026-01-01", "window_end": "2999-12-31",
+        "status": "open", "source_url": "https://x", "verified_on": "2026-06-01",
+        "irpf_deduction_pct": 0.20, "irpf_base_cap_eur": 3000.0, "irpf_years": 4,
+    }
+    monkeypatch.setattr(subsidies_mod, "get_region_record", lambda code, config=None: valid)
+
+    real = {m: v for m, v in zip(range(1, 13),
+            [2902, 2640, 2210, 1874, 1632, 1542, 1810, 1948, 1765, 2009, 2430, 2875])}
+    history = [{"month": m, "kwh": k} for m, k in real.items()]
+    data = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0, "auto_size_power": True,
+        "postal_code": "15896",
+        "bills": [{"kwh": 25637, "energy_eur": 5350.51, "total_eur": 7332.17,
+                   "start_date": "2026-01-01", "end_date": "2026-12-31",
+                   "consumption_history": history}],
+    }).json()
+    sub = data["subsidies"]
+    assert sub["applicable"] is True
+    assert sub["grant_eur"] > 0
+    sc = data["sizing_analysis"]
+    by = {s["power_kwp"]: s for s in sc["scenarios"]}
+    opt = by[sc["economic_optimum_kwp"]]
+    cov = by[sc["max_savings_kwp"]]
+    # ayuda por escenario reduce el payback y la inversión neta
+    for s in (opt, cov):
+        assert s["subsidy_grant_eur"] > 0
+        assert s["net_investment_with_subsidy_eur"] < s["investment_eur"]
+        assert s["payback_with_subsidy_years"] < s["payback_years"]
+    # el óptimo (<8 kWp) recibe más ayuda por kWp instalado que el grande (topado)
+    assert opt["subsidy_grant_eur"] / opt["power_kwp"] > cov["subsidy_grant_eur"] / cov["power_kwp"]

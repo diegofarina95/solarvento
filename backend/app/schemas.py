@@ -107,6 +107,9 @@ class SolarEstimateRequest(BaseModel):
         max_length=2,
         description="Código ISO del país para precios; si falta se infiere por coordenadas",
     )
+    postal_code: str | None = Field(
+        None, max_length=12, description="CP del suministro; resuelve la comunidad para ayudas"
+    )
     refresh_prices: bool = Field(False, description="Forzar refresco de la caché de precios")
     # --- Análisis avanzado ---
     bills: list[BillInput] | None = Field(
@@ -308,6 +311,25 @@ class BatteryAnalysis(BaseModel):
     battery_cost_range_eur_per_kwh: PriceRange | None = None
 
 
+class SubsidyIrpf(BaseModel):
+    deduction_pct: float
+    recoverable_eur: float
+    years: int | None = None
+
+
+class SubsidyInfo(BaseModel):
+    """Ayudas autonómicas: capa (a) subvención + (b) IRPF, con guarda de vigencia."""
+
+    region: str
+    organismo: str | None = None
+    status: str  # open | unverified | closed | exhausted | expired | not_yet
+    applicable: bool
+    verified_on: str | None = None
+    source_url: str | None = None
+    grant_eur: float = 0.0  # subvención para el sistema recomendado (0 si no aplica)
+    irpf: SubsidyIrpf | None = None
+
+
 class GridLimits(BaseModel):
     """Aviso informativo cuando la potencia recomendada roza límites de red."""
 
@@ -351,6 +373,10 @@ class SizingScenario(BaseModel):
     imported_kwh: float
     exceeds_contracted: bool = False
     exceeds_tariff: bool = False
+    # Ayuda autonómica por escenario (0 si no aplica) y payback con/sin ayuda.
+    subsidy_grant_eur: float = 0.0
+    net_investment_with_subsidy_eur: float | None = None
+    payback_with_subsidy_years: float | None = None
 
 
 class SizingAnalysis(BaseModel):
@@ -433,6 +459,7 @@ class SolarEstimateResponse(BaseModel):
     annual_energy: AnnualEnergySummary
     battery_analysis: BatteryAnalysis | None = None
     sizing_analysis: SizingAnalysis | None = None
+    subsidies: SubsidyInfo | None = None
     grid_limits: GridLimits | None = None
     typical_day: TypicalDay | None = None
     confidence: CalculationConfidence

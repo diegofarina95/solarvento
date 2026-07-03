@@ -5,6 +5,7 @@ import ipaddress
 import logging
 import math
 from contextlib import asynccontextmanager
+from datetime import date
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Query, Request, UploadFile
@@ -28,6 +29,7 @@ from .pricing import (
 from .profiles import DAYS_PER_MONTH, consumption_profile
 from .pvgis import PVGISClient, PVGISError
 from .spain_postal import province_from_postal_code
+from . import subsidies as subsidies_mod
 from .ratelimit import RateLimiter
 from .schemas import (
     GeocodeResult,
@@ -731,6 +733,7 @@ def _size_scenarios(
     cost_fn,
     coverage_kwp: float,
     step_kwp: float,
+    grant_fn=None,
 ) -> tuple[list[dict], float, float]:
     """Barrido de tamaños de PV (sin batería): payback/ROI/VAN por potencia.
 
@@ -755,15 +758,23 @@ def _size_scenarios(
             savings, annual_consumption, price, export_scheme
         )
         cost = cost_fn(kwp)
+        replacements = {
+            cashflow.INVERTER_REPLACEMENT_YEAR: round(inverter_per_kwp * kwp, 2)
+        }
+        om = round(cost * om_pct, 2)
+        yearly = cashflow.simple_yearly_savings(savings)
         analysis = cashflow.cashflow_analysis(
-            cashflow.simple_yearly_savings(savings),
-            investment_eur=cost,
-            subsidy_eur=subsidy,
-            om_eur_per_year=round(cost * om_pct, 2),
-            replacements={
-                cashflow.INVERTER_REPLACEMENT_YEAR: round(inverter_per_kwp * kwp, 2)
-            },
+            yearly, investment_eur=cost, subsidy_eur=subsidy,
+            om_eur_per_year=om, replacements=replacements,
         )
+        # Subvención autonómica POR ESCENARIO (0 si no aplica): el tope de kWp
+        # elegibles hace que un sistema grande reciba proporcionalmente menos,
+        # favoreciendo aún más el óptimo económico. Se muestra CON y SIN ayuda.
+        grant = grant_fn(kwp, cost) if grant_fn else 0.0
+        with_subsidy = cashflow.cashflow_analysis(
+            yearly, investment_eur=cost, subsidy_eur=subsidy + grant,
+            om_eur_per_year=om, replacements=replacements,
+        ) if grant > 0 else analysis
         scenarios.append(
             {
                 "power_kwp": kwp,
@@ -771,6 +782,9 @@ def _size_scenarios(
                 "investment_eur": round(cost, 2),
                 "payback_years": analysis["payback_years"],
                 "npv_eur": analysis["npv_eur"],
+                "subsidy_grant_eur": round(grant, 2),
+                "net_investment_with_subsidy_eur": with_subsidy["net_investment_eur"],
+                "payback_with_subsidy_years": with_subsidy["payback_years"],
                 "roi_pct": round(savings / cost * 100, 1) if cost > 0 else None,
                 "production_kwh": balance["production_kwh"],
                 "self_consumption_pct": balance["self_consumption_pct"],
@@ -1114,6 +1128,23 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
     effective_surplus = surplus_price
     subsidy = req.subsidy_eur or 0.0
 
+    # --- Ayudas autonómicas (config versionada; guarda de vigencia) ---
+    # La comunidad se resuelve del CP; el registro puede estar sin verificar →
+    # no se aplica nada (grant 0) y se muestra "consultar". Grant POR ESCENARIO.
+    subsidy_region = subsidies_mod.region_from_postal_code(req.postal_code)
+    subsidy_record = subsidies_mod.get_region_record(subsidy_region)
+    subsidy_today = date.today()
+
+    def _subsidy_grant(kwp: float, cost_for_kwp: float) -> float:
+        if not subsidy_record:
+            return 0.0
+        return subsidies_mod.compute_subsidy(
+            subsidy_record,
+            power_kwp=kwp,
+            system_cost_eur=cost_for_kwp,
+            today=subsidy_today,
+        )["grant_eur"]
+
     # --- Dimensionado: recomendación de cobertura + barrido económico ---
     panels = None
     analysis_power_kwp = req.peak_power_kwp
@@ -1170,6 +1201,7 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
                     cost_fn=_size_cost,
                     coverage_kwp=panels["total_kwp"],
                     step_kwp=max(0.5, req.panel_power_w / 1000),
+                    grant_fn=_subsidy_grant,
                 )
                 sizing_analysis = {
                     "scenarios": size_list,
@@ -1452,6 +1484,26 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
                 "exceeds_tariff": recommended_power > TARIFF_THRESHOLD_KW,
             }
 
+    # --- Objeto de ayudas para la respuesta (headline = sistema recomendado) ---
+    subsidies_info = None
+    if subsidy_record and annual_consumption is not None:
+        head = subsidies_mod.compute_subsidy(
+            subsidy_record,
+            power_kwp=analysis_power_kwp,
+            system_cost_eur=cost,
+            today=subsidy_today,
+        )
+        subsidies_info = {
+            "region": subsidy_region,
+            "organismo": head.get("organismo"),
+            "status": head["status"],
+            "applicable": head["applicable"],
+            "verified_on": head.get("verified_on"),
+            "source_url": head.get("source_url"),
+            "grant_eur": head["grant_eur"],
+            "irpf": head.get("irpf"),
+        }
+
     return SolarEstimateResponse(
         lat=round(req.lat, 2),
         lon=round(req.lon, 2),
@@ -1480,6 +1532,7 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         annual_energy=annual_energy,
         battery_analysis=battery_analysis,
         sizing_analysis=sizing_analysis,
+        subsidies=subsidies_info,
         grid_limits=grid_limits,
         typical_day=typical_day,
         confidence=_confidence_summary(consumption_summary, price_source, price_quote),
