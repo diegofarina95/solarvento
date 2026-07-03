@@ -1,4 +1,5 @@
 import respx
+import pytest
 from httpx import Response
 
 from app.cache import TTLCache
@@ -43,13 +44,30 @@ def test_default_pricing_calculates_ranges():
         battery_options_kwh=[5, 10],
     )
 
-    assert result["system_cost_range"] == {
-        "low": 4725.0,
-        "medium": 5625.0,
-        "high": 6525.0,
-    }
+    # Media ajustada al tamaño (4.5 kWp → factor (5/4.5)^0.3 ≈ 1.0321) y rango
+    # típico de presupuestos -12%/+15%, no el min-max de mercado
+    factor = (5.0 / 4.5) ** 0.3
+    adjusted_kwp = round(1250 * factor, 2)
+    assert result["turnkey_cost_per_kwp"]["medium"] == pytest.approx(adjusted_kwp, abs=0.02)
+    assert result["system_cost_range"]["medium"] == pytest.approx(adjusted_kwp * 4.5, abs=0.1)
+    assert result["system_cost_range"]["low"] == pytest.approx(
+        adjusted_kwp * 0.88 * 4.5, abs=0.5
+    )
+    assert result["system_cost_range"]["high"] == pytest.approx(
+        adjusted_kwp * 1.15 * 4.5, abs=0.5
+    )
+    # La horquilla típica es más estrecha que la banda de mercado completa
+    market_width = (1450 - 1050) * 4.5
+    typical_width = result["system_cost_range"]["high"] - result["system_cost_range"]["low"]
+    assert typical_width < market_width
     assert result["panel_price_per_panel"]["medium"] == 108.0
-    assert result["battery_option_costs"][0]["investment_range"]["medium"] == 8875.0
+    # Batería de 5 kWh: más cara por kWh que la media de mercado (a 10 kWh)
+    battery_5 = result["battery_option_costs"][0]
+    assert battery_5["battery_kwh"] == 5
+    per_kwh_5 = 650 * (10.0 / 5.0) ** 0.15
+    assert battery_5["investment_range"]["medium"] == pytest.approx(
+        result["system_cost_range"]["medium"] + per_kwh_5 * 5, rel=0.001
+    )
 
 
 def test_manual_overrides_do_not_replace_component_catalogue():

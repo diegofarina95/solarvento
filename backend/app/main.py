@@ -834,6 +834,15 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         capacities = [0.0] + sorted(
             {c for c in req.battery_options_kwh if c > 0}
         )
+        # €/kWh por capacidad (las baterías pequeñas cuestan más por kWh):
+        # coherente con las horquillas de inversión que se muestran
+        battery_unit_costs = {
+            item["battery_kwh"]: round(
+                (item["investment_range"]["medium"] - cost) / item["battery_kwh"], 2
+            )
+            for item in cost_details["battery_option_costs"]
+            if item["battery_kwh"] > 0
+        }
         scenarios = simulation.battery_scenarios(
             hourly_production,
             cons_profile,
@@ -841,7 +850,7 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
             price,
             surplus_price,
             cost,
-            battery_cost_per_kwh,
+            battery_unit_costs,
             export_scheme=price_quote.get("export_scheme", "capped_compensation"),
         )
         _attach_battery_cost_ranges(

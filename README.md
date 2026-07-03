@@ -122,7 +122,10 @@ La imagen es multi-stage (Node compila el frontend, Python ejecuta la API) y per
   con el tope mensual de la compensación simplificada (la factura de energía no queda negativa).
 - **Baterías**: se recomienda la capacidad con mejor payback marginal si baja de ~10 años (vida
   útil típica); si no, se indica que no compensa.
-- **Coste estimado**: `kWp × 1250 €` por defecto (configurable), sin subvenciones ni deducciones.
+- **Coste estimado**: media de mercado del país ajustada por tamaño (las instalaciones pequeñas
+  cuestan más por kWp; curva calibrada con datos reales, exponente 0,3 sobre 5 kWp de referencia)
+  y presentada como rango típico de presupuestos (−12 % / +15 %), siempre dentro de la banda de
+  mercado. Las baterías se ajustan igual por capacidad (10 kWh de referencia). Sin subvenciones.
 - **Amortización**: retorno simple `coste / ahorro anual`, sin inflación ni degradación.
 - **Paneles recomendados**: `⌈(consumo / kWh-por-kWp-local) × 1000 / W-panel⌉` (~2,2 m²/panel +15% de margen).
 

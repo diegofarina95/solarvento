@@ -99,12 +99,14 @@ def test_solar_estimate_basic_mode(respx_mock, client):
     assert data["economics"]["electricity_price_eur_kwh"] == 0.17
     assert data["economics"]["electricity_price_source"] == "default"
     assert data["economics"]["annual_savings_eur"] > 0
-    # Sin coste indicado se estima por kWp (ES verificado jul-2026: 800/1100/1500)
+    # Sin coste indicado se estima por kWp (ES media 1100 a 5 kWp) y se muestra
+    # el rango típico de presupuestos para ese tamaño (-12% / +15%), no el
+    # min-max de todo el mercado
     assert data["economics"]["installation_cost_eur"] == 5500.0
     assert data["economics"]["installation_cost_range_eur"] == {
-        "low": 4000.0,
+        "low": 4840.0,
         "medium": 5500.0,
-        "high": 7500.0,
+        "high": 6325.0,
     }
     assert data["economics"]["cost_is_estimated"] is True
     assert data["economics"]["roi_pct"] is not None
@@ -266,7 +268,8 @@ def test_solar_estimate_january_june_bills_regression(respx_mock, client):
 
     # El coste estimado, la simulación horaria y la amortización usan la potencia recomendada.
     assert data["economics"]["installation_cost_eur"] == pytest.approx(
-        data["analysis_power_kwp"] * 1100
+        data["analysis_power_kwp"] * data["pricing"]["turnkey_cost_per_kwp"]["medium"],
+        rel=0.001,
     )
     assert data["economics"]["installation_cost_range_eur"]["medium"] == pytest.approx(
         data["analysis_power_kwp"] * data["pricing"]["turnkey_cost_per_kwp"]["medium"]

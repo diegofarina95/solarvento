@@ -524,7 +524,10 @@ export default function Results({ data, i18n }) {
               eco.cost_is_estimated
                 ? t('results.installedCostDetail', { kwp: fmt.nf2.format(data.analysis_power_kwp) })
                 : t('results.indicatedCostDetail'),
-            ].join(' · ')}
+              eco.cost_is_estimated ? t('results.typicalRangeNote') : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
           />
         )}
         <Card

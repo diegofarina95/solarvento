@@ -157,7 +157,15 @@ def battery_scenarios(
 
     Para cada capacidad: balance, ahorro anual, inversión total y payback.
     El payback marginal de la batería compara con el escenario sin batería.
+    battery_cost_eur_kwh puede ser un float único o un dict {capacidad: €/kWh}
+    (las baterías pequeñas cuestan más por kWh que las grandes).
     """
+
+    def _unit_cost(capacity: float) -> float:
+        if isinstance(battery_cost_eur_kwh, dict):
+            return battery_cost_eur_kwh.get(capacity, 0.0)
+        return battery_cost_eur_kwh
+
     base = None
     scenarios = []
     for capacity in capacities_kwh:
@@ -165,7 +173,7 @@ def battery_scenarios(
         savings = annual_savings_with_surplus(
             balance, price_eur_kwh, surplus_price_eur_kwh, export_scheme
         )
-        investment = system_cost_eur + capacity * battery_cost_eur_kwh
+        investment = system_cost_eur + capacity * _unit_cost(capacity)
         scenario = {
             "battery_kwh": capacity,
             "annual_savings_eur": savings,
@@ -187,7 +195,7 @@ def battery_scenarios(
             base = scenario
         if base is not None and capacity > 0:
             extra_savings = savings - base["annual_savings_eur"]
-            extra_cost = capacity * battery_cost_eur_kwh
+            extra_cost = capacity * _unit_cost(capacity)
             scenario["battery_marginal_payback_years"] = (
                 round(extra_cost / extra_savings, 1) if extra_savings > 0 else None
             )
