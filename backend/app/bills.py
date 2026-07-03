@@ -435,6 +435,28 @@ def _effective_price_bounds(currency: str | None) -> tuple[float, float]:
     return _price_bounds(cur)
 
 
+def safe_to_float(raw: object) -> float | None:
+    """_to_float que no lanza: normaliza formato español o devuelve None.
+
+    Punto único de normalización numérica del contrato de extracción (Layer 3):
+    "6.551"->6551, "1.689,65"->1689,65, "0,24"->0,24. Ignora unidades/símbolos
+    pegados al número ('6.551 kWh', '0,241 €/kWh')."""
+    if raw is None:
+        return None
+    if isinstance(raw, bool):
+        return None
+    if isinstance(raw, (int, float)):
+        return float(raw)
+    text = str(raw)
+    match = re.search(r"-?\d[\d.,\s ]*\d|-?\d", text)
+    if not match:
+        return None
+    try:
+        return _to_float(match.group(0))
+    except ValueError:
+        return None
+
+
 def _values_close(a: float | None, b: float | None) -> bool:
     """Dos lecturas del consumo se consideran la misma cifra (2 % o 5 kWh)."""
     if not a or not b:
@@ -450,6 +472,12 @@ def _annual_consumption_sources(bill: dict) -> dict[str, float]:
     headline = bill.get("kwh")
     if headline and headline > 0:
         sources["headline"] = round(float(headline), 1)
+
+    # Total de la tabla de periodos TAL COMO LO IMPRIME la factura (candidato
+    # distinto de la suma de columnas que calcula la app).
+    printed_total = bill.get("period_total_kwh")
+    if isinstance(printed_total, (int, float)) and printed_total > 0:
+        sources["period_total_printed"] = round(float(printed_total), 1)
 
     periods = bill.get("consumption_periods") or {}
     period_sum = sum(v for v in periods.values() if isinstance(v, (int, float)) and v > 0)
@@ -481,8 +509,6 @@ def reconcile_annual_consumption(bill: dict) -> tuple[float | None, str | None, 
     """
     headline = bill.get("kwh")
     sources = _annual_consumption_sources(bill)
-    period_total = sources.get("period_total")
-    history_sum = sources.get("history_sum")
     head = sources.get("headline")
 
     periods = bill.get("consumption_periods") or {}
@@ -490,16 +516,22 @@ def reconcile_annual_consumption(bill: dict) -> tuple[float | None, str | None, 
         _values_close(head, v) for v in periods.values() if isinstance(v, (int, float))
     )
 
+    # Valor corroborado por ≥2 fuentes que coinciden entre sí (mayor consenso gana).
+    values = list(sources.values())
     authoritative: float | None = None
-    if _values_close(period_total, history_sum):
-        # Dos fuentes deterministas coinciden → manda su cifra (media).
-        authoritative = round((period_total + history_sum) / 2, 1)
-    elif period_total and matches_single_period and period_total > (head or 0) * 1.2:
-        # La cifra destacada es una sola columna de periodo → usar la suma.
-        authoritative = period_total
-    elif _values_close(head, period_total) or _values_close(head, history_sum):
-        # La cifra destacada ya coincide con una fuente determinista → correcta.
-        authoritative = head
+    best_support = 1
+    for candidate in values:
+        agree = [w for w in values if _values_close(candidate, w)]
+        if len(agree) >= 2 and len(agree) > best_support:
+            authoritative = round(sum(agree) / len(agree), 1)
+            best_support = len(agree)
+
+    if authoritative is None:
+        # Sin corroboración: reparación de columna única (cabecera = una columna,
+        # existe un total mayor) usando el total impreso o la suma de columnas.
+        period_total = sources.get("period_total_printed") or sources.get("period_total")
+        if period_total and matches_single_period and period_total > (head or 0) * 1.2:
+            authoritative = period_total
 
     if authoritative is None:
         # Nada se corrobora. Si hay varias fuentes y NO coinciden → revisión.
