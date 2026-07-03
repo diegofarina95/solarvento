@@ -286,6 +286,8 @@ class AnnualEnergySummary(BaseModel):
     production_to_consumption_pct: float | None = None
     self_consumption_pct: float | None = None
     self_sufficiency_pct: float | None = None
+    winter_self_sufficiency_pct: float | None = None
+    summer_self_sufficiency_pct: float | None = None
 
 
 class BatteryAnalysis(BaseModel):

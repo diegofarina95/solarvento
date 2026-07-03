@@ -612,6 +612,34 @@ def _scale_system(system: dict, target_kwp: float, source_kwp: float) -> dict:
     return scaled
 
 
+_WINTER_MONTHS = (12, 1, 2)
+_SUMMER_MONTHS = (6, 7, 8)
+
+
+def _seasonal_self_sufficiency(
+    production: list[list[float]], consumption: list[list[float]]
+) -> tuple[float | None, float | None]:
+    """Autosuficiencia invierno vs verano del perfil horario (misma fuente que el
+    titular; no re-simula). Sin batería: servido = Σ min(prod, cons) por hora.
+
+    Devuelve (invierno %, verano %), ponderando meses por su consumo real.
+    """
+
+    def _window(months: tuple[int, ...]) -> float | None:
+        served = 0.0
+        consumed = 0.0
+        for m in months:
+            days = DAYS_PER_MONTH[m - 1]
+            prod, cons = production[m - 1], consumption[m - 1]
+            served += sum(min(prod[h], cons[h]) for h in range(24)) * days
+            consumed += sum(cons) * days
+        if consumed <= 0:
+            return None
+        return round(min(100.0, max(0.0, 100 * served / consumed)), 1)
+
+    return _window(_WINTER_MONTHS), _window(_SUMMER_MONTHS)
+
+
 def _coverage_pct(production_kwh: float, consumption_kwh: float | None) -> float | None:
     """Producción anual como porcentaje del consumo anual, sin acotarla al 100%."""
     if not consumption_kwh or consumption_kwh <= 0:
@@ -1293,6 +1321,11 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
                 "battery_cost_per_kwh"
             ],
         }
+        # Autosuficiencia estacional (misma fuente horaria; sin re-simular):
+        # revela la baja cobertura invernal que el % anual esconde.
+        winter_ss, summer_ss = _seasonal_self_sufficiency(hourly_production, cons_profile)
+        annual_energy["winter_self_sufficiency_pct"] = winter_ss
+        annual_energy["summer_self_sufficiency_pct"] = summer_ss
         typical_day = {"production": hourly_production, "consumption": cons_profile}
         # Con simulación, el ahorro base es el del escenario sin batería
         # (incluye compensación de excedentes): más realista que el modelo simple

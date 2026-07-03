@@ -1478,3 +1478,34 @@ def test_geocode_province_mismatch_falls_back_to_cp_centroid(respx_mock, client)
     # Rechazado por distancia → centroide del CP (provincia 15 = A Coruña), baja confianza
     assert out["location_confidence"] == "low"
     assert _haversine_km(out["lat"], out["lon"], 43.36, -8.41) < 5
+
+
+def test_seasonal_self_sufficiency_winter_below_summer():
+    """FEATURE R: invierno < verano con producción estival y consumo plano."""
+    from app.main import _seasonal_self_sufficiency
+    prod = [
+        [(2.0 if m in (5, 6, 7) else 0.2) if 9 <= h < 17 else 0.0 for h in range(24)]
+        for m in range(12)
+    ]
+    cons = [[1.0] * 24 for _ in range(12)]
+    winter, summer = _seasonal_self_sufficiency(prod, cons)
+    assert winter is not None and summer is not None
+    assert winter < summer
+
+
+@respx.mock
+def test_annual_energy_exposes_seasonal_self_sufficiency(respx_mock, client):
+    mock_pvgis(respx_mock)
+    real = {m: v for m, v in zip(range(1, 13),
+            [2902, 2640, 2210, 1874, 1632, 1542, 1810, 1948, 1765, 2009, 2430, 2875])}
+    history = [{"month": m, "kwh": k} for m, k in real.items()]
+    e = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0, "auto_size_power": True,
+        "bills": [{"kwh": 25637, "energy_eur": 5350.51, "total_eur": 7332.17,
+                   "start_date": "2026-01-01", "end_date": "2026-12-31",
+                   "consumption_history": history}],
+    }).json()["annual_energy"]
+    assert e["winter_self_sufficiency_pct"] is not None
+    assert e["summer_self_sufficiency_pct"] is not None
+    for v in (e["winter_self_sufficiency_pct"], e["summer_self_sufficiency_pct"]):
+        assert 0 <= v <= 100

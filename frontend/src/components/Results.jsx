@@ -730,9 +730,17 @@ export default function Results({ data, i18n }) {
             title={t('results.selfSufficiency')}
             value={fmt.nf1.format(annualEnergy.self_sufficiency_pct)}
             unit="%"
-            detail={t('results.selfSufficiencyDetail', {
-              value: fmt.nf.format(annualEnergy.self_consumed_kwh),
-            })}
+            detail={
+              annualEnergy.winter_self_sufficiency_pct != null &&
+              annualEnergy.summer_self_sufficiency_pct != null
+                ? t('results.selfSufficiencySeasonal', {
+                    winter: fmt.nf1.format(annualEnergy.winter_self_sufficiency_pct),
+                    summer: fmt.nf1.format(annualEnergy.summer_self_sufficiency_pct),
+                  })
+                : t('results.selfSufficiencyDetail', {
+                    value: fmt.nf.format(annualEnergy.self_consumed_kwh),
+                  })
+            }
           />
         )}
         {annualEnergy?.self_consumption_pct != null && (
