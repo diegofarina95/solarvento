@@ -207,6 +207,11 @@ function SizingSection({ analysis, i18n, fmt }) {
           </tbody>
         </table>
       </div>
+      {analysis.scenarios.some((s) => s.exceeds_contracted || s.exceeds_tariff) && (
+        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
+          {t('sizing.overGridNote')}
+        </p>
+      )}
       <p className="mt-2 text-xs text-stone-500">{t('sizing.note')}</p>
     </div>
   )
