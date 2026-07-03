@@ -435,21 +435,105 @@ def _effective_price_bounds(currency: str | None) -> tuple[float, float]:
     return _price_bounds(cur)
 
 
-def validate_bill_consumption(bill: dict) -> list[str]:
-    """Guardas de plausibilidad y reconciliación del consumo detectado.
+def _values_close(a: float | None, b: float | None) -> bool:
+    """Dos lecturas del consumo se consideran la misma cifra (2 % o 5 kWh)."""
+    if not a or not b:
+        return False
+    return abs(a - b) <= max(0.02 * max(a, b), 5)
 
-    Agnóstica al parser (IA o local): atrapa tanto una sola columna de periodo
-    tomada por el total como un precio efectivo imposible. Devuelve motivos de
-    revisión (lista vacía = sin objeciones). No lanza: el llamador decide si
-    degrada a estado 'revisar factura'.
+
+def _annual_consumption_sources(bill: dict) -> dict[str, float]:
+    """Las varias lecturas del consumo anual, para cruzarlas entre sí:
+    la cifra destacada, la suma de columnas de periodo y la suma del histórico
+    mensual (11-12 meses = anual, sin depender de fechas)."""
+    sources: dict[str, float] = {}
+    headline = bill.get("kwh")
+    if headline and headline > 0:
+        sources["headline"] = round(float(headline), 1)
+
+    periods = bill.get("consumption_periods") or {}
+    period_sum = sum(v for v in periods.values() if isinstance(v, (int, float)) and v > 0)
+    if period_sum > 0:
+        sources["period_total"] = round(period_sum, 1)
+
+    history = bill.get("consumption_history") or []
+    if len(history) >= 11:
+        history_sum = sum(
+            h.get("kwh", 0) for h in history if isinstance(h, dict) and h.get("kwh")
+        )
+        if history_sum > 0:
+            sources["history_sum"] = round(history_sum, 1)
+    return sources
+
+
+def reconcile_annual_consumption(bill: dict) -> tuple[float | None, str | None, list[str]]:
+    """Cruza el consumo anual de sus VARIAS fuentes y devuelve el valor autoritativo.
+
+    La misma cifra aparece en varios sitios (cifra destacada 'consumo facturado',
+    total de la tabla de periodos, suma del histórico mensual). Se tratan como
+    corroboraciones, no como lecturas independientes:
+      - si dos fuentes coinciden, esa cifra manda y se CORRIGE la que discrepe
+        (p. ej. una tarjeta mal parseada) — la factura calcula, no va a revisión;
+      - una sola columna de periodo tomada por el total se corrige a la suma;
+      - solo si NINGUNA fuente se corrobora con otra se deja para revisión.
+
+    Devuelve (kwh_autoritativo, nota_de_correccion|None, motivos_de_revision).
+    """
+    headline = bill.get("kwh")
+    sources = _annual_consumption_sources(bill)
+    period_total = sources.get("period_total")
+    history_sum = sources.get("history_sum")
+    head = sources.get("headline")
+
+    periods = bill.get("consumption_periods") or {}
+    matches_single_period = any(
+        _values_close(head, v) for v in periods.values() if isinstance(v, (int, float))
+    )
+
+    authoritative: float | None = None
+    if _values_close(period_total, history_sum):
+        # Dos fuentes deterministas coinciden → manda su cifra (media).
+        authoritative = round((period_total + history_sum) / 2, 1)
+    elif period_total and matches_single_period and period_total > (head or 0) * 1.2:
+        # La cifra destacada es una sola columna de periodo → usar la suma.
+        authoritative = period_total
+    elif _values_close(head, period_total) or _values_close(head, history_sum):
+        # La cifra destacada ya coincide con una fuente determinista → correcta.
+        authoritative = head
+
+    if authoritative is None:
+        # Nada se corrobora. Si hay varias fuentes y NO coinciden → revisión.
+        if len(sources) >= 2:
+            detail = ", ".join(f"{k}={v:.0f}" for k, v in sources.items())
+            return headline, None, [
+                f"Las fuentes de consumo no coinciden ({detail} kWh); revisa el consumo."
+            ]
+        return headline, None, []
+
+    if headline is None or not _values_close(headline, authoritative):
+        note = (
+            f"Consumo anual corregido a {authoritative:.0f} kWh por coincidencia de fuentes "
+            f"(suma de periodos/histórico); la cifra detectada ({headline}) no cuadraba."
+        )
+        return authoritative, note, []
+    return authoritative, None, []
+
+
+def validate_bill_consumption(bill: dict) -> list[str]:
+    """Guarda de plausibilidad del consumo YA reconciliado: el precio efectivo.
+
+    Agnóstica al parser (IA o local). La reconciliación de fuentes la hace
+    reconcile_annual_consumption; aquí queda el backstop independiente: si
+    incluso el consumo reconciliado da un precio efectivo imposible (p. ej. una
+    factura con una única columna de periodo y sin más fuentes que la corroboren),
+    se deja para revisión. Devuelve motivos (lista vacía = sin objeciones).
     """
     reasons: list[str] = []
     kwh = bill.get("kwh")
     if not kwh or kwh <= 0:
-        return reasons  # sin consumo no hay nada que reconciliar
+        return reasons
     currency = bill.get("currency")
 
-    # (4) Precio efectivo = total / consumo. 3.027 € / 2.150 kWh = 1,41 lo dispara.
     total = bill.get("total_eur") or bill.get("amount_eur")
     if total:
         effective = total / kwh
@@ -459,26 +543,6 @@ def validate_bill_consumption(bill: dict) -> list[str]:
                 f"El precio efectivo detectado ({effective:.2f} {currency or 'EUR'}/kWh) queda "
                 f"fuera de lo razonable ({low:.2f}–{high:.2f} {currency or 'EUR'}/kWh): el consumo "
                 "puede ser una sola columna de periodo en vez del total. Revisa el consumo."
-            )
-
-    # (3) Reconciliación: la suma de columnas de periodo (P1+P2+P3) == consumo total.
-    periods = bill.get("consumption_periods") or {}
-    period_sum = sum(v for v in periods.values() if isinstance(v, (int, float)) and v > 0)
-    if period_sum > 0 and abs(period_sum - kwh) > max(0.02 * kwh, 5):
-        reasons.append(
-            f"La suma de los periodos ({period_sum:.0f} kWh) no cuadra con el consumo "
-            f"detectado ({kwh:.0f} kWh); revisa qué columna es el total del periodo."
-        )
-
-    # (3b) Reconciliación con el histórico mensual: 11-12 meses ES anual, sin
-    # depender de las fechas (que el parser IA entrega como texto, no date).
-    history = bill.get("consumption_history") or []
-    if len(history) >= 11:
-        history_sum = sum(h.get("kwh", 0) for h in history if isinstance(h, dict))
-        if history_sum > 0 and abs(history_sum - kwh) > max(0.10 * kwh, 50):
-            reasons.append(
-                f"El consumo anual ({kwh:.0f} kWh) no cuadra con la suma del histórico "
-                f"mensual ({history_sum:.0f} kWh)."
             )
     return reasons
 
@@ -1039,8 +1103,12 @@ def parse_bill_text(text: str) -> dict:
     if result["kwh"] is None:
         warnings.append("No se detectó el consumo en kWh")
 
-    # --- Guardas: reconciliación y precio efectivo → estado 'revisar factura' ---
-    review_reasons = validate_bill_consumption(result)
+    # --- Reconciliación de fuentes (corrige) + guarda de precio efectivo (revisa) ---
+    corrected_kwh, correction_note, review_reasons = reconcile_annual_consumption(result)
+    result["kwh"] = corrected_kwh
+    if correction_note:
+        warnings.append(correction_note)
+    review_reasons = review_reasons + validate_bill_consumption(result)
     if review_reasons:
         result["needs_review"] = True
         result["review_reasons"] = review_reasons

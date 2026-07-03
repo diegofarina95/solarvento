@@ -11,7 +11,13 @@ from typing import Any
 
 import httpx
 
-from .bills import BillParseError, MAX_BILL_KWH, _to_float, validate_bill_consumption
+from .bills import (
+    BillParseError,
+    MAX_BILL_KWH,
+    _to_float,
+    reconcile_annual_consumption,
+    validate_bill_consumption,
+)
 from .pricing.countries import COUNTRIES, normalize_country_code
 
 
@@ -373,21 +379,6 @@ def _normalize_openai_bill(parsed: dict[str, Any]) -> dict[str, Any]:
         kwh = None
 
     periods = _optional_periods(parsed.get("consumption_periods"))
-    period_sum = round(sum(periods.values()), 1) if periods else None
-    # Trampa "una sola columna por el total": si el kWh detectado coincide con una
-    # columna de periodo y la suma de periodos es claramente mayor, se corrige al
-    # total real (la columna sumada) en vez de dejar el dimensionado a 1/6.
-    if (
-        kwh is not None
-        and period_sum is not None
-        and period_sum > kwh * 1.2
-        and any(abs(kwh - v) <= max(0.02 * v, 2) for v in periods.values())
-    ):
-        warnings.append(
-            f"El consumo detectado ({kwh:.0f} kWh) era una sola columna de periodo; "
-            f"se usa la suma de periodos ({period_sum:.0f} kWh)."
-        )
-        kwh = period_sum
 
     if amount is not None and amount <= 0:
         amount = None
@@ -429,10 +420,15 @@ def _normalize_openai_bill(parsed: dict[str, Any]) -> dict[str, Any]:
         "parser": "openai",
     }
 
-    # Guardas de reconciliación/precio efectivo, agnósticas al parser: convierten
-    # un consumo mal extraído en estado 'revisar factura' en vez de un resultado
-    # seguro y equivocado.
-    review_reasons = validate_bill_consumption(bill)
+    # Reconciliación de fuentes (misma cifra en tarjeta destacada / suma de
+    # periodos / histórico): si dos coinciden, se corrige la que discrepe y la
+    # factura calcula; solo si ninguna se corrobora se deja para revisión. Luego
+    # la guarda de precio efectivo como backstop independiente.
+    corrected_kwh, correction_note, review_reasons = reconcile_annual_consumption(bill)
+    bill["kwh"] = corrected_kwh
+    if correction_note:
+        warnings.append(correction_note)
+    review_reasons = review_reasons + validate_bill_consumption(bill)
     if review_reasons:
         bill["needs_review"] = True
         bill["review_reasons"] = review_reasons

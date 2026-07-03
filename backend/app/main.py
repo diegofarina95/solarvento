@@ -283,13 +283,17 @@ async def parse_bill(request: Request, file: UploadFile, website: str | None = F
         if local.get("kwh") is None and remote.get("kwh") is not None:
             return await _enrich_bill_location(remote)
         _merge_bill_context(local, remote)
-        # El merge puede aportar total/periodos del otro parser: se reevalúan las
-        # guardas sobre el resultado combinado para que needs_review sea coherente.
-        review = bills_mod.validate_bill_consumption(local)
+        # El merge puede aportar total/periodos/histórico del otro parser: se
+        # reconcilian las fuentes (corrige la que discrepe) y se re-evalúa la
+        # guarda de precio efectivo sobre el resultado combinado.
+        corrected_kwh, correction_note, review = bills_mod.reconcile_annual_consumption(local)
+        local["kwh"] = corrected_kwh
+        review = review + bills_mod.validate_bill_consumption(local)
         local["needs_review"] = bool(review)
         local["review_reasons"] = review
+        notes = [correction_note] if correction_note else []
         local["warnings"] = _dedupe_strings(
-            [*local.get("warnings", []), *remote.get("warnings", []), *review]
+            [*local.get("warnings", []), *remote.get("warnings", []), *notes, *review]
         )
         local["parser"] = "local+openai"
     return await _enrich_bill_location(local)
