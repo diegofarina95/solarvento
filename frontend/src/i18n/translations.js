@@ -176,6 +176,10 @@ export const translations = {
       costPerKwpHint: 'Override manual del coste llave en mano',
       batteryCost: 'Batería',
       batteryCostHint: 'Override manual por kWh de batería',
+      subsidy: 'Subvención o deducción (€)',
+      subsidyHint: 'Se resta de la inversión para payback y rentabilidad',
+      subsidyNote:
+        'En muchos países existen ayudas o deducciones fiscales para autoconsumo (deducciones en la renta, IVA reducido, primas locales…). Infórmate de las de tu zona y añade aquí su valor estimado.',
       calculate: 'Calcular producción solar',
       calculating: 'Calculando…',
     },
@@ -504,6 +508,10 @@ export const translations = {
       costPerKwpHint: 'Manual turnkey cost override',
       batteryCost: 'Battery',
       batteryCostHint: 'Manual battery cost per kWh',
+      subsidy: 'Grant or tax deduction (€)',
+      subsidyHint: 'Deducted from the investment for payback and returns',
+      subsidyNote:
+        'Many countries offer grants or tax deductions for self-consumption (income tax deductions, reduced VAT, local schemes…). Check what applies in your area and enter its estimated value here.',
       calculate: 'Calculate solar production',
       calculating: 'Calculating…',
     },
@@ -832,6 +840,10 @@ export const translations = {
       costPerKwpHint: 'Remplacement manuel du coût clé en main',
       batteryCost: 'Batterie',
       batteryCostHint: 'Coût manuel par kWh de batterie',
+      subsidy: 'Aide ou déduction (€)',
+      subsidyHint: 'Déduite de l’investissement pour le retour et la rentabilité',
+      subsidyNote:
+        'De nombreux pays proposent des aides ou déductions fiscales pour l’autoconsommation (prime à l’autoconsommation, TVA réduite, aides locales…). Renseignez-vous et indiquez ici leur valeur estimée.',
       calculate: 'Calculer la production solaire',
       calculating: 'Calcul…',
     },
@@ -1160,6 +1172,10 @@ export const translations = {
       costPerKwpHint: 'Override manuale del costo chiavi in mano',
       batteryCost: 'Batteria',
       batteryCostHint: 'Costo manuale per kWh di batteria',
+      subsidy: 'Incentivo o detrazione (€)',
+      subsidyHint: 'Si sottrae all’investimento per il rientro e la redditività',
+      subsidyNote:
+        'Molti paesi offrono incentivi o detrazioni fiscali per l’autoconsumo (detrazioni fiscali, IVA ridotta, bandi locali…). Informati sulla tua zona e inserisci qui il valore stimato.',
       calculate: 'Calcola produzione solare',
       calculating: 'Calcolo…',
     },
