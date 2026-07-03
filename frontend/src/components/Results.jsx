@@ -4,6 +4,7 @@ import {
   IrradiationChart,
   TypicalDayChart,
   MonthlyConsumptionChart,
+  CashflowChart,
 } from './Charts'
 import AdSlot from './AdSlot'
 import PrintReport from './PrintReport'
@@ -409,6 +410,60 @@ function CalculationBasis({ data, i18n, fmt }) {
   )
 }
 
+function FinancialDetails({ eco, i18n, fmt }) {
+  const { t } = i18n
+  const a = eco.assumptions
+  if (!a) return null
+  const rows = [
+    eco.net_investment_eur != null && [
+      t('financial.netInvestment'),
+      fmt.money0.format(eco.net_investment_eur),
+    ],
+    eco.subsidy_eur != null && [t('financial.subsidy'), fmt.money0.format(eco.subsidy_eur)],
+    eco.npv_eur != null && [
+      t('financial.npv', { rate: fmt.nf1.format(a.discount_rate_pct), years: a.headline_years }),
+      fmt.money0.format(eco.npv_eur),
+    ],
+    eco.irr_pct != null && [t('financial.irr'), `${fmt.nf1.format(eco.irr_pct)} %`],
+    [
+      t('financial.degradation'),
+      `${fmt.nf2.format(a.panel_degradation_pct_per_year)} %/${t('units.year')}`,
+    ],
+    [
+      t('financial.escalation'),
+      `+${fmt.nf1.format(a.price_escalation_pct_per_year)} %/${t('units.year')}`,
+    ],
+    [t('financial.om'), `${fmt.money0.format(a.om_eur_per_year)}/${t('units.year')}`],
+    a.inverter_replacement_cost_eur > 0 && [
+      t('financial.inverter', { year: a.inverter_replacement_year }),
+      fmt.money0.format(a.inverter_replacement_cost_eur),
+    ],
+    eco.marginal_price_factor > 1 && [
+      t('financial.taxFactor'),
+      `×${fmt.nf2.format(eco.marginal_price_factor)}`,
+    ],
+  ].filter(Boolean)
+  return (
+    <details className="card-solar p-4">
+      <summary className="cursor-pointer text-sm font-semibold text-stone-700">
+        {t('financial.title')}
+      </summary>
+      <dl className="mt-3 grid gap-x-8 gap-y-1.5 text-sm sm:grid-cols-2">
+        {rows.map(([label, value]) => (
+          <div
+            key={label}
+            className="flex items-baseline justify-between gap-3 border-b border-stone-100 pb-1"
+          >
+            <dt className="text-stone-500">{label}</dt>
+            <dd className="font-medium text-stone-800">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 text-xs leading-relaxed text-stone-500">{t('financial.note')}</p>
+    </details>
+  )
+}
+
 export default function Results({ data, i18n }) {
   const { t } = i18n
   if (!data?.pricing) {
@@ -460,7 +515,11 @@ export default function Results({ data, i18n }) {
           hero
           title={t('results.estimatedSavings')}
           value={fmt.money2.format(eco.annual_savings_eur)}
-          detail={`${fmt.money2.format(eco.electricity_price_eur_kwh)}/kWh`}
+          detail={
+            eco.marginal_price_factor > 1 && eco.effective_price_eur_kwh != null
+              ? `${fmt.money2.format(eco.effective_price_eur_kwh)}/kWh · ${t('results.taxInclusivePrice')}`
+              : `${fmt.money2.format(eco.electricity_price_eur_kwh)}/kWh`
+          }
         />
         {eco.payback_years != null && (
           <Card
@@ -468,7 +527,22 @@ export default function Results({ data, i18n }) {
             title={t('results.payback')}
             value={fmt.nf1.format(eco.payback_years)}
             unit={t('units.years')}
-            detail={t('results.paybackDetail')}
+            detail={[
+              t('results.paybackDetail'),
+              eco.simple_payback_years != null
+                ? t('results.simplePayback', { value: fmt.nf1.format(eco.simple_payback_years) })
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          />
+        )}
+        {eco.savings_25yr_eur != null && (
+          <Card
+            hero
+            title={t('results.savings25', { years: eco.assumptions?.headline_years ?? 25 })}
+            value={fmt.money0.format(eco.savings_25yr_eur)}
+            detail={t('results.savings25Detail')}
           />
         )}
         {eco.installation_cost_eur != null && (
@@ -609,7 +683,7 @@ export default function Results({ data, i18n }) {
             title={t('results.roi')}
             value={fmt.nf1.format(eco.roi_pct)}
             unit="%"
-            detail={t('results.paybackDetail')}
+            detail={t('results.roiDetail')}
           />
         )}
         {data.consumption?.annual_amount_eur != null && (
@@ -647,6 +721,21 @@ export default function Results({ data, i18n }) {
       <AdSlot placement="results" />
 
       <CalculationBasis data={data} i18n={i18n} fmt={fmt} />
+
+      {(eco.cumulative_cashflow?.length > 0 || eco.assumptions) && (
+        <div className="space-y-4">
+          {eco.cumulative_cashflow?.length > 0 && (
+            <div className="card-solar p-4">
+              <CashflowChart
+                rows={eco.cumulative_cashflow}
+                i18n={i18n}
+                currency={pricing.currency_symbol || pricing.currency}
+              />
+            </div>
+          )}
+          <FinancialDetails eco={eco} i18n={i18n} fmt={fmt} />
+        </div>
+      )}
 
       <ConsumptionSection
         consumption={data.consumption}

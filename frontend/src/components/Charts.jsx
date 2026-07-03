@@ -11,6 +11,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  ReferenceLine,
 } from 'recharts'
 
 const axisStyle = { fontSize: 12, fill: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }
@@ -234,6 +235,41 @@ export function MonthlyConsumptionChart({
           )}
         </ComposedChart>
       </ResponsiveContainer>
+    </div>
+  )
+}
+
+export function CashflowChart({ rows, i18n, currency }) {
+  const { t, locale } = i18n
+  const { nf } = formatters(locale)
+  const data = rows.map((r) => ({ year: r.year, cumulative: r.cumulative_eur }))
+  return (
+    <div>
+      <h3 className="mb-2 text-sm font-semibold text-stone-700">{t('charts.cashflow')}</h3>
+      <ResponsiveContainer width="100%" height={260}>
+        <LineChart data={data} margin={{ top: 4, right: 4, left: -4, bottom: 0 }}>
+          <CartesianGrid vertical={false} stroke="var(--gridline)" />
+          <XAxis
+            dataKey="year"
+            tick={axisStyle}
+            tickLine={false}
+            stroke="var(--baseline)"
+            tickFormatter={(y) => t('charts.yearShort', { value: y })}
+          />
+          <YAxis tick={axisStyle} tickLine={false} axisLine={false} tickFormatter={nf.format} />
+          <ReferenceLine y={0} stroke="var(--baseline)" strokeDasharray="4 4" />
+          <Tooltip content={<ChartTooltip unit={currency} formatter={nf.format} />} />
+          <Line
+            type="monotone"
+            dataKey="cumulative"
+            stroke="var(--series-cost)"
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 5 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+      <p className="mt-1 text-xs text-stone-500">{t('charts.cashflowNote')}</p>
     </div>
   )
 }
