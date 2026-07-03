@@ -22,8 +22,10 @@ Rules:
 - Extract electricity consumption for the billed period in kWh. Do not use cumulative meter readings.
 - If the bill has tariff periods such as P1/P2/P3, sum the period electricity kWh.
 - Ignore gas, water, telecoms, contracted power kW, taxes expressed as percentages, and meter serials.
-- Extract the final amount to pay including taxes. The field name amount_eur is historical; keep the
-  numeric amount in the bill currency because SolVento formats it using the selected country.
+- Extract the variable electricity energy charge separately from fixed charges and taxes when visible.
+- Extract the final amount to pay including taxes as total_eur and amount_eur. Field names ending
+  in _eur are historical; keep numeric amounts in the bill currency.
+- Extract the bill currency as an ISO 4217 code such as EUR, GBP, PLN, HUF, SEK.
 - Extract the billing period start and end dates as YYYY-MM-DD. Set month to the midpoint month of
   that period, or the invoice month if no period is clear.
 - Extract the country of the supply/invoice as an ISO 3166-1 alpha-2 code. Use GB for the United Kingdom.
@@ -45,6 +47,26 @@ BILL_SCHEMA: dict[str, Any] = {
         "amount_eur": {
             "type": ["number", "null"],
             "description": "Final bill amount including taxes, numeric value in the invoice currency.",
+        },
+        "energy_eur": {
+            "type": ["number", "null"],
+            "description": "Variable energy charge for consumed electricity, excluding fixed charges and taxes.",
+        },
+        "fixed_eur": {
+            "type": ["number", "null"],
+            "description": "Fixed charges such as contracted power, standing charge or meter rental.",
+        },
+        "taxes_eur": {
+            "type": ["number", "null"],
+            "description": "Taxes and VAT shown on the bill.",
+        },
+        "total_eur": {
+            "type": ["number", "null"],
+            "description": "Final bill amount including taxes, numeric value in the invoice currency.",
+        },
+        "currency": {
+            "type": ["string", "null"],
+            "description": "ISO 4217 bill currency code, e.g. EUR, GBP, PLN, HUF or SEK.",
         },
         "month": {
             "type": ["integer", "null"],
@@ -95,6 +117,11 @@ BILL_SCHEMA: dict[str, Any] = {
     "required": [
         "kwh",
         "amount_eur",
+        "energy_eur",
+        "fixed_eur",
+        "taxes_eur",
+        "total_eur",
+        "currency",
         "month",
         "start_date",
         "end_date",
@@ -231,9 +258,15 @@ def _normalize_openai_bill(parsed: dict[str, Any]) -> dict[str, Any]:
     warnings = [str(w) for w in parsed.get("warnings", []) if str(w).strip()]
     kwh = _optional_float(parsed.get("kwh"))
     amount = _optional_float(parsed.get("amount_eur"))
+    total = _optional_float(parsed.get("total_eur")) or amount
+    amount = amount or total
+    energy = _optional_float(parsed.get("energy_eur"))
+    fixed = _optional_float(parsed.get("fixed_eur"))
+    taxes = _optional_float(parsed.get("taxes_eur"))
     month = _optional_month(parsed.get("month"))
     country_code = _optional_country(parsed.get("country_code"))
     language = _optional_language(parsed.get("language"))
+    currency = _optional_currency(parsed.get("currency"))
 
     if kwh is not None and not (0 < kwh <= MAX_BILL_KWH):
         warnings.append("Consumo fuera del rango esperado; revisa los kWh.")
@@ -249,6 +282,11 @@ def _normalize_openai_bill(parsed: dict[str, Any]) -> dict[str, Any]:
     return {
         "kwh": kwh,
         "amount_eur": amount,
+        "energy_eur": energy,
+        "fixed_eur": fixed,
+        "taxes_eur": taxes,
+        "total_eur": total,
+        "currency": currency,
         "month": month,
         "start_date": _optional_date_text(parsed.get("start_date")),
         "end_date": _optional_date_text(parsed.get("end_date")),
@@ -282,6 +320,14 @@ def _optional_month(value: Any) -> int | None:
     except (TypeError, ValueError):
         return None
     return result if 1 <= result <= 12 else None
+
+
+def _optional_currency(value: Any) -> str | None:
+    text = _optional_text(value)
+    if not text:
+        return None
+    code = text.upper()
+    return code if len(code) == 3 and code.isalpha() else None
 
 
 def _optional_country(value: Any) -> str | None:

@@ -8,7 +8,7 @@ el usuario lo corrija a mano en el formulario.
 
 import io
 import re
-from datetime import date
+from datetime import date, timedelta
 
 from pypdf import PdfReader
 
@@ -78,6 +78,106 @@ MAX_BILL_KWH = 20_000
 SUSPICIOUS_MONTHLY_KWH = 5_000
 SUSPICIOUS_MIN_PRICE_EUR_KWH = 0.05
 SUSPICIOUS_MAX_PRICE_EUR_KWH = 1.00
+DEFAULT_CURRENCY = "EUR"
+
+CURRENCY_SYMBOLS = {
+    "€": "EUR",
+    "EUR": "EUR",
+    "£": "GBP",
+    "GBP": "GBP",
+    "zł": "PLN",
+    "PLN": "PLN",
+    "Kč": "CZK",
+    "CZK": "CZK",
+    "CHF": "CHF",
+    "Ft": "HUF",
+    "HUF": "HUF",
+    "lei": "RON",
+    "RON": "RON",
+    "лв": "BGN",
+    "BGN": "BGN",
+    "kn": "EUR",
+    "DKK": "DKK",
+    "NOK": "NOK",
+    "SEK": "SEK",
+    "ISK": "ISK",
+}
+
+PRICE_PLAUSIBILITY_BY_CURRENCY = {
+    "EUR": (0.05, 1.00),
+    "GBP": (0.05, 1.50),
+    "CHF": (0.05, 1.50),
+    "PLN": (0.20, 5.00),
+    "CZK": (1.00, 25.00),
+    "HUF": (10.00, 250.00),
+    "RON": (0.20, 5.00),
+    "BGN": (0.10, 2.50),
+    "DKK": (0.30, 12.00),
+    "NOK": (0.30, 12.00),
+    "SEK": (0.30, 12.00),
+    "ISK": (5.00, 150.00),
+    "TRY": (0.50, 20.00),
+    "ALL": (2.00, 80.00),
+    "BAM": (0.10, 2.50),
+    "BYN": (0.10, 3.50),
+    "MDL": (1.00, 15.00),
+    "MKD": (2.00, 40.00),
+    "RUB": (2.00, 40.00),
+    "RSD": (2.00, 80.00),
+    "UAH": (1.00, 25.00),
+}
+
+_ENERGY_CHARGE_LABELS = [
+    r"energ[ií]a\s+(?:consumida|facturada|activa)",
+    r"t[ée]rmino\s+de\s+energ[ií]a",
+    r"consumo\s+(?:facturado|electricidad|el[ée]ctrico)",
+    r"electricity\s+(?:used|charge|charges|consumption)",
+    r"energy\s+(?:used|charge|charges|consumption)",
+    r"consommation\s+(?:[ée]lectricit[ée]|factur[ée]e|totale)",
+    r"[ée]nergie\s+(?:consomm[ée]e|factur[ée]e|active)",
+    r"energia\s+(?:consumata|fatturata|attiva)",
+    r"consumo\s+fatturato",
+    r"energia\s+(?:consumida|faturada|ativa)",
+    r"verbrauch(?:spreis)?",
+    r"arbeitspreis",
+]
+
+_FIXED_CHARGE_LABELS = [
+    r"potencia\s+contratada",
+    r"t[ée]rmino\s+de\s+potencia",
+    r"alquiler\s+(?:de\s+)?(?:equipos|contador)",
+    r"standing\s+charge",
+    r"meter\s+(?:rental|charge)",
+    r"abonnement",
+    r"puissance\s+(?:souscrite|abonn[ée]e)",
+    r"potenza\s+(?:impegnata|disponibile)",
+    r"quota\s+fissa",
+    r"termo\s+fixo",
+    r"grundpreis",
+    r"z[aä]hler(?:miete|geb[üu]hr)",
+]
+
+_TAX_CHARGE_LABELS = [
+    r"\biva\b",
+    r"\bvat\b",
+    r"\btva\b",
+    r"impuesto",
+    r"tax(?:es)?",
+    r"imposta",
+    r"accise",
+    r"contribui[cç][aã]o",
+    r"steuer",
+]
+
+_CHARGE_EXCLUDE_LABELS = [
+    r"total",
+    r"importe\s+total",
+    r"amount\s+due",
+    r"net\s+[aà]\s+payer",
+    r"zu\s+zahlen",
+    r"totale\s+da\s+pagare",
+    r"valor\s+a\s+pagar",
+]
 
 
 class BillParseError(Exception):
@@ -151,7 +251,54 @@ def _period_consumption_candidates(text: str) -> list[float]:
     candidates: list[float] = []
     for pattern in patterns:
         candidates.extend(_to_float(m) for m in re.findall(pattern, text, re.IGNORECASE))
+    candidates.extend(_consumption_table_candidates(text))
     return [v for v in candidates if 1 <= v <= MAX_BILL_KWH]
+
+
+def _clean_lines(text: str) -> list[str]:
+    return [line.strip() for line in text.splitlines() if line.strip()]
+
+
+def _line_is_plain_number(line: str) -> bool:
+    return re.fullmatch(_NUM, line.strip()) is not None
+
+
+def _line_has_unit_price(line: str) -> bool:
+    return re.search(r"/\s*kWh\b", line, re.IGNORECASE) is not None
+
+
+def _consumption_table_candidates(text: str) -> list[float]:
+    """Extrae kWh de tablas donde la unidad está en la cabecera, no junto al valor."""
+    lines = _clean_lines(text)
+    candidates: list[float] = []
+
+    for index, line in enumerate(lines):
+        normalized = line.lower()
+        if not re.fullmatch(r"(?:total|total\s+energ[ií]a\s+consumida)", normalized):
+            continue
+        if index + 1 >= len(lines) or not _line_is_plain_number(lines[index + 1]):
+            continue
+
+        nearby_before = " ".join(lines[max(0, index - 6):index]).lower()
+        nearby_after = " ".join(lines[index + 2:index + 5]).lower()
+        if "kwh" not in nearby_before and not _line_has_unit_price(nearby_after):
+            continue
+        candidates.append(_to_float(lines[index + 1]))
+
+    tariff_labels = r"punta|llano|valle|peak|off[-\s]?peak|shoulder"
+    tariff_values: list[float] = []
+    for index, line in enumerate(lines[:-2]):
+        if not re.fullmatch(tariff_labels, line, re.IGNORECASE):
+            continue
+        if not _line_is_plain_number(lines[index + 1]):
+            continue
+        if not _line_has_unit_price(lines[index + 2]):
+            continue
+        tariff_values.append(_to_float(lines[index + 1]))
+    if tariff_values:
+        candidates.append(round(sum(tariff_values), 1))
+
+    return candidates
 
 
 def _reading_kind(label: str) -> str:
@@ -208,30 +355,42 @@ def _fallback_kwh_candidates(text: str) -> list[float]:
     return [v for v in candidates if 1 <= v <= MAX_BILL_KWH]
 
 
-def _looks_like_accumulated_reading(kwh: float, amount_eur: float | None) -> bool:
-    if amount_eur is None:
-        return False
-    return (
-        kwh >= SUSPICIOUS_MONTHLY_KWH
-        and amount_eur / kwh < SUSPICIOUS_MIN_PRICE_EUR_KWH
+def _price_bounds(currency: str | None) -> tuple[float, float]:
+    return PRICE_PLAUSIBILITY_BY_CURRENCY.get(
+        (currency or DEFAULT_CURRENCY).upper(),
+        PRICE_PLAUSIBILITY_BY_CURRENCY[DEFAULT_CURRENCY],
     )
 
 
-def _is_anomalous_effective_price(price: float) -> bool:
-    return price < SUSPICIOUS_MIN_PRICE_EUR_KWH or price > SUSPICIOUS_MAX_PRICE_EUR_KWH
+def _looks_like_accumulated_reading(
+    kwh: float, amount: float | None, currency: str | None = None
+) -> bool:
+    if amount is None:
+        return False
+    min_price, _max_price = _price_bounds(currency)
+    return (
+        kwh >= SUSPICIOUS_MONTHLY_KWH
+        and amount / kwh < min_price
+    )
+
+
+def _is_anomalous_effective_price(price: float, currency: str | None = None) -> bool:
+    min_price, max_price = _price_bounds(currency)
+    return price < min_price or price > max_price
 
 
 def _select_consumption_kwh(
     period_candidates: list[float],
     reading_candidates: list[float],
     fallback_candidates: list[float],
-    amount_eur: float | None,
+    amount: float | None,
+    currency: str | None,
     warnings: list[str],
 ) -> float | None:
     """Elige consumo real evitando confundir lecturas acumuladas con kWh del periodo."""
     period_plausible = [
         kwh for kwh in period_candidates
-        if not _looks_like_accumulated_reading(kwh, amount_eur)
+        if not _looks_like_accumulated_reading(kwh, amount, currency)
     ]
     if period_plausible:
         return max(period_plausible)
@@ -245,7 +404,7 @@ def _select_consumption_kwh(
 
     fallback_plausible = [
         kwh for kwh in fallback_candidates
-        if not _looks_like_accumulated_reading(kwh, amount_eur)
+        if not _looks_like_accumulated_reading(kwh, amount, currency)
     ]
     if fallback_plausible:
         return max(fallback_plausible)
@@ -254,6 +413,13 @@ def _select_consumption_kwh(
         warnings.append(
             "El valor kWh detectado parece una lectura acumulada; introduce el consumo del periodo."
         )
+    return None
+
+
+def _detect_currency(text: str) -> str | None:
+    for token, code in CURRENCY_SYMBOLS.items():
+        if re.search(rf"(?<![A-Za-z]){re.escape(token)}(?![A-Za-z])", text, re.IGNORECASE):
+            return code
     return None
 
 
@@ -298,6 +464,116 @@ def _find_total_amount(text: str, warnings: list[str]) -> float | None:
     return None
 
 
+def _line_amount_candidates(line: str) -> list[float]:
+    values = []
+    for match in re.finditer(rf"(?:{_CURRENCY}\s*)?{_NUM}\s*(?:{_CURRENCY})?", line, re.IGNORECASE):
+        start, end = match.span()
+        context_after = line[end:end + 12].lower()
+        context_before = line[max(0, start - 8):start].lower()
+        if re.search(r"^(?:kwh|kw\b)|(?:/|\s+)kwh|(?:/|\s+)kw\b|%\s*$", context_after):
+            continue
+        if re.search(r"^\s*%", context_after):
+            continue
+        if re.search(r"\b\d+(?:[.,]\d+)?\s*%$", context_before):
+            continue
+        value = _to_float(match.group(1))
+        if 0 < value <= 10000:
+            values.append(value)
+    return values
+
+
+def _line_matches_any(line: str, patterns: list[str]) -> bool:
+    return any(re.search(pattern, line, re.IGNORECASE) for pattern in patterns)
+
+
+def _find_charge_amount(text: str, labels: list[str]) -> float | None:
+    lines = _clean_lines(text)
+    values: list[float] = []
+    seen: set[float] = set()
+
+    def add_amounts(amounts: list[float]) -> None:
+        for amount in amounts:
+            key = round(amount, 2)
+            if key in seen:
+                continue
+            seen.add(key)
+            values.append(amount)
+
+    for index, line in enumerate(lines):
+        normalized = line.strip()
+        if _line_matches_any(normalized, _CHARGE_EXCLUDE_LABELS):
+            continue
+        if not _line_matches_any(normalized, labels):
+            continue
+
+        amounts = _line_amount_candidates(normalized)
+        if amounts:
+            add_amounts([amounts[-1]])
+            continue
+
+        lookahead: list[float] = []
+        for next_line in lines[index + 1:index + 4]:
+            if _line_matches_any(next_line, _CHARGE_EXCLUDE_LABELS):
+                break
+            if _line_matches_any(next_line, _ENERGY_CHARGE_LABELS + _FIXED_CHARGE_LABELS + _TAX_CHARGE_LABELS):
+                break
+            line_amounts = _line_amount_candidates(next_line)
+            if line_amounts:
+                lookahead.extend(line_amounts)
+                break
+        if lookahead:
+            add_amounts([lookahead[-1]])
+
+    return round(sum(values), 2) if values else None
+
+
+def _period_end_exclusive(start: date, end: date) -> bool:
+    """Heurística: 01/01-01/02 suele expresar intervalo [inicio, fin)."""
+    return end.day == 1 and start < end
+
+
+def _period_end_boundary(start: date, end: date) -> date:
+    return end if _period_end_exclusive(start, end) else end + timedelta(days=1)
+
+
+def _period_days(start: date, end: date) -> int:
+    return max(0, (_period_end_boundary(start, end) - start).days)
+
+
+def _next_month_start(value: date) -> date:
+    if value.month == 12:
+        return date(value.year + 1, 1, 1)
+    return date(value.year, value.month + 1, 1)
+
+
+def split_bill_period_by_month(start: date, end: date) -> list[tuple[int, int]]:
+    """Días de la factura que caen en cada mes.
+
+    Soporta facturas con fecha final inclusiva (01/07-31/07) y periodos tipo
+    [inicio, fin) cuando el final es día 1 del mes siguiente (01/01-01/02).
+    """
+    boundary = _period_end_boundary(start, end)
+    if boundary <= start:
+        return []
+
+    cursor = start
+    result: list[tuple[int, int]] = []
+    while cursor < boundary:
+        segment_end = min(_next_month_start(cursor), boundary)
+        days = (segment_end - cursor).days
+        if days > 0:
+            result.append((cursor.month, days))
+        cursor = segment_end
+    return result
+
+
+def _bill_month_from_period(start: date, end: date) -> int:
+    parts = split_bill_period_by_month(start, end)
+    if parts:
+        return max(parts, key=lambda item: item[1])[0]
+    return (start + (end - start) / 2).month
+
+
 def _detect_from_hints(text: str, hints: list[tuple[str, str]]) -> str | None:
     for code, pattern in hints:
         if re.search(pattern, text, re.IGNORECASE):
@@ -314,10 +590,11 @@ def extract_text(pdf_bytes: bytes) -> str:
 
 
 def parse_bill_text(text: str) -> dict:
-    """Extrae kwh, importe y periodo del texto de una factura.
+    """Extrae kwh, importes y periodo del texto de una factura.
 
-    Devuelve {kwh, amount_eur, start_date, end_date, warnings[]} con None en
-    lo que no se haya detectado.
+    Devuelve campos compatibles históricos (amount_eur) y campos nuevos
+    separados: energy_eur/fixed_eur/taxes_eur/total_eur, todos en la moneda
+    detectada del documento.
     """
     if not text.strip():
         raise BillParseError(
@@ -328,6 +605,11 @@ def parse_bill_text(text: str) -> dict:
     result: dict = {
         "kwh": None,
         "amount_eur": None,
+        "energy_eur": None,
+        "fixed_eur": None,
+        "taxes_eur": None,
+        "total_eur": None,
+        "currency": _detect_currency(text),
         "month": None,
         "start_date": None,
         "end_date": None,
@@ -346,7 +628,11 @@ def parse_bill_text(text: str) -> dict:
     }
 
     # --- Importe total (multi-idioma y multi-moneda) ---
-    result["amount_eur"] = _find_total_amount(text, warnings)
+    result["total_eur"] = _find_total_amount(text, warnings)
+    result["amount_eur"] = result["total_eur"]
+    result["energy_eur"] = _find_charge_amount(text, _ENERGY_CHARGE_LABELS)
+    result["fixed_eur"] = _find_charge_amount(text, _FIXED_CHARGE_LABELS)
+    result["taxes_eur"] = _find_charge_amount(text, _TAX_CHARGE_LABELS)
 
     # --- kWh: consumo del periodo > diferencia de lecturas > kWh no acumulados ---
     period_candidates = _period_consumption_candidates(text)
@@ -356,7 +642,8 @@ def parse_bill_text(text: str) -> dict:
         period_candidates,
         reading_candidates,
         fallback_candidates,
-        result["amount_eur"],
+        result["total_eur"],
+        result["currency"],
         warnings,
     )
     if result["kwh"] is None:
@@ -390,7 +677,7 @@ def parse_bill_text(text: str) -> dict:
         warnings.append("No se detectó el periodo de facturación")
     else:
         start, end = result["start_date"], result["end_date"]
-        result["month"] = (start + (end - start) / 2).month
+        result["month"] = _bill_month_from_period(start, end)
 
     return result
 
@@ -400,9 +687,9 @@ def parse_bill_pdf(pdf_bytes: bytes) -> dict:
 
 
 def _bill_month(bill: dict, start: date | None, end: date | None) -> int | None:
-    """Mes representativo de la factura: explícito o punto medio del periodo."""
+    """Mes representativo de la factura: explícito o mayor tramo del periodo."""
     if start and end:
-        return (start + (end - start) / 2).month
+        return _bill_month_from_period(start, end)
     if bill.get("month") is not None:
         return int(bill["month"])
     return None
@@ -452,29 +739,45 @@ def _estimate_monthly_from_samples(
     return round(sum(monthly), 1), monthly, [m + 1 for m in observed]
 
 
-def aggregate_bills(bills: list[dict]) -> dict:
-    """Agrega facturas (kwh, amount_eur, days) a consumo anual y precio medio.
+def aggregate_bills(bills: list[dict], default_currency: str | None = None) -> dict:
+    """Agrega facturas a consumo anual, gasto total y precio variable medio.
 
-    Cada factura: {kwh, amount_eur (opcional), month (opcional),
+    Cada factura: {kwh, energy_eur/total_eur/amount_eur (opcional), month (opcional),
     start_date/end_date o days}. Si hay meses identificables, estima una curva
     anual completa usando esos meses como muestras reales y el perfil
     residencial por defecto para completar los huecos.
     """
     total_kwh = 0.0
     total_days = 0.0
-    total_eur = 0.0
-    kwh_with_eur = 0.0
+    total_variable_amount = 0.0
+    kwh_with_variable_amount = 0.0
+    total_bill_amount = 0.0
+    total_amount_days = 0.0
     priced_bill_count = 0
+    total_amount_bill_count = 0
     ignored_price_bill_count = 0
     monthly_kwh = [0.0] * 12
     monthly_days = [0.0] * 12
+    monthly_total_amount = [0.0] * 12
+    monthly_total_amount_days = [0.0] * 12
+    currencies: list[str] = []
 
     for bill in bills:
         kwh = float(bill["kwh"])
-        amount = float(bill["amount_eur"]) if bill.get("amount_eur") else None
-        if amount is not None and kwh >= SUSPICIOUS_MONTHLY_KWH:
-            implicit_price = amount / kwh
-            if implicit_price < SUSPICIOUS_MIN_PRICE_EUR_KWH:
+        currency = (bill.get("currency") or default_currency or DEFAULT_CURRENCY).upper()
+        currencies.append(currency)
+        variable_amount = float(bill["energy_eur"]) if bill.get("energy_eur") else None
+        total_amount = None
+        if bill.get("total_eur"):
+            total_amount = float(bill["total_eur"])
+        elif bill.get("amount_eur"):
+            total_amount = float(bill["amount_eur"])
+
+        reading_check_amount = variable_amount or total_amount
+        if reading_check_amount is not None and kwh >= SUSPICIOUS_MONTHLY_KWH:
+            implicit_price = reading_check_amount / kwh
+            min_price, _max_price = _price_bounds(currency)
+            if implicit_price < min_price:
                 raise BillParseError(
                     "Una factura parece usar una lectura acumulada del contador como consumo. "
                     "Introduce el consumo del periodo (kWh) o importa una factura con lectura "
@@ -484,23 +787,45 @@ def aggregate_bills(bills: list[dict]) -> dict:
         start, end = bill.get("start_date"), bill.get("end_date")
         month = _bill_month(bill, start, end)
         if days is None and start and end:
-            days = (end - start).days
+            days = _period_days(start, end)
         if days is None and month is not None:
             days = DAYS_PER_MONTH[month - 1]
         days = float(days) if days else 30.4
         total_kwh += kwh
         total_days += days
-        if amount is not None:
-            effective_price = amount / kwh
-            if _is_anomalous_effective_price(effective_price):
+        if variable_amount is not None:
+            effective_price = variable_amount / kwh
+            if _is_anomalous_effective_price(effective_price, currency):
                 ignored_price_bill_count += 1
             else:
-                total_eur += amount
-                kwh_with_eur += kwh
+                total_variable_amount += variable_amount
+                kwh_with_variable_amount += kwh
                 priced_bill_count += 1
+        if total_amount is not None:
+            total_bill_amount += total_amount
+            total_amount_days += days
+            total_amount_bill_count += 1
+
+        if start and end:
+            parts = split_bill_period_by_month(start, end)
+            period_days = sum(part_days for _month, part_days in parts)
+            if period_days > 0:
+                for part_month, part_days in parts:
+                    share = part_days / period_days
+                    monthly_kwh[part_month - 1] += kwh * share
+                    monthly_days[part_month - 1] += part_days
+                    if total_amount is not None:
+                        monthly_total_amount[part_month - 1] += total_amount * share
+                        monthly_total_amount_days[part_month - 1] += part_days
+                continue
+
         if month is not None:
-            monthly_kwh[month - 1] += kwh
-            monthly_days[month - 1] += days
+            index = month - 1
+            monthly_kwh[index] += kwh
+            monthly_days[index] += days
+            if total_amount is not None:
+                monthly_total_amount[index] += total_amount
+                monthly_total_amount_days[index] += days
 
     if total_kwh <= 0 or total_days <= 0:
         raise BillParseError("Las facturas no contienen consumos válidos")
@@ -509,7 +834,22 @@ def aggregate_bills(bills: list[dict]) -> dict:
         monthly_kwh, monthly_days
     )
     annual_kwh = annual_from_months if annual_from_months is not None else total_kwh / total_days * 365.25
-    price = round(total_eur / kwh_with_eur, 4) if kwh_with_eur > 0 else None
+    price = (
+        round(total_variable_amount / kwh_with_variable_amount, 4)
+        if kwh_with_variable_amount > 0
+        else None
+    )
+
+    annual_amount = None
+    monthly_amount = None
+    if total_amount_bill_count > 0:
+        annual_amount_from_months, monthly_amount, _observed_amount_months = (
+            _estimate_monthly_from_samples(monthly_total_amount, monthly_total_amount_days)
+        )
+        if annual_amount_from_months is not None:
+            annual_amount = annual_amount_from_months
+        elif total_amount_days > 0:
+            annual_amount = round(total_bill_amount / total_amount_days * 365.25, 1)
 
     if len(observed_months) == 12:
         seasonality_source = "full_year_bills"
@@ -521,11 +861,18 @@ def aggregate_bills(bills: list[dict]) -> dict:
     return {
         "annual_kwh": round(annual_kwh, 1),
         "avg_price_eur_kwh": price,
+        "avg_price_kwh": price,
+        "annual_amount_eur": annual_amount,
+        "annual_amount": annual_amount,
+        "monthly_eur": monthly_amount,
+        "monthly_amount": monthly_amount,
         "bill_count": len(bills),
         "priced_bill_count": priced_bill_count,
+        "total_amount_bill_count": total_amount_bill_count,
         "ignored_price_bill_count": ignored_price_bill_count,
         "days_covered": round(total_days),
         "monthly_kwh": monthly,
         "observed_months": observed_months,
         "seasonality_source": seasonality_source,
+        "currency": currencies[0] if currencies else (default_currency or DEFAULT_CURRENCY),
     }

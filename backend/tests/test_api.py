@@ -171,15 +171,27 @@ def test_solar_estimate_advanced_mode(respx_mock, client):
         "annual_kwh": 4000,
         "source": "input",
         "avg_price_eur_kwh": None,
+        "avg_price_kwh": None,
         "bill_count": 0,
         "priced_bill_count": 0,
+        "total_amount_bill_count": 0,
         "ignored_price_bill_count": 0,
         "days_covered": None,
         "monthly_kwh": None,
         "monthly_eur": None,
+        "monthly_amount": None,
         "annual_amount_eur": 800.0,
+        "annual_amount": 800.0,
+        "currency": "EUR",
         "observed_months": [],
         "seasonality_source": "manual_annual",
+        "profile": {
+            "country_code": "ES",
+            "occupancy_profile": "standard",
+            "has_heat_pump": False,
+            "has_ev": False,
+            "has_pool": False,
+        },
     }
 
 
@@ -193,8 +205,20 @@ def test_solar_estimate_with_bills(respx_mock, client):
             "lon": -8.54,
             "peak_power_kwp": 5.0,
             "bills": [
-                {"kwh": 300, "amount_eur": 70, "start_date": "2026-01-01", "end_date": "2026-01-31"},
-                {"kwh": 280, "amount_eur": 66, "start_date": "2026-02-01", "end_date": "2026-03-01"},
+                {
+                    "kwh": 300,
+                    "energy_eur": 50,
+                    "amount_eur": 70,
+                    "start_date": "2026-01-01",
+                    "end_date": "2026-01-31",
+                },
+                {
+                    "kwh": 280,
+                    "energy_eur": 46,
+                    "amount_eur": 66,
+                    "start_date": "2026-02-01",
+                    "end_date": "2026-03-01",
+                },
             ],
         },
     )
@@ -203,16 +227,18 @@ def test_solar_estimate_with_bills(respx_mock, client):
     cons = data["consumption"]
     assert cons["source"] == "bills"
     # Enero/febrero se tratan como meses observados, no como promedio plano de días.
-    assert cons["annual_kwh"] == pytest.approx(3261.8, rel=0.01)
+    assert cons["annual_kwh"] == pytest.approx(3206.6, rel=0.01)
     assert cons["monthly_kwh"] is not None
     assert cons["monthly_eur"] is not None
+    assert cons["monthly_amount"] is not None
     assert cons["annual_amount_eur"] == pytest.approx(
-        cons["annual_kwh"] * cons["avg_price_eur_kwh"], rel=0.01
+        cons["annual_amount"], rel=0.01
     )
     assert cons["observed_months"] == [1, 2]
     assert cons["seasonality_source"] == "estimated_from_sampled_months"
     assert cons["bill_count"] == 2
     assert cons["priced_bill_count"] == 2
+    assert cons["total_amount_bill_count"] == 2
     assert cons["ignored_price_bill_count"] == 0
     # El precio derivado de las facturas se usa en la economía
     assert data["economics"]["electricity_price_eur_kwh"] == cons["avg_price_eur_kwh"]
@@ -232,8 +258,8 @@ def test_solar_estimate_january_june_bills_regression(respx_mock, client):
             "lon": -8.54,
             "peak_power_kwp": 5.0,
             "bills": [
-                {"month": 1, "kwh": 612, "amount_eur": 155.15},
-                {"month": 6, "kwh": 344, "amount_eur": 94.04},
+                {"month": 1, "kwh": 612, "energy_eur": 105.15, "amount_eur": 155.15},
+                {"month": 6, "kwh": 344, "energy_eur": 54.04, "amount_eur": 94.04},
             ],
         },
     )
@@ -242,17 +268,14 @@ def test_solar_estimate_january_june_bills_regression(respx_mock, client):
     data = resp.json()
     cons = data["consumption"]
     assert cons["annual_kwh"] == pytest.approx(5492.1, rel=0.01)
-    assert cons["avg_price_eur_kwh"] == pytest.approx(0.2607, rel=0.001)
+    assert cons["avg_price_eur_kwh"] == pytest.approx(0.1665, rel=0.001)
     assert 8 <= data["panels"]["count"] <= 12
     assert data["economics"]["annual_savings_eur"] > 500
-    assert data["analysis_power_kwp"] == data["panels"]["total_kwp"]
-    assert data["analysis_power_kwp"] != data["requested_peak_power_kwp"]
+    assert data["analysis_power_kwp"] == data["requested_peak_power_kwp"]
+    assert data["analysis_power_kwp"] != data["panels"]["total_kwp"]
 
     mock_5kwp_production = pvcalc_response()["outputs"]["totals"]["fixed"]["E_y"]
-    expected_production = mock_5kwp_production * data["analysis_power_kwp"] / 5.0
-    assert data["optimal"]["annual_production_kwh"] == pytest.approx(
-        expected_production, rel=0.001
-    )
+    assert data["optimal"]["annual_production_kwh"] == pytest.approx(mock_5kwp_production, rel=0.001)
     assert data["annual_energy"]["production_kwh"] == pytest.approx(
         data["optimal"]["annual_production_kwh"], rel=0.001
     )
@@ -266,7 +289,7 @@ def test_solar_estimate_january_june_bills_regression(respx_mock, client):
         abs=0.1,
     )
 
-    # El coste estimado, la simulación horaria y la amortización usan la potencia recomendada.
+    # El coste estimado, la simulación horaria y la amortización usan la potencia introducida.
     assert data["economics"]["installation_cost_eur"] == pytest.approx(
         data["analysis_power_kwp"] * data["pricing"]["turnkey_cost_per_kwp"]["medium"],
         rel=0.001,
@@ -378,6 +401,52 @@ def test_parse_bill_rejects_wrong_file_type(client):
         files={"file": ("factura.txt", b"texto", "text/plain")},
     )
     assert resp.status_code == 422
+
+
+def test_cors_is_restricted_to_configured_origins(client):
+    allowed = client.options(
+        "/api/health",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert allowed.status_code == 200
+    assert allowed.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+    blocked = client.options(
+        "/api/health",
+        headers={
+            "Origin": "https://example.invalid",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert blocked.status_code == 400
+    assert "access-control-allow-origin" not in blocked.headers
+
+
+def test_invalid_uploads_do_not_consume_valid_upload_quota(client, monkeypatch):
+    monkeypatch.setenv("SOLVENTO_UPLOAD_RATELIMIT_MAX", "1")
+    get_settings.cache_clear()
+    from app.main import app
+
+    with TestClient(app) as c:
+        invalid = c.post(
+            "/api/parse-bill",
+            files={"file": ("factura.txt", b"texto", "text/plain")},
+        )
+        assert invalid.status_code == 422
+        valid = c.post(
+            "/api/parse-bill",
+            files={"file": ("f.pdf", b"%PDF-1.4 basura", "application/pdf")},
+        )
+        assert valid.status_code == 200
+        blocked = c.post(
+            "/api/parse-bill",
+            files={"file": ("f.pdf", b"%PDF-1.4 basura", "application/pdf")},
+        )
+        assert blocked.status_code == 429
+    get_settings.cache_clear()
 
 
 def test_parse_bill_rejects_image_without_openai(client):
@@ -493,6 +562,82 @@ def test_parse_bill_uses_openai_when_configured(respx_mock, openai_client):
     assert content[0]["file_data"].startswith("data:application/pdf;base64,")
     assert payload["text"]["format"]["type"] == "json_schema"
     assert "supply_address" in payload["text"]["format"]["schema"]["required"]
+
+
+@respx.mock
+def test_parse_bill_prefers_local_pdf_amounts_when_openai_is_configured(
+    respx_mock, openai_client, monkeypatch
+):
+    respx_mock.post("https://api.openai.com/v1/responses").mock(
+        return_value=Response(
+            200,
+            json={
+                "status": "completed",
+                "output_text": json.dumps(
+                    {
+                        "kwh": 123.0,
+                        "amount_eur": 999.0,
+                        "energy_eur": None,
+                        "fixed_eur": None,
+                        "taxes_eur": None,
+                        "total_eur": 999.0,
+                        "currency": "EUR",
+                        "month": 1,
+                        "start_date": "2026-01-01",
+                        "end_date": "2026-01-31",
+                        "country_code": "ES",
+                        "country_name": "España",
+                        "supply_address": None,
+                        "postal_code": None,
+                        "city": None,
+                        "region": None,
+                        "language": "es",
+                        "warnings": ["remote warning"],
+                    }
+                ),
+            },
+        )
+    )
+
+    from app.main import bills_mod
+
+    monkeypatch.setattr(
+        bills_mod,
+        "parse_bill_pdf",
+        lambda _content: {
+            "kwh": 2902.0,
+            "amount_eur": 829.17,
+            "energy_eur": 497.91,
+            "fixed_eur": None,
+            "taxes_eur": None,
+            "total_eur": 829.17,
+            "currency": "EUR",
+            "month": 1,
+            "start_date": None,
+            "end_date": None,
+            "country_code": None,
+            "country_name": None,
+            "language": None,
+            "parser": "local",
+            "warnings": [],
+        },
+    )
+
+    resp = openai_client.post(
+        "/api/parse-bill",
+        files={"file": ("factura.pdf", b"%PDF-1.4\n%%EOF", "application/pdf")},
+    )
+
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["kwh"] == 2902.0
+    assert data["energy_eur"] == 497.91
+    assert data["total_eur"] == 829.17
+    assert data["amount_eur"] == 829.17
+    assert data["country_code"] == "ES"
+    assert data["language"] == "es"
+    assert data["parser"] == "local+openai"
+    assert "remote warning" in data["warnings"]
 
 
 @respx.mock
@@ -766,8 +911,8 @@ def test_confidence_high_with_two_seasonal_priced_bills(respx_mock, client):
             "lon": -8.54,
             "peak_power_kwp": 5.0,
             "bills": [
-                {"month": 1, "kwh": 400, "amount_eur": 95},
-                {"month": 7, "kwh": 300, "amount_eur": 75},
+                {"month": 1, "kwh": 400, "energy_eur": 70, "amount_eur": 95},
+                {"month": 7, "kwh": 300, "energy_eur": 50, "amount_eur": 75},
             ],
         },
     )
@@ -801,7 +946,7 @@ def test_confidence_hints_guide_the_user(respx_mock, client):
             "lat": 42.88,
             "lon": -8.54,
             "peak_power_kwp": 5.0,
-            "bills": [{"month": 1, "kwh": 400, "amount_eur": 95}],
+            "bills": [{"month": 1, "kwh": 400, "energy_eur": 70, "amount_eur": 95}],
         },
     )
     data2 = resp2.json()

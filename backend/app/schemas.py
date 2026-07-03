@@ -1,7 +1,7 @@
 """Modelos Pydantic de entrada/salida de la API."""
 
 from datetime import date
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -10,6 +10,33 @@ class BillInput(BaseModel):
     """Una factura de la luz: consumo y, opcionalmente, importe y periodo."""
 
     kwh: float = Field(..., gt=0, le=20000)
+    energy_eur: float | None = Field(
+        None,
+        gt=0,
+        le=10000,
+        description="Cargo variable de energía de la factura, en la moneda local.",
+    )
+    fixed_eur: float | None = Field(
+        None,
+        ge=0,
+        le=10000,
+        description="Cargos fijos detectados, en la moneda local.",
+    )
+    taxes_eur: float | None = Field(
+        None,
+        ge=0,
+        le=10000,
+        description="Impuestos detectados, en la moneda local.",
+    )
+    total_eur: float | None = Field(
+        None,
+        gt=0,
+        le=10000,
+        description="Total final de la factura, en la moneda local.",
+    )
+    currency: str | None = Field(None, min_length=3, max_length=3)
+    # Alias histórico. Se conserva para clientes antiguos, pero el precio
+    # marginal solo usa energy_eur.
     amount_eur: float | None = Field(None, gt=0, le=10000)
     month: int | None = Field(None, ge=1, le=12, description="Mes representativo de la factura")
     start_date: date | None = None
@@ -67,6 +94,13 @@ class SolarEstimateRequest(BaseModel):
     battery_cost_per_kwh_eur: float | None = Field(
         None, gt=0, le=5000, description="Override manual del coste de batería por kWh"
     )
+    occupancy_profile: Literal["standard", "home_day", "evening", "night"] = Field(
+        "standard",
+        description="Forma horaria del consumo residencial.",
+    )
+    has_heat_pump: bool = Field(False, description="Ajusta consumo a bomba de calor/aerotermia")
+    has_ev: bool = Field(False, description="Añade carga nocturna típica de vehículo eléctrico")
+    has_pool: bool = Field(False, description="Añade consumo diurno de piscina en meses cálidos")
 
 
 class MonthlyProduction(BaseModel):
@@ -123,15 +157,21 @@ class ConsumptionSummary(BaseModel):
     annual_kwh: float
     source: str  # 'bills' | 'input'
     avg_price_eur_kwh: float | None = None
+    avg_price_kwh: float | None = None
     bill_count: int = 0
     priced_bill_count: int = 0
+    total_amount_bill_count: int = 0
     ignored_price_bill_count: int = 0
     days_covered: int | None = None
     monthly_kwh: list[float] | None = None
     monthly_eur: list[float] | None = None
+    monthly_amount: list[float] | None = None
     annual_amount_eur: float | None = None
+    annual_amount: float | None = None
+    currency: str | None = None
     observed_months: list[int] = Field(default_factory=list)
     seasonality_source: str | None = None
+    profile: dict | None = None
 
 
 class BatteryScenario(BaseModel):
@@ -252,6 +292,11 @@ class SolarEstimateResponse(BaseModel):
 class ParsedBill(BaseModel):
     kwh: float | None = None
     amount_eur: float | None = None
+    energy_eur: float | None = None
+    fixed_eur: float | None = None
+    taxes_eur: float | None = None
+    total_eur: float | None = None
+    currency: str | None = None
     month: int | None = None
     start_date: date | None = None
     end_date: date | None = None

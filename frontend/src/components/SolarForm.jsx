@@ -37,6 +37,7 @@ export default function SolarForm({
 }) {
   const { t } = i18n
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value })
+  const setBool = (key) => (e) => setForm({ ...form, [key]: e.target.checked })
   const hasBills = bills.length > 0
 
   return (
@@ -174,6 +175,55 @@ export default function SolarForm({
               />
             </Field>
           </div>
+
+          <details className="rounded-lg border border-stone-200 p-3">
+            <summary className="cursor-pointer text-sm font-medium text-stone-700">
+              {t('form.consumptionProfile')}
+            </summary>
+            <div className="mt-3 space-y-3">
+              <Field label={t('form.occupancyProfile')} hint={t('form.occupancyProfileHint')}>
+                <select
+                  value={form.occupancyProfile}
+                  onChange={set('occupancyProfile')}
+                  className={inputClass}
+                >
+                  <option value="standard">{t('form.occupancy.standard')}</option>
+                  <option value="home_day">{t('form.occupancy.home_day')}</option>
+                  <option value="evening">{t('form.occupancy.evening')}</option>
+                  <option value="night">{t('form.occupancy.night')}</option>
+                </select>
+              </Field>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <label className="flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.hasHeatPump)}
+                    onChange={setBool('hasHeatPump')}
+                    className="h-4 w-4 accent-amber-500"
+                  />
+                  {t('form.hasHeatPump')}
+                </label>
+                <label className="flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.hasEv)}
+                    onChange={setBool('hasEv')}
+                    className="h-4 w-4 accent-amber-500"
+                  />
+                  {t('form.hasEv')}
+                </label>
+                <label className="flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.hasPool)}
+                    onChange={setBool('hasPool')}
+                    className="h-4 w-4 accent-amber-500"
+                  />
+                  {t('form.hasPool')}
+                </label>
+              </div>
+            </div>
+          </details>
 
           <details className="rounded-lg border border-stone-200 p-3">
             <summary className="cursor-pointer text-sm font-medium text-stone-700">

@@ -41,6 +41,8 @@ class Settings(BaseSettings):
     nominatim_base_url: str = "https://nominatim.openstreetmap.org"
     http_user_agent: str = "SolVento/0.1 (solar calculator; diego.farina@gimo.co.uk)"
     http_timeout_seconds: float = 30.0
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    trusted_proxy_hosts: str = "127.0.0.1,::1"
 
     @property
     def resolved_openai_api_key(self) -> str | None:
@@ -53,6 +55,14 @@ class Settings(BaseSettings):
         if standard_key and standard_key.strip():
             return standard_key.strip()
         return None
+
+    @property
+    def cors_allow_origins(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
+    def trusted_proxy_host_set(self) -> set[str]:
+        return {host.strip() for host in self.trusted_proxy_hosts.split(",") if host.strip()}
 
 
 @lru_cache

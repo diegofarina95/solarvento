@@ -108,10 +108,11 @@ La imagen es multi-stage (Node compila el frontend, Python ejecuta la API) y per
 
 - **HSP**: `H(i)_d` de PVGIS — irradiación diaria media sobre el plano del generador (kWh/m² ≈ horas de sol pico).
 - **% pérdida vs óptimo**: `(producción_óptima − producción_usuario) / producción_óptima`.
-- **Facturas**: el precio medio €/kWh sale de las facturas con importe (incluye peajes e impuestos:
-  es el precio efectivo). Si OpenAI está configurado, el backend usa la Responses API con entrada
-  PDF y salida JSON estructurada; si no hay clave o falla la llamada, usa el extractor local basado
-  en texto. El país detectado en la factura actualiza el selector de país de la plataforma. Si
+- **Facturas**: el precio medio €/kWh sale del cargo variable de energía de las facturas, separado
+  del total final con potencia, impuestos y alquileres. Si OpenAI está configurado, el backend usa
+  la Responses API para completar el contexto del documento; en PDFs con texto extraíble mantiene
+  el extractor local como fuente principal de kWh e importes. El país detectado en la factura
+  actualiza el selector de país de la plataforma. Si
   aportas meses concretos, por ejemplo enero, julio y septiembre, esos meses se normalizan a mes
   completo y el resto del año se estima con el perfil residencial; con 12 meses se usa la
   estacionalidad real del usuario.

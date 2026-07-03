@@ -1,11 +1,12 @@
 """SolVento — API de cálculo solar fotovoltaico sobre PVGIS."""
 
 import asyncio
+import ipaddress
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query, Request, UploadFile
+from fastapi import FastAPI, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
@@ -81,6 +82,13 @@ async def lifespan(app: FastAPI):
         global_limit=settings.upload_ratelimit_global_max,
         table="upload_events",
     )
+    app.state.invalid_upload_limiter = RateLimiter(
+        settings.upload_ratelimit_db_path,
+        limit=max(settings.upload_ratelimit_max * 3, settings.upload_ratelimit_max),
+        window_seconds=settings.upload_ratelimit_window_seconds,
+        global_limit=None,
+        table="invalid_upload_events",
+    )
     app.state.estimate_limiter = RateLimiter(
         settings.upload_ratelimit_db_path,
         limit=settings.estimate_ratelimit_max,
@@ -95,6 +103,7 @@ async def lifespan(app: FastAPI):
     if app.state.openai_bill_parser:
         await app.state.openai_bill_parser.close()
     app.state.upload_limiter.close()
+    app.state.invalid_upload_limiter.close()
     app.state.estimate_limiter.close()
     cache.close()
 
@@ -103,9 +112,10 @@ app = FastAPI(title="SolVento", version="0.1.0", lifespan=lifespan)
 
 # En desarrollo el frontend corre en el puerto de Vite; en producción se sirve
 # desde este mismo proceso y CORS no interviene.
+settings = get_settings()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_allow_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -159,15 +169,69 @@ _MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 
 def _client_ip(request: Request) -> str:
-    # Detrás del proxy de Taller la IP real va en X-Forwarded-For (primer salto).
+    settings = get_settings()
+    client_host = request.client.host if request.client else "unknown"
     forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
+    trusted_hosts = settings.trusted_proxy_host_set
+    if forwarded and _is_trusted_proxy(client_host, trusted_hosts):
         return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
+    return client_host
+
+
+def _is_trusted_proxy(host: str, trusted_hosts: set[str]) -> bool:
+    if "*" in trusted_hosts:
+        return True
+    if host in trusted_hosts:
+        return True
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    for trusted in trusted_hosts:
+        try:
+            if ip in ipaddress.ip_network(trusted, strict=False):
+                return True
+        except ValueError:
+            continue
+    return False
+
+
+def _reject_invalid_upload(request: Request, detail: str) -> None:
+    limiter: RateLimiter = app.state.invalid_upload_limiter
+    allowed, _blocked_by = limiter.check_and_record(_client_ip(request))
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Demasiados intentos inválidos de subida. Inténtalo más tarde.",
+        )
+    raise HTTPException(status_code=422, detail=detail)
 
 
 @app.post("/api/parse-bill", response_model=ParsedBill)
-async def parse_bill(request: Request, file: UploadFile):
+async def parse_bill(request: Request, file: UploadFile, website: str | None = Form(None)):
+    if website:
+        _reject_invalid_upload(request, "Subida no válida")
+    content_type = (file.content_type or "").lower()
+    is_pdf = content_type in _PDF_TYPES or content_type == ""
+    is_image = content_type in _IMAGE_TYPES
+    if not (is_pdf or is_image):
+        _reject_invalid_upload(request, "Sube la factura en PDF o imagen (JPG/PNG)")
+    if file.size is not None and file.size > _MAX_UPLOAD_BYTES:
+        _reject_invalid_upload(request, "El archivo supera los 10 MB")
+    content = await file.read()
+    if len(content) > _MAX_UPLOAD_BYTES:
+        _reject_invalid_upload(request, "El archivo supera los 10 MB")
+
+    openai_parser: OpenAIBillParser | None = app.state.openai_bill_parser
+
+    # Las imágenes solo las entiende OpenAI (pypdf no lee fotos): sin clave,
+    # se pide un PDF en su lugar.
+    if is_image and openai_parser is None:
+        _reject_invalid_upload(
+            request,
+            "Las fotos de factura no están disponibles ahora; sube la factura en PDF.",
+        )
+
     limiter: RateLimiter = app.state.upload_limiter
     allowed, blocked_by = limiter.check_and_record(_client_ip(request))
     if not allowed:
@@ -180,27 +244,6 @@ async def parse_bill(request: Request, file: UploadFile):
         )
         raise HTTPException(status_code=429, detail=detail)
 
-    content_type = (file.content_type or "").lower()
-    is_pdf = content_type in _PDF_TYPES or content_type == ""
-    is_image = content_type in _IMAGE_TYPES
-    if not (is_pdf or is_image):
-        raise HTTPException(status_code=422, detail="Sube la factura en PDF o imagen (JPG/PNG)")
-    if file.size is not None and file.size > _MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=422, detail="El archivo supera los 10 MB")
-    content = await file.read()
-    if len(content) > _MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=422, detail="El archivo supera los 10 MB")
-
-    openai_parser: OpenAIBillParser | None = app.state.openai_bill_parser
-
-    # Las imágenes solo las entiende OpenAI (pypdf no lee fotos): sin clave,
-    # se pide un PDF en su lugar.
-    if is_image and openai_parser is None:
-        raise HTTPException(
-            status_code=422,
-            detail="Las fotos de factura no están disponibles ahora; sube la factura en PDF.",
-        )
-
     remote = None
     if openai_parser:
         parser_type = content_type if is_image else "application/pdf"
@@ -211,9 +254,6 @@ async def parse_bill(request: Request, file: UploadFile):
             # degrada al extractor local en vez de romper la petición.
             logger.warning("OpenAI bill parser failed; falling back to local parser: %s", exc)
             remote = None
-
-    if remote is not None and remote.get("kwh") is not None:
-        return await _enrich_bill_location(remote)
 
     if is_image:
         # No hay extractor local para imágenes: se devuelve lo que OpenAI sacara
@@ -236,18 +276,29 @@ async def parse_bill(request: Request, file: UploadFile):
         return _unreadable_bill(str(exc))
 
     if remote is not None:
-        if local.get("kwh") is None:
+        if local.get("kwh") is None and remote.get("kwh") is not None:
             return await _enrich_bill_location(remote)
         _merge_bill_context(local, remote)
         local["warnings"] = _dedupe_strings(
             [*local.get("warnings", []), *remote.get("warnings", [])]
         )
+        local["parser"] = "local+openai"
     return await _enrich_bill_location(local)
 
 
 def _unreadable_bill(reason: str) -> dict:
     """Respuesta 200 para facturas ilegibles: fila vacía + aviso."""
-    return {"kwh": None, "amount_eur": None, "parser": "local", "warnings": [reason]}
+    return {
+        "kwh": None,
+        "amount_eur": None,
+        "energy_eur": None,
+        "fixed_eur": None,
+        "taxes_eur": None,
+        "total_eur": None,
+        "currency": None,
+        "parser": "local",
+        "warnings": [reason],
+    }
 
 
 def _merge_bill_context(target: dict, source: dict | None) -> None:
@@ -256,6 +307,11 @@ def _merge_bill_context(target: dict, source: dict | None) -> None:
         return
     for key in (
         "amount_eur",
+        "energy_eur",
+        "fixed_eur",
+        "taxes_eur",
+        "total_eur",
+        "currency",
         "month",
         "start_date",
         "end_date",
@@ -357,26 +413,47 @@ def _dedupe_strings(values: list[str]) -> list[str]:
     return result
 
 
-def _resolve_consumption(req: SolarEstimateRequest) -> tuple[dict | None, float | None]:
+def _profile_summary(req: SolarEstimateRequest, country_code: str) -> dict:
+    return {
+        "country_code": country_code,
+        "occupancy_profile": req.occupancy_profile,
+        "has_heat_pump": req.has_heat_pump,
+        "has_ev": req.has_ev,
+        "has_pool": req.has_pool,
+    }
+
+
+def _resolve_consumption(
+    req: SolarEstimateRequest, default_currency: str, country_code: str
+) -> tuple[dict | None, float | None]:
     """Consumo anual y resumen: de las facturas si las hay, si no del campo manual."""
     if req.bills:
         try:
-            agg = bills_mod.aggregate_bills([b.model_dump() for b in req.bills])
+            agg = bills_mod.aggregate_bills(
+                [b.model_dump() for b in req.bills],
+                default_currency=default_currency,
+            )
         except bills_mod.BillParseError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         summary = {
             "annual_kwh": agg["annual_kwh"],
             "source": "bills",
             "avg_price_eur_kwh": agg["avg_price_eur_kwh"],
+            "avg_price_kwh": agg["avg_price_kwh"],
             "bill_count": agg["bill_count"],
             "priced_bill_count": agg["priced_bill_count"],
+            "total_amount_bill_count": agg["total_amount_bill_count"],
             "ignored_price_bill_count": agg["ignored_price_bill_count"],
             "days_covered": agg["days_covered"],
             "monthly_kwh": agg["monthly_kwh"],
-            "monthly_eur": None,
-            "annual_amount_eur": None,
+            "monthly_eur": agg["monthly_eur"],
+            "monthly_amount": agg["monthly_amount"],
+            "annual_amount_eur": agg["annual_amount_eur"],
+            "annual_amount": agg["annual_amount"],
+            "currency": agg["currency"],
             "observed_months": agg["observed_months"],
             "seasonality_source": agg["seasonality_source"],
+            "profile": _profile_summary(req, country_code),
         }
         return summary, agg["annual_kwh"]
     if req.annual_consumption_kwh is not None:
@@ -385,15 +462,21 @@ def _resolve_consumption(req: SolarEstimateRequest) -> tuple[dict | None, float 
                 "annual_kwh": req.annual_consumption_kwh,
                 "source": "input",
                 "avg_price_eur_kwh": None,
+                "avg_price_kwh": None,
                 "bill_count": 0,
                 "priced_bill_count": 0,
+                "total_amount_bill_count": 0,
                 "ignored_price_bill_count": 0,
                 "days_covered": None,
                 "monthly_kwh": None,
                 "monthly_eur": None,
+                "monthly_amount": None,
                 "annual_amount_eur": None,
+                "annual_amount": None,
+                "currency": default_currency,
                 "observed_months": [],
                 "seasonality_source": "manual_annual",
+                "profile": _profile_summary(req, country_code),
             },
             req.annual_consumption_kwh,
         )
@@ -401,14 +484,17 @@ def _resolve_consumption(req: SolarEstimateRequest) -> tuple[dict | None, float 
 
 
 def _attach_consumption_costs(summary: dict | None, price_eur_kwh: float) -> None:
-    """Añade gasto estimado usando el precio final elegido para la simulación."""
+    """Añade gasto estimado si no viene de importes totales de factura."""
     if not summary:
         return
-    summary["annual_amount_eur"] = round(summary["annual_kwh"] * price_eur_kwh, 2)
-    if summary.get("monthly_kwh"):
+    if summary.get("annual_amount_eur") is None:
+        summary["annual_amount_eur"] = round(summary["annual_kwh"] * price_eur_kwh, 2)
+        summary["annual_amount"] = summary["annual_amount_eur"]
+    if summary.get("monthly_kwh") and summary.get("monthly_eur") is None:
         summary["monthly_eur"] = [
             round(kwh * price_eur_kwh, 2) for kwh in summary["monthly_kwh"]
         ]
+        summary["monthly_amount"] = summary["monthly_eur"]
 
 
 def _scale_system(system: dict, target_kwp: float, source_kwp: float) -> dict:
@@ -676,7 +762,12 @@ def _validate_estimate_consistency(
         if abs(expected_kwp - panels["total_kwp"]) > 0.01:
             warnings.append("recommended panel count is not coherent with total kWp")
         ratio = panels.get("production_to_consumption_pct")
-        if ratio is not None and coverage is not None and abs(ratio - coverage) > 0.2:
+        if (
+            ratio is not None
+            and coverage is not None
+            and abs(panels["total_kwp"] - analysis_power_kwp) <= 0.01
+            and abs(ratio - coverage) > 0.2
+        ):
             warnings.append("panel production ratio is not coherent with annual energy")
 
     if warnings:
@@ -700,7 +791,6 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
     pvgis: PVGISClient = app.state.pvgis
     pricing_service: PricingService = app.state.pricing
     has_user_angles = req.tilt_deg is not None or req.azimuth_deg is not None
-    consumption_summary, annual_consumption = _resolve_consumption(req)
 
     if not ensure_european_location(req.lat, req.lon):
         raise HTTPException(
@@ -711,6 +801,11 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
             ),
         )
     country = country_for_coordinates(req.lat, req.lon, req.country_code)
+    consumption_summary, annual_consumption = _resolve_consumption(
+        req,
+        default_currency=country.currency,
+        country_code=country.code,
+    )
 
     # Todo lo que no depende de resultados previos va en un único gather:
     # cotización de precios, PVcalc óptimo, PVcalc del usuario y, si ya
@@ -770,14 +865,10 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         panels = calculations.recommended_panels(
             annual_consumption, per_kwp, req.panel_power_w
         )
-        analysis_power_kwp = panels["total_kwp"]
-
-    optimal = _scale_system(optimal, analysis_power_kwp, req.peak_power_kwp)
-    user_system = (
-        _scale_system(user_system, analysis_power_kwp, req.peak_power_kwp)
-        if user_system
-        else None
-    )
+        recommended_production = per_kwp * panels["total_kwp"]
+        recommended_coverage = _coverage_pct(recommended_production, annual_consumption)
+        panels["coverage_pct"] = recommended_coverage
+        panels["production_to_consumption_pct"] = recommended_coverage
     selected = user_system or optimal
 
     # La serie horaria se pide siempre a 1 kWp (la clave de caché no varía con
@@ -789,7 +880,7 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         )
 
     # Precio: prioridad al explícito, luego al derivado de facturas, luego default.
-    # Si hay facturas con importe válido, nunca se usa un precio medio nacional.
+    # Si hay facturas con cargo variable de energía válido, no se usa un precio medio nacional.
     price, price_source, price_bill_count = _resolve_electricity_price(
         req,
         consumption_summary,
@@ -830,6 +921,11 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         cons_profile = consumption_profile(
             annual_consumption,
             consumption_summary.get("monthly_kwh") if consumption_summary else None,
+            country_code=country.code,
+            occupancy_profile=req.occupancy_profile,
+            has_heat_pump=req.has_heat_pump,
+            has_ev=req.has_ev,
+            has_pool=req.has_pool,
         )
         capacities = [0.0] + sorted(
             {c for c in req.battery_options_kwh if c > 0}
@@ -909,10 +1005,6 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         "roi_pct": roi_pct,
     }
     if panels is not None:
-        panels["coverage_pct"] = annual_energy["coverage_pct"]
-        panels["production_to_consumption_pct"] = annual_energy[
-            "production_to_consumption_pct"
-        ]
         panels["explanation"] = _panels_explanation(panels)
 
     _validate_estimate_consistency(

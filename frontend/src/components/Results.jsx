@@ -7,6 +7,7 @@ import {
 } from './Charts'
 import AdSlot from './AdSlot'
 import PrintReport from './PrintReport'
+import { batteryRecommendation } from '../batteryRecommendation'
 
 function ReportDownload({ data, i18n, fmt }) {
   const { t } = i18n
@@ -142,46 +143,6 @@ function ConfidenceBadge({ confidence, t }) {
       {t(`confidence.${level}`)}
     </span>
   )
-}
-
-function batteryRecommendation(analysis, i18n, fmt) {
-  // La decisión (qué batería y con qué vida útil) viene del backend; aquí solo
-  // se construye el texto traducido. Así la fila resaltada en la tabla y la
-  // recomendación no pueden contradecirse.
-  const { t } = i18n
-  const lifetime = analysis.battery_lifetime_years ?? 10
-  const base = analysis.scenarios.find((s) => s.battery_kwh === 0) ?? analysis.scenarios[0]
-  const recommended = analysis.scenarios.find(
-    (s) => s.battery_kwh > 0 && s.battery_kwh === analysis.recommended_battery_kwh,
-  )
-  if (recommended) {
-    return t('battery.recommendation', {
-      battery: fmt.nf1.format(recommended.battery_kwh),
-      payback: fmt.nf1.format(recommended.battery_marginal_payback_years),
-      selfBefore: fmt.nf1.format(base.self_sufficiency_pct),
-      selfAfter: fmt.nf1.format(recommended.self_sufficiency_pct),
-      lifetime,
-    })
-  }
-  const candidates = analysis.scenarios.filter(
-    (s) => s.battery_kwh > 0 && s.battery_marginal_payback_years != null,
-  )
-  const best = candidates.reduce(
-    (current, item) =>
-      !current || item.battery_marginal_payback_years < current.battery_marginal_payback_years
-        ? item
-        : current,
-    null,
-  )
-  const detail = best
-    ? t('battery.bestDetail', {
-        battery: fmt.nf1.format(best.battery_kwh),
-        payback: fmt.nf1.format(best.battery_marginal_payback_years),
-        extraSavings: fmt.money0.format(Math.max(0, best.annual_savings_eur - base.annual_savings_eur)),
-        extraInvestment: fmt.money0.format(Math.max(0, best.investment_eur - base.investment_eur)),
-      })
-    : ''
-  return t('battery.noRecommendation', { lifetime, detail })
 }
 
 function BatterySection({ analysis, i18n, pricing, fmt }) {
@@ -531,6 +492,12 @@ export default function Results({ data, i18n }) {
           />
         )}
         <Card
+          title={t('results.analysedPower')}
+          value={fmt.nf2.format(data.analysis_power_kwp)}
+          unit="kWp"
+          detail={t('results.analysedPowerDetail')}
+        />
+        <Card
           title={t('results.annualProduction')}
           value={fmt.nf.format(system.annual_production_kwh)}
           unit={t('units.kwhYear')}
@@ -649,7 +616,11 @@ export default function Results({ data, i18n }) {
           <Card
             title={t('results.annualBill')}
             value={fmt.money0.format(data.consumption.annual_amount_eur)}
-            detail={t('results.annualBillDetail')}
+            detail={
+              data.consumption.total_amount_bill_count
+                ? t('results.annualBillTotalDetail')
+                : t('results.annualBillDetail')
+            }
           />
         )}
         {data.panels && (

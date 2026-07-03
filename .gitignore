@@ -18,3 +18,7 @@ frontend/dist/
 
 # Runtime de Taller (log y pid del proceso)
 .taller/
+
+# Salida de Playwright
+frontend/test-results/
+frontend/playwright-report/

@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom'
+import { batteryRecommendation } from '../batteryRecommendation'
 
 // Informe imprimible (el usuario elige "Guardar como PDF" en el diálogo).
 // Se renderiza fuera del #app-shell mediante un portal a <body>, y el CSS de
@@ -96,7 +97,7 @@ export default function PrintReport({ data, i18n, fmt, variant }) {
         <table className="pr-table pr-kv">
           <tbody>
             <Row
-              label={t('report.recommendedPower')}
+              label={t('report.analysedPower')}
               value={`${fmt.nf2.format(data.analysis_power_kwp)} kWp`}
             />
             {data.panels && (
@@ -201,7 +202,7 @@ export default function PrintReport({ data, i18n, fmt, variant }) {
 
       {data.battery_analysis && (
         <Section title={t('battery.title')}>
-          <p className="pr-note">{data.battery_analysis.recommendation}</p>
+          <p className="pr-note">{batteryRecommendation(data.battery_analysis, i18n, fmt)}</p>
           {isInstaller && (
             <table className="pr-table pr-scenarios">
               <thead>

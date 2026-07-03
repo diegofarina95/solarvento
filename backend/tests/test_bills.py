@@ -31,6 +31,11 @@ class TestParseBillText:
         result = parse_bill_text(SAMPLE_BILL)
         assert result["kwh"] == 312.0
         assert result["amount_eur"] == 71.39
+        assert result["total_eur"] == 71.39
+        assert result["energy_eur"] == 43.06
+        assert result["fixed_eur"] == 13.11
+        assert result["taxes_eur"] == 15.22
+        assert result["currency"] == "EUR"
         assert result["start_date"] == date(2026, 3, 15)
         assert result["end_date"] == date(2026, 4, 14)
         assert result["country_code"] == "ES"
@@ -117,24 +122,126 @@ class TestParseBillText:
         result = parse_bill_text(text)
         assert result["kwh"] == 350.0
 
+    def test_energy_charge_does_not_use_kwh_as_money(self):
+        text = """
+        Factura de electricidad
+        Energía consumida 312 kWh
+        Total importe factura 71,39 €
+        """
+        result = parse_bill_text(text)
+        assert result["energy_eur"] is None
+        assert result["amount_eur"] == 71.39
+
+    def test_extracts_multiline_spanish_large_house_january_bill(self):
+        text = """
+        Factura de electricidad
+        Periodo facturado
+        01/01/2026 - 31/01/2026
+        Total a pagar
+        829,17 €
+        Total energía consumida
+        2.902 kWh
+        497,91 €
+        Desglose económico
+        Importe
+        Término de potencia
+        70,84 €
+        Término de energía
+        497,91 €
+        Impuesto eléctrico y cargos regulados
+        27,41 €
+        Alquiler de contador
+        0,93 €
+        Base imponible
+        584,59 €
+        IVA 21%
+        122,76 €
+        TOTAL FACTURA
+        829,17 €
+        """
+        result = parse_bill_text(text)
+        assert result["kwh"] == 2902.0
+        assert result["total_eur"] == 829.17
+        assert result["energy_eur"] == 497.91
+        assert result["fixed_eur"] == 71.77
+        assert result["taxes_eur"] == 150.17
+
+    def test_extracts_consumption_table_without_repeated_kwh_unit(self):
+        text = """
+        Factura de electricidad
+        Periodo de facturación
+        01/07/2026 - 31/07/2026
+        RESUMEN DE CONSUMO
+        kWh
+        Precio medio
+        Punta
+        496
+        0,231 €/kWh
+        Llano
+        611
+        0,204 €/kWh
+        Valle
+        703
+        0,176 €/kWh
+        TOTAL
+        1.810
+        0,200 €/kWh
+        CONCEPTO
+        IMPORTE
+        Término de potencia
+        48,91 €
+        Término de energía
+        362,02 €
+        Impuesto electricidad
+        21,20 €
+        Alquiler contador
+        0,81 €
+        Base imponible
+        439,89 €
+        IVA (21%)
+        92,38 €
+        TOTAL FACTURA
+        532,27 €
+        """
+        result = parse_bill_text(text)
+        assert result["kwh"] == 1810.0
+        assert result["total_eur"] == 532.27
+        assert result["energy_eur"] == 362.02
+        assert result["fixed_eur"] == 49.72
+        assert result["taxes_eur"] == 113.58
+
 
 class TestAggregateBills:
     def test_estimates_annual_from_sampled_months(self):
         bills = [
-            {"kwh": 300, "amount_eur": 70, "start_date": date(2026, 1, 1), "end_date": date(2026, 1, 31)},
-            {"kwh": 280, "amount_eur": 65, "start_date": date(2026, 2, 1), "end_date": date(2026, 3, 1)},
+            {
+                "kwh": 300,
+                "energy_eur": 50,
+                "amount_eur": 70,
+                "start_date": date(2026, 1, 1),
+                "end_date": date(2026, 1, 31),
+            },
+            {
+                "kwh": 280,
+                "energy_eur": 45,
+                "amount_eur": 65,
+                "start_date": date(2026, 2, 1),
+                "end_date": date(2026, 3, 1),
+            },
         ]
         result = aggregate_bills(bills)
-        jan_month = 300 / 30 * DAYS_PER_MONTH[0]
+        jan_month = 300 / 31 * DAYS_PER_MONTH[0]
         feb_month = 280 / 28 * DAYS_PER_MONTH[1]
         expected = (
-            (jan_month / (MONTHLY_WEIGHTS[0] / sum(MONTHLY_WEIGHTS))) * 30
+            (jan_month / (MONTHLY_WEIGHTS[0] / sum(MONTHLY_WEIGHTS))) * 31
             + (feb_month / (MONTHLY_WEIGHTS[1] / sum(MONTHLY_WEIGHTS))) * 28
-        ) / 58
+        ) / 59
         assert result["annual_kwh"] == pytest.approx(expected, rel=0.01)
-        assert result["avg_price_eur_kwh"] == pytest.approx(135 / 580, rel=0.01)
+        assert result["avg_price_eur_kwh"] == pytest.approx(95 / 580, rel=0.01)
+        assert result["annual_amount_eur"] is not None
         assert result["bill_count"] == 2
         assert result["priced_bill_count"] == 2
+        assert result["total_amount_bill_count"] == 2
         assert result["ignored_price_bill_count"] == 0
         assert result["monthly_kwh"] is not None
         assert result["observed_months"] == [1, 2]
@@ -153,13 +260,14 @@ class TestAggregateBills:
         assert result["monthly_kwh"][6] == pytest.approx(520, rel=0.01)
         assert result["monthly_kwh"][8] == pytest.approx(360, rel=0.01)
         assert result["annual_kwh"] > sum([420, 520, 360])
-        assert result["avg_price_eur_kwh"] == pytest.approx(325 / 1300, rel=0.01)
+        assert result["avg_price_eur_kwh"] is None
+        assert result["annual_amount_eur"] is not None
 
     def test_january_and_june_manual_bills_do_not_get_multiplied_by_month_days(self):
         result = aggregate_bills(
             [
-                {"month": 1, "kwh": 612, "amount_eur": 155.15},
-                {"month": 6, "kwh": 344, "amount_eur": 94.04},
+                {"month": 1, "kwh": 612, "energy_eur": 105.15, "amount_eur": 155.15},
+                {"month": 6, "kwh": 344, "energy_eur": 54.04, "amount_eur": 94.04},
             ]
         )
 
@@ -168,7 +276,7 @@ class TestAggregateBills:
         assert result["monthly_kwh"][5] == pytest.approx(344, rel=0.01)
         assert result["annual_kwh"] == pytest.approx(sum(result["monthly_kwh"]), rel=0.001)
         assert 5000 < result["annual_kwh"] < 6500
-        assert result["avg_price_eur_kwh"] == round((155.15 + 94.04) / (612 + 344), 4)
+        assert result["avg_price_eur_kwh"] == round((105.15 + 54.04) / (612 + 344), 4)
 
     def test_rejects_probable_meter_reading_used_as_consumption(self):
         with pytest.raises(BillParseError, match="lectura acumulada"):
@@ -199,9 +307,9 @@ class TestAggregateBills:
     def test_ignores_anomalous_prices_for_weighted_average(self):
         result = aggregate_bills(
             [
-                {"month": 1, "kwh": 286, "amount_eur": 95.09},
-                {"month": 2, "kwh": 300, "amount_eur": 2.00},
-                {"month": 3, "kwh": 250, "amount_eur": 380.00},
+                {"month": 1, "kwh": 286, "energy_eur": 95.09, "amount_eur": 120.09},
+                {"month": 2, "kwh": 300, "energy_eur": 2.00, "amount_eur": 30.00},
+                {"month": 3, "kwh": 250, "energy_eur": 380.00, "amount_eur": 430.00},
             ]
         )
 
@@ -209,6 +317,37 @@ class TestAggregateBills:
         assert result["bill_count"] == 3
         assert result["priced_bill_count"] == 1
         assert result["ignored_price_bill_count"] == 2
+
+    def test_total_amount_does_not_drive_marginal_price(self):
+        result = aggregate_bills([{"month": 1, "kwh": 300, "amount_eur": 120}])
+
+        assert result["avg_price_eur_kwh"] is None
+        assert result["annual_amount_eur"] is not None
+        assert result["total_amount_bill_count"] == 1
+
+    def test_non_euro_price_thresholds_use_bill_currency(self):
+        result = aggregate_bills(
+            [{"month": 1, "kwh": 350, "energy_eur": 280, "amount_eur": 420, "currency": "PLN"}]
+        )
+
+        assert result["avg_price_eur_kwh"] == pytest.approx(0.8, rel=0.001)
+        assert result["priced_bill_count"] == 1
+
+    def test_cross_month_period_is_split_by_days(self):
+        result = aggregate_bills(
+            [
+                {
+                    "kwh": 310,
+                    "amount_eur": 100,
+                    "start_date": date(2026, 1, 20),
+                    "end_date": date(2026, 2, 10),
+                }
+            ]
+        )
+
+        assert result["observed_months"] == [1, 2]
+        assert result["monthly_kwh"][0] == pytest.approx(310 * 12 / 22 / 12 * DAYS_PER_MONTH[0], rel=0.01)
+        assert result["monthly_kwh"][1] == pytest.approx(310 * 10 / 22 / 10 * DAYS_PER_MONTH[1], rel=0.01)
 
     def test_invalid_bills_raise(self):
         with pytest.raises(BillParseError):

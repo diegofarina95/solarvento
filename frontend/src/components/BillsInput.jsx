@@ -4,7 +4,16 @@ import { ApiError, parseBill } from '../api'
 const inputClass =
   'w-full min-w-0 rounded-md border border-stone-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-200'
 
-const EMPTY_ROW = { month: '', kwh: '', amount: '', start: '', end: '' }
+const EMPTY_ROW = {
+  month: '',
+  kwh: '',
+  energyAmount: '',
+  totalAmount: '',
+  amount: '',
+  currency: '',
+  start: '',
+  end: '',
+}
 
 // Ids estables para las filas: con key={index}, borrar una fila intermedia
 // hace saltar el foco y reutiliza estado de inputs de la fila siguiente.
@@ -45,7 +54,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
   const [notice, setNotice] = useState(null)
 
   function update(index, key, value) {
-    setBills(bills.map((b, i) => (i === index ? { ...b, [key]: value } : b)))
+    setBills((prev) => prev.map((b, i) => (i === index ? { ...b, [key]: value } : b)))
   }
 
   function removeRow(index) {
@@ -78,7 +87,10 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
       added.push(newRow({
         month: parsed.month ? String(parsed.month) : inferBillMonth(parsed.start_date, parsed.end_date),
         kwh: parsed.kwh ?? '',
-        amount: parsed.amount_eur ?? '',
+        energyAmount: parsed.energy_eur ?? '',
+        totalAmount: parsed.total_eur ?? parsed.amount_eur ?? '',
+        amount: parsed.total_eur ?? parsed.amount_eur ?? '',
+        currency: parsed.currency ?? '',
         start: parsed.start_date ?? '',
         end: parsed.end_date ?? '',
       }))
@@ -139,7 +151,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         <div className="space-y-2">
           {bills.map((bill, i) => (
             <div key={bill.id ?? i} className="rounded-md border border-stone-200 bg-white p-2">
-              <div className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_auto] gap-1.5">
+              <div className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,0.9fr)_auto] gap-1.5">
                 <MiniField label={t('bills.month')}>
                   <select
                     value={bill.month ?? ''}
@@ -167,17 +179,6 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
                     aria-label={t('bills.kwhAria', { index: i + 1 })}
                   />
                 </MiniField>
-                <MiniField label={t('bills.amount')}>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={bill.amount}
-                    onChange={(e) => update(i, 'amount', e.target.value)}
-                    placeholder="71,39"
-                    className={inputClass}
-                    aria-label={t('bills.amountAria', { index: i + 1 })}
-                  />
-                </MiniField>
                 <button
                   type="button"
                   onClick={() => removeRow(i)}
@@ -186,6 +187,33 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
                 >
                   x
                 </button>
+              </div>
+              <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+                <MiniField label={t('bills.energyAmount')}>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={bill.energyAmount ?? ''}
+                    onChange={(e) => update(i, 'energyAmount', e.target.value)}
+                    placeholder="43,06"
+                    className={inputClass}
+                    aria-label={t('bills.energyAmountAria', { index: i + 1 })}
+                  />
+                </MiniField>
+                <MiniField label={t('bills.totalAmount')}>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={bill.totalAmount ?? bill.amount ?? ''}
+                    onChange={(e) => {
+                      update(i, 'totalAmount', e.target.value)
+                      update(i, 'amount', e.target.value)
+                    }}
+                    placeholder="71,39"
+                    className={inputClass}
+                    aria-label={t('bills.totalAmountAria', { index: i + 1 })}
+                  />
+                </MiniField>
               </div>
               <div className="mt-1.5 grid grid-cols-2 gap-1.5">
                 <MiniField label={t('bills.start')}>

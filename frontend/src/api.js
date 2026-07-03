@@ -67,5 +67,6 @@ export function solarEstimate(params) {
 export function parseBill(file) {
   const form = new FormData()
   form.append('file', file)
+  form.append('website', '')
   return request(`${API_BASE}/api/parse-bill`, { method: 'POST', body: form })
 }

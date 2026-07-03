@@ -5,6 +5,7 @@ import LocationSearch from './components/LocationSearch'
 import MapPicker from './components/MapPicker'
 import SolarForm from './components/SolarForm'
 import { ApiError, apiErrorMessage, solarEstimate } from './api'
+import { parseLocaleNumber } from './numberParsing'
 
 // Results arrastra Recharts (~40% del bundle) y solo se ve tras calcular:
 // cargarlo en diferido recorta el JS inicial de la página.
@@ -29,24 +30,6 @@ function detectInitialLanguage() {
     if (SUPPORTED_LANGUAGES.has(base)) return base
   }
   return 'es'
-}
-
-function parseLocaleNumber(value, { thousands = false } = {}) {
-  if (value == null || value === '') return null
-  if (typeof value === 'number') return Number.isFinite(value) ? value : null
-
-  const raw = String(value).trim().replace(/\s/g, '')
-  if (!raw) return null
-
-  let normalized = raw
-  if (raw.includes(',')) {
-    normalized = raw.replace(/\./g, '').replace(',', '.')
-  } else if (thousands && /^\d{1,3}(?:\.\d{3})+$/.test(raw)) {
-    normalized = raw.replace(/\./g, '')
-  }
-
-  const parsed = Number(normalized)
-  return Number.isFinite(parsed) ? parsed : null
 }
 
 function requireLocaleNumber(value, label, t, options) {
@@ -75,6 +58,10 @@ export default function App() {
     surplusPrice: '',
     costPerKwp: '',
     batteryCost: '',
+    occupancyProfile: 'standard',
+    hasHeatPump: false,
+    hasEv: false,
+    hasPool: false,
   })
   const [bills, setBills] = useState([])
   const [loading, setLoading] = useState(false)
@@ -146,7 +133,8 @@ export default function App() {
         ...b,
         index,
         parsedKwh: parseLocaleNumber(b.kwh, { thousands: true }),
-        parsedAmount: parseLocaleNumber(b.amount, { thousands: true }),
+        parsedEnergyAmount: parseLocaleNumber(b.energyAmount, { thousands: true }),
+        parsedTotalAmount: parseLocaleNumber(b.totalAmount ?? b.amount, { thousands: true }),
       }))
       // Una fila con kWh ilegible no se descarta en silencio: el usuario
       // creería que su factura cuenta en el cálculo.
@@ -164,7 +152,19 @@ export default function App() {
       if (validBills.length) {
         params.bills = validBills.map((b) => ({
           kwh: b.parsedKwh,
-          amount_eur: b.parsedAmount != null && b.parsedAmount > 0 ? b.parsedAmount : null,
+          energy_eur:
+            b.parsedEnergyAmount != null && b.parsedEnergyAmount > 0
+              ? b.parsedEnergyAmount
+              : null,
+          total_eur:
+            b.parsedTotalAmount != null && b.parsedTotalAmount > 0
+              ? b.parsedTotalAmount
+              : null,
+          amount_eur:
+            b.parsedTotalAmount != null && b.parsedTotalAmount > 0
+              ? b.parsedTotalAmount
+              : null,
+          currency: b.currency || null,
           month: b.month ? Number(b.month) : null,
           start_date: b.start || null,
           end_date: b.end || null,
@@ -221,6 +221,10 @@ export default function App() {
             { thousands: true },
           )
         }
+        params.occupancy_profile = form.occupancyProfile
+        params.has_heat_pump = Boolean(form.hasHeatPump)
+        params.has_ev = Boolean(form.hasEv)
+        params.has_pool = Boolean(form.hasPool)
       }
       setResults(await solarEstimate(params))
     } catch (err) {
