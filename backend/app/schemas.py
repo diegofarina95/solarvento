@@ -336,6 +336,8 @@ class SizingScenario(BaseModel):
     self_consumed_kwh: float
     exported_kwh: float
     imported_kwh: float
+    exceeds_contracted: bool = False
+    exceeds_tariff: bool = False
 
 
 class SizingAnalysis(BaseModel):

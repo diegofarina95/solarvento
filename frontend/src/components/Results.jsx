@@ -184,7 +184,17 @@ function SizingSection({ analysis, i18n, fmt }) {
                     </span>
                   )}
                 </td>
-                <td className="py-2 pr-3">{fmt.nf2.format(s.power_kwp)} kWp</td>
+                <td className="py-2 pr-3">
+                  {fmt.nf2.format(s.power_kwp)} kWp
+                  {(s.exceeds_contracted || s.exceeds_tariff) && (
+                    <span
+                      className="ml-1.5 rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-800"
+                      title={t('sizing.overGridTitle')}
+                    >
+                      {t('sizing.overGrid')}
+                    </span>
+                  )}
+                </td>
                 <td className="py-2 pr-3">{fmt.money0.format(s.investment_eur)}</td>
                 <td className="py-2 pr-3">{fmt.money0.format(s.annual_savings_eur)}</td>
                 <td className="py-2 pr-3">

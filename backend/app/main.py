@@ -1294,10 +1294,17 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
     # Aviso informativo de límites de red: recomendar un inversor que roza o
     # supera la potencia contratada o el techo de la tarifa 2.0TD (15 kW) tiene
     # consecuencias (límites de inyección, tipo de trámite de conexión).
+    TARIFF_THRESHOLD_KW = 15.0  # techo de la tarifa 2.0TD (por encima → 3.0TD)
     grid_limits = None
     contracted_power_kw = (consumption_summary or {}).get("contracted_power_kw")
     if contracted_power_kw:
-        TARIFF_THRESHOLD_KW = 15.0  # techo de la tarifa 2.0TD
+        # Marca cada escenario de tamaño que roza/supera la potencia contratada o
+        # el techo 2.0TD (implica cambio de tarifa y de trámite de conexión).
+        if sizing_analysis:
+            for scenario in sizing_analysis["scenarios"]:
+                p = scenario["power_kwp"]
+                scenario["exceeds_contracted"] = p > contracted_power_kw
+                scenario["exceeds_tariff"] = p > TARIFF_THRESHOLD_KW
         candidate_powers = [analysis_power_kwp]
         if sizing_analysis:
             candidate_powers.append(sizing_analysis["max_savings_kwp"])

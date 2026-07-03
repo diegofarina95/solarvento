@@ -1343,3 +1343,27 @@ def test_panels_card_matches_recommended_optimum(respx_mock, client):
     assert panels["production_to_consumption_pct"] < 60
     # La cobertura 100% queda como 'needed_kwp' (mayor)
     assert panels["needed_kwp"] > panels["total_kwp"]
+
+
+@respx.mock
+def test_sizing_scenarios_flag_grid_oversize(respx_mock, client):
+    """FLAG I: los escenarios que superan potencia contratada / 15 kW se marcan."""
+    mock_pvgis(respx_mock)
+    real = {m: v for m, v in zip(range(1, 13),
+            [2902, 2640, 2210, 1874, 1632, 1542, 1810, 1948, 1765, 2009, 2430, 2875])}
+    history = [{"month": m, "kwh": k} for m, k in real.items()]
+    data = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0, "auto_size_power": True,
+        "bills": [{"kwh": 25637, "energy_eur": 5350.51, "total_eur": 7332.17,
+                   "contracted_power_kw": 14.49,
+                   "start_date": "2026-01-01", "end_date": "2026-12-31",
+                   "consumption_history": history}],
+    }).json()
+    scenarios = data["sizing_analysis"]["scenarios"]
+    by = {s["power_kwp"]: s for s in scenarios}
+    cov = by[data["sizing_analysis"]["max_savings_kwp"]]
+    opt = by[data["sizing_analysis"]["economic_optimum_kwp"]]
+    # La cobertura 100% (~20 kWp) supera contratada y techo; el óptimo (~7-8) no
+    assert cov["exceeds_contracted"] is True
+    assert cov["exceeds_tariff"] is True
+    assert opt["exceeds_tariff"] is False
