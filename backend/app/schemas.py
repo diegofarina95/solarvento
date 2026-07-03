@@ -16,7 +16,9 @@ class BillHistoryEntry(BaseModel):
 class BillInput(BaseModel):
     """Una factura de la luz: consumo y, opcionalmente, importe y periodo."""
 
-    kwh: float = Field(..., gt=0, le=20000)
+    # Tope alto para admitir facturas anuales de viviendas grandes; una lectura
+    # acumulada del contador se filtra por precio implícito, no por este máximo.
+    kwh: float = Field(..., gt=0, le=60000)
     energy_eur: float | None = Field(
         None,
         gt=0,

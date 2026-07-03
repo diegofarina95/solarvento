@@ -91,7 +91,10 @@ _TOTAL_LABELS = [
     r"total\s+charges",
     r"total\s+bill",
 ]
-MAX_BILL_KWH = 20_000
+# Tope de kWh de una factura. Cubre facturas anuales de viviendas grandes; el
+# filtro real contra lecturas acumuladas del contador es el de precio por kWh
+# (_looks_like_accumulated_reading), no este tope absoluto.
+MAX_BILL_KWH = 60_000
 SUSPICIOUS_MONTHLY_KWH = 5_000
 SUSPICIOUS_MIN_PRICE_EUR_KWH = 0.05
 SUSPICIOUS_MAX_PRICE_EUR_KWH = 1.00
@@ -925,6 +928,19 @@ def derive_bill_tax_rates(bill: dict, country_code: str | None = None) -> dict |
     }
 
 
+ANNUAL_MIN_DAYS = 330  # una factura que cubre ~12 meses se trata como anual
+
+
+def _is_annual_bill(bill: dict) -> bool:
+    """True si la factura cubre un periodo anual (~12 meses)."""
+    days = bill.get("days")
+    if days is None:
+        start, end = bill.get("start_date"), bill.get("end_date")
+        if start and end:
+            days = _period_days(start, end)
+    return days is not None and float(days) >= ANNUAL_MIN_DAYS
+
+
 def _bill_recency_key(bill: dict) -> date:
     """Fecha para resolver conflictos del histórico: la más reciente gana."""
     end, start = bill.get("end_date"), bill.get("start_date")
@@ -1087,16 +1103,27 @@ def aggregate_bills(
     if total_kwh <= 0 or total_days <= 0:
         raise BillParseError("Las facturas no contienen consumos válidos")
 
-    # Consumo anual: si alguna factura trae el histórico mensual, es la fuente
-    # de verdad (determinista, no depende de qué meses se suban); si no, se cae
-    # a la estimación por meses muestreados con el perfil estacional.
+    # Consumo anual, por orden de fiabilidad:
+    #  1) histórico mensual de la factura (determinista, no depende de qué meses
+    #     se suban);
+    #  2) facturas de periodo anual (~12 meses): su total ya ES el consumo anual,
+    #     así que no se reparte plano por días; la forma estacional la aplica el
+    #     perfil de consumo aguas abajo (igual que el consumo anual introducido a
+    #     mano), por eso se deja monthly_kwh en None;
+    #  3) facturas de periodos cortos: estimación por meses muestreados.
     history = _merge_consumption_history(bills)
     estimated_months: list[int] = []
+    annual_only = not history and all(_is_annual_bill(bill) for bill in bills)
     if history:
         monthly, estimated_months = _twelve_months_from_history(history)
         observed_months = sorted(history)
         annual_kwh = sum(monthly)
         seasonality_source = "bill_history"
+    elif annual_only:
+        monthly = None
+        observed_months = []
+        annual_kwh = total_kwh
+        seasonality_source = "annual_bill"
     else:
         annual_from_months, monthly, observed_months = _estimate_monthly_from_samples(
             monthly_kwh, monthly_days
@@ -1135,13 +1162,18 @@ def aggregate_bills(
     annual_amount = None
     monthly_amount = None
     if total_amount_bill_count > 0:
-        annual_amount_from_months, monthly_amount, _observed_amount_months = (
-            _estimate_monthly_from_samples(monthly_total_amount, monthly_total_amount_days)
-        )
-        if annual_amount_from_months is not None:
-            annual_amount = annual_amount_from_months
-        elif total_amount_days > 0:
-            annual_amount = round(total_bill_amount / total_amount_days * 365.25, 1)
+        if annual_only:
+            # El importe de una factura anual ya es el gasto anual; no hay reparto
+            # mensual fiable, coherente con monthly_kwh=None.
+            annual_amount = round(total_bill_amount, 1)
+        else:
+            annual_amount_from_months, monthly_amount, _observed_amount_months = (
+                _estimate_monthly_from_samples(monthly_total_amount, monthly_total_amount_days)
+            )
+            if annual_amount_from_months is not None:
+                annual_amount = annual_amount_from_months
+            elif total_amount_days > 0:
+                annual_amount = round(total_bill_amount / total_amount_days * 365.25, 1)
 
     return {
         "annual_kwh": round(annual_kwh, 1),

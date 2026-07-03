@@ -1114,3 +1114,43 @@ def test_annual_consumption_is_deterministic_across_bill_subsets(respx_mock, cli
     assert 2 in a["estimated_months"]
     # 11 reales (21.086) + febrero estimado ≈ 23.500-24.000, NO ≈ 25.600
     assert 23500 <= a["annual_kwh"] <= 24000
+
+
+@respx.mock
+def test_solar_estimate_accepts_annual_bill(respx_mock, client):
+    mock_pvgis(respx_mock)
+    resp = client.post(
+        "/api/solar-estimate",
+        json={
+            "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0,
+            "bills": [{
+                "kwh": 9600, "energy_eur": 1920, "total_eur": 2600,
+                "start_date": "2025-01-01", "end_date": "2025-12-31",
+            }],
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    cons = data["consumption"]
+    assert cons["seasonality_source"] == "annual_bill"
+    assert cons["annual_kwh"] == pytest.approx(9600, abs=1)
+    # La simulación horaria corre con el perfil estacional aguas abajo
+    assert data["battery_analysis"] is not None
+    assert data["economics"]["annual_savings_eur"] > 0
+
+
+@respx.mock
+def test_solar_estimate_accepts_large_annual_bill(respx_mock, client):
+    mock_pvgis(respx_mock)
+    resp = client.post(
+        "/api/solar-estimate",
+        json={
+            "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0,
+            "bills": [{
+                "kwh": 23712, "energy_eur": 4742, "total_eur": 6400,
+                "start_date": "2025-01-01", "end_date": "2025-12-31",
+            }],
+        },
+    )
+    assert resp.status_code == 200
+    assert resp.json()["consumption"]["annual_kwh"] == pytest.approx(23712, abs=1)

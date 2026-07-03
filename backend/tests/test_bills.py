@@ -736,3 +736,75 @@ class TestConsumptionFromHistory:
         )
         assert agg["seasonality_source"] == "estimated_from_sampled_months"
         assert agg["estimated_months"] == []
+
+
+class TestAnnualBills:
+    """Facturas que cubren un periodo anual (~12 meses)."""
+
+    def test_annual_period_bill_is_treated_as_annual_total(self):
+        agg = aggregate_bills(
+            [{
+                "kwh": 9600, "energy_eur": 1920, "total_eur": 2600,
+                "start_date": date(2025, 1, 1), "end_date": date(2025, 12, 31),
+            }],
+            country_code="ES",
+        )
+        assert agg["seasonality_source"] == "annual_bill"
+        assert agg["annual_kwh"] == pytest.approx(9600, abs=1)
+        # Sin reparto mensual plano: la estacionalidad la aplica el perfil aguas abajo
+        assert agg["monthly_kwh"] is None
+        assert agg["observed_months"] == []
+        assert agg["estimated_months"] == []
+        assert agg["annual_amount_eur"] == pytest.approx(2600, abs=1)
+
+    def test_annual_bill_by_days_field(self):
+        agg = aggregate_bills([{"kwh": 8000, "days": 365}], country_code="ES")
+        assert agg["seasonality_source"] == "annual_bill"
+        assert agg["annual_kwh"] == pytest.approx(8000, abs=1)
+
+    def test_large_annual_bill_above_old_limit_is_accepted(self):
+        agg = aggregate_bills(
+            [{
+                "kwh": 23712, "energy_eur": 4742, "total_eur": 6400,
+                "start_date": date(2025, 1, 1), "end_date": date(2025, 12, 31),
+            }],
+            country_code="ES",
+        )
+        assert agg["annual_kwh"] == pytest.approx(23712, abs=1)
+        assert agg["marginal_price_factor"] == pytest.approx(1.2719, abs=0.001)
+
+    def test_two_annual_bills_sum(self):
+        agg = aggregate_bills(
+            [
+                {"kwh": 9000, "days": 365},
+                {"kwh": 500, "days": 365},
+            ],
+            country_code="ES",
+        )
+        assert agg["seasonality_source"] == "annual_bill"
+        assert agg["annual_kwh"] == pytest.approx(9500, abs=1)
+
+    def test_history_takes_precedence_over_annual_period(self):
+        # Una factura anual que ADEMÁS trae histórico usa el histórico (más preciso)
+        agg = aggregate_bills(
+            [{
+                "kwh": 9600,
+                "start_date": date(2025, 1, 1), "end_date": date(2025, 12, 31),
+                "consumption_history": [
+                    {"month": m, "kwh": 800} for m in range(1, 13)
+                ],
+            }],
+            country_code="ES",
+        )
+        assert agg["seasonality_source"] == "bill_history"
+        assert agg["annual_kwh"] == pytest.approx(9600, abs=1)
+
+    def test_short_period_bill_still_uses_sampled_path(self):
+        agg = aggregate_bills(
+            [{
+                "kwh": 800, "energy_eur": 160,
+                "start_date": date(2025, 1, 1), "end_date": date(2025, 1, 31),
+            }],
+            country_code="ES",
+        )
+        assert agg["seasonality_source"] != "annual_bill"
