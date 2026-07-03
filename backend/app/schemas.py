@@ -305,6 +305,24 @@ class GridLimits(BaseModel):
     exceeds_tariff: bool
 
 
+class RecommendedSystem(BaseModel):
+    """Fuente única del sistema recomendado; todo el UI lee de aquí."""
+
+    kwp: float
+    panel_count: int
+    panel_power_w: int
+    inverter_kw: float
+    annual_production_kwh: float
+    roof_area_m2: float
+    self_consumption_pct: float | None = None
+    self_sufficiency_pct: float | None = None
+    savings_per_year_eur: float
+    payback_years: float | None = None
+    roi_pct: float | None = None
+    production_to_consumption_pct: float | None = None
+    scenario_name: str  # 'economic_optimum' | 'as_entered'
+
+
 class SizingScenario(BaseModel):
     power_kwp: float
     annual_savings_eur: float
@@ -395,6 +413,7 @@ class SolarEstimateResponse(BaseModel):
     economics: Economics
     pricing: PricingSummary
     panels: PanelsRecommendation | None = None
+    recommended_system: RecommendedSystem | None = None
     consumption: ConsumptionSummary | None = None
     annual_energy: AnnualEnergySummary
     battery_analysis: BatteryAnalysis | None = None

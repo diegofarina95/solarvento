@@ -3,6 +3,7 @@
 import asyncio
 import ipaddress
 import logging
+import math
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -865,8 +866,11 @@ def _validate_estimate_consistency(
         warnings.append("production-to-consumption ratio is outside the expected range")
 
     if panels is not None:
-        expected_kwp = round(panels["count"] * panels["panel_power_w"] / 1000, 2)
-        if abs(expected_kwp - panels["total_kwp"]) > 0.01:
+        # El nº de paneles es entero: la potencia instalada por paneles puede
+        # diferir de la analizada hasta el valor de un panel.
+        expected_kwp = panels["count"] * panels["panel_power_w"] / 1000
+        panel_kwp = panels["panel_power_w"] / 1000
+        if abs(expected_kwp - panels["total_kwp"]) > panel_kwp + 0.01:
             warnings.append("recommended panel count is not coherent with total kWp")
         ratio = panels.get("production_to_consumption_pct")
         if (
@@ -1009,6 +1013,10 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         recommended_coverage = _coverage_pct(recommended_production, annual_consumption)
         panels["coverage_pct"] = recommended_coverage
         panels["production_to_consumption_pct"] = recommended_coverage
+        # Tamaño de cobertura del 100% (escenario 'máximo ahorro'); el titular
+        # puede ser menor (óptimo económico). Se guarda para el barrido y como
+        # 'needed_kwp' informativo.
+        coverage_kwp = panels["total_kwp"]
 
         if hourly_production is not None:
             cons_profile = consumption_profile(
@@ -1232,7 +1240,47 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         "cumulative_cashflow": base_analysis["cumulative"],
         "assumptions": base_analysis["assumptions"],
     }
+    # --- Fuente única del sistema recomendado (REFACTOR K) ---
+    # Todo lo que muestra el "sistema recomendado" (tarjeta de paneles, titular)
+    # se deriva de este objeto, calculado UNA vez a la potencia analizada. Nada
+    # se recalcula por separado en el frontend.
+    recommended_system = None
     if panels is not None:
+        panel_count = max(1, round(analysis_power_kwp * 1000 / req.panel_power_w))
+        installed_kwp = round(analysis_power_kwp, 2)
+        coverage_ratio = _coverage_pct(
+            selected["annual_production_kwh"], annual_consumption
+        )
+        recommended_system = {
+            "kwp": installed_kwp,
+            "panel_count": panel_count,
+            "panel_power_w": req.panel_power_w,
+            "inverter_kw": installed_kwp,
+            "annual_production_kwh": selected["annual_production_kwh"],
+            "roof_area_m2": round(panel_count * 2.2 * 1.15, 1),
+            "self_consumption_pct": annual_energy.get("self_consumption_pct"),
+            "self_sufficiency_pct": annual_energy.get("self_sufficiency_pct"),
+            "savings_per_year_eur": savings,
+            "payback_years": payback,
+            "roi_pct": roi_pct,
+            "production_to_consumption_pct": coverage_ratio,
+            "scenario_name": (
+                "economic_optimum"
+                if sizing_analysis and req.auto_size_power
+                else "as_entered"
+            ),
+        }
+        # La tarjeta de paneles se DERIVA del sistema recomendado (no del tamaño
+        # de cobertura del 100%): así no puede contradecir al titular.
+        panels = {
+            "count": panel_count,
+            "total_kwp": installed_kwp,
+            "needed_kwp": coverage_kwp,
+            "panel_power_w": req.panel_power_w,
+            "roof_area_m2": recommended_system["roof_area_m2"],
+            "coverage_pct": coverage_ratio,
+            "production_to_consumption_pct": coverage_ratio,
+        }
         panels["explanation"] = _panels_explanation(panels)
 
     _validate_estimate_consistency(
@@ -1288,6 +1336,7 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
             **cost_details,
         },
         panels=panels,
+        recommended_system=recommended_system,
         consumption=consumption_summary,
         annual_energy=annual_energy,
         battery_analysis=battery_analysis,

@@ -277,7 +277,10 @@ def test_solar_estimate_january_june_bills_regression(respx_mock, client):
     assert 8 <= data["panels"]["count"] <= 12
     assert data["economics"]["annual_savings_eur"] > 500
     assert data["analysis_power_kwp"] == data["requested_peak_power_kwp"]
-    assert data["analysis_power_kwp"] != data["panels"]["total_kwp"]
+    # Fuente única: la tarjeta de paneles refleja la potencia analizada, no el
+    # tamaño de cobertura del 100% (que queda como 'needed_kwp' informativo).
+    assert data["panels"]["total_kwp"] == data["analysis_power_kwp"]
+    assert data["recommended_system"]["kwp"] == data["analysis_power_kwp"]
 
     mock_5kwp_production = pvcalc_response()["outputs"]["totals"]["fixed"]["E_y"]
     assert data["optimal"]["annual_production_kwh"] == pytest.approx(mock_5kwp_production, rel=0.001)
@@ -1281,3 +1284,62 @@ def test_no_grid_limits_note_for_small_system(respx_mock, client):
     }).json()
     # Sin facturas no hay potencia contratada conocida → sin aviso
     assert data["grid_limits"] is None
+
+
+@respx.mock
+def test_single_source_consistency_recommended_system(respx_mock, client):
+    """REFACTOR K: ningún valor de tamaño/paneles/consumo diverge de la fuente única."""
+    mock_pvgis(respx_mock)
+    real = {1: 2902, 2: 2640, 3: 2210, 4: 1874, 5: 1632, 6: 1542,
+            7: 1810, 8: 1948, 9: 1765, 10: 2009, 11: 2430, 12: 2875}
+    history = [{"month": m, "kwh": k} for m, k in real.items()]
+    data = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0, "auto_size_power": True,
+        "bills": [{
+            "kwh": 25637, "energy_eur": 5350.51, "total_eur": 7332.17,
+            "iee_eur": 22.5, "iva_rate": 0.21, "vat_base_eur": 6059.65,
+            "contracted_power_kw": 14.49,
+            "start_date": "2026-01-01", "end_date": "2026-12-31",
+            "consumption_history": history,
+        }],
+    }).json()
+
+    rs = data["recommended_system"]
+    panels = data["panels"]
+    eco = data["economics"]
+    energy = data["annual_energy"]
+
+    assert panels["total_kwp"] == rs["kwp"] == data["analysis_power_kwp"]
+    assert panels["count"] == rs["panel_count"]
+    assert panels["roof_area_m2"] == rs["roof_area_m2"]
+    assert panels["production_to_consumption_pct"] == rs["production_to_consumption_pct"]
+    assert rs["annual_production_kwh"] == pytest.approx(energy["production_kwh"], rel=0.001)
+    assert rs["savings_per_year_eur"] == eco["annual_savings_eur"]
+    assert rs["payback_years"] == eco["payback_years"]
+    assert rs["roi_pct"] == eco["roi_pct"]
+    assert rs["self_consumption_pct"] == energy["self_consumption_pct"]
+    assert abs(panels["count"] * panels["panel_power_w"] / 1000 - panels["total_kwp"]) <= panels["panel_power_w"] / 1000 + 0.01
+    assert data["consumption"]["annual_kwh"] == pytest.approx(sum(data["consumption"]["monthly_kwh"]), rel=0.001)
+    assert rs["scenario_name"] == "economic_optimum"
+
+
+@respx.mock
+def test_panels_card_matches_recommended_optimum(respx_mock, client):
+    """BUG G: la tarjeta de paneles usa el óptimo (7-8 kWp, ~35%), no la cobertura 100%."""
+    mock_pvgis(respx_mock)
+    real = {m: v for m, v in zip(range(1, 13),
+            [2902, 2640, 2210, 1874, 1632, 1542, 1810, 1948, 1765, 2009, 2430, 2875])}
+    history = [{"month": m, "kwh": k} for m, k in real.items()]
+    data = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0, "auto_size_power": True,
+        "bills": [{"kwh": 25637, "energy_eur": 5350.51, "total_eur": 7332.17,
+                   "start_date": "2026-01-01", "end_date": "2026-12-31",
+                   "consumption_history": history}],
+    }).json()
+    panels = data["panels"]
+    # Óptimo ~7-9 kWp → ~16-20 paneles, NO ~45; cobertura ~35%, NO ~100%
+    assert panels["total_kwp"] < 12
+    assert panels["count"] < 25
+    assert panels["production_to_consumption_pct"] < 60
+    # La cobertura 100% queda como 'needed_kwp' (mayor)
+    assert panels["needed_kwp"] > panels["total_kwp"]

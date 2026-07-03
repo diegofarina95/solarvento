@@ -320,10 +320,17 @@ function ConsumptionSection({ consumption, i18n, currency }) {
   if (!consumption?.monthly_kwh) return null
 
   const observedMonths = billMonthsText(consumption.observed_months, i18n)
+  const estimatedCount = consumption.estimated_months?.length ?? 0
   const source = consumption.seasonality_source
   let note = t('results.consumptionEstimated')
-  if (source === 'full_year_bills') {
+  if (source === 'full_year_bills' || (source === 'bill_history' && estimatedCount === 0)) {
+    // 12 meses reales de la(s) factura(s): serie real, sin perfil sintético
     note = t('results.consumptionFromBills')
+  } else if (source === 'bill_history') {
+    // Parte real (histórico de la factura), parte interpolada
+    note = t('results.consumptionPartial', {
+      months: billMonthsText(consumption.estimated_months, i18n),
+    })
   } else if (source === 'estimated_from_sampled_months') {
     note = observedMonths
       ? t('results.consumptionSampled', { months: observedMonths })
