@@ -570,6 +570,73 @@ def test_parse_bill_uses_openai_when_configured(respx_mock, openai_client):
     assert content[0]["file_data"].startswith("data:application/pdf;base64,")
     assert payload["text"]["format"]["type"] == "json_schema"
     assert "supply_address" in payload["text"]["format"]["schema"]["required"]
+    assert "consumption_periods" in payload["text"]["format"]["schema"]["required"]
+
+
+def test_parse_bill_repairs_openai_single_period_as_total(respx_mock, openai_client):
+    # Bug crítico 2.0TD: OpenAI devuelve P1 (2.150) como total; con el split de
+    # periodos el endpoint lo corrige a la suma real (13.800), no ~1/6 de escala.
+    respx_mock.post("https://api.openai.com/v1/responses").mock(
+        return_value=Response(
+            200,
+            json={
+                "status": "completed",
+                "output_text": json.dumps(
+                    {
+                        "kwh": 2150,
+                        "amount_eur": 3027.14,
+                        "total_eur": 3027.14,
+                        "currency": "EUR",
+                        "consumption_periods": {"punta": 2150, "llano": 2820, "valle": 8830},
+                        "country_code": "ES",
+                        "language": "es",
+                        "warnings": [],
+                    }
+                ),
+            },
+        )
+    )
+    resp = openai_client.post(
+        "/api/parse-bill",
+        files={"file": ("factura.pdf", b"%PDF-1.4\n%%EOF", "application/pdf")},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["kwh"] == 13800.0  # suma de periodos, no 2.150
+    assert data["consumption_periods"] == {"punta": 2150, "llano": 2820, "valle": 8830}
+    assert data["needs_review"] is False
+
+
+def test_parse_bill_flags_review_on_implausible_effective_price(respx_mock, openai_client):
+    # Sin split de periodos, el precio efectivo 3.027/2.150 = 1,41 €/kWh dispara
+    # la guarda → estado 'revisar factura', no un resultado seguro y equivocado.
+    respx_mock.post("https://api.openai.com/v1/responses").mock(
+        return_value=Response(
+            200,
+            json={
+                "status": "completed",
+                "output_text": json.dumps(
+                    {
+                        "kwh": 2150,
+                        "amount_eur": 3027.14,
+                        "total_eur": 3027.14,
+                        "currency": "EUR",
+                        "country_code": "ES",
+                        "language": "es",
+                        "warnings": [],
+                    }
+                ),
+            },
+        )
+    )
+    resp = openai_client.post(
+        "/api/parse-bill",
+        files={"file": ("factura.pdf", b"%PDF-1.4\n%%EOF", "application/pdf")},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["needs_review"] is True
+    assert any("precio efectivo" in r.lower() for r in data["review_reasons"])
 
 
 @respx.mock

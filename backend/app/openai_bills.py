@@ -10,7 +10,7 @@ from typing import Any
 
 import httpx
 
-from .bills import BillParseError, MAX_BILL_KWH
+from .bills import BillParseError, MAX_BILL_KWH, validate_bill_consumption
 from .pricing.countries import COUNTRIES, normalize_country_code
 
 
@@ -19,8 +19,15 @@ You extract structured data from residential electricity bills for SolVento.
 
 Return the schema exactly. Use null when a value is absent or uncertain.
 Rules:
-- Extract electricity consumption for the billed period in kWh. Do not use cumulative meter readings.
-- If the bill has tariff periods such as P1/P2/P3, sum the period electricity kWh.
+- Extract electricity consumption for the billed period in kWh. Do not use cumulative meter readings
+  (e.g. "lectura anterior 50.210 / lectura actual 64.010"): those are meter indexes, not consumption.
+- Multi-period bills (2.0TD/3.0TD) are the NORM, not the exception. Read the TOTAL consumption column
+  ("Consumo del periodo" / "Consumo total" / the total row), which is the SUM of every tariff period.
+  NEVER report a single period column (P1/Punta alone) as the total. If a labelled total is shown, use
+  it and confirm it equals P1+P2+P3; if they disagree, prefer the labelled total.
+- Also report the per-period split in consumption_periods: {punta (P1), llano (P2), valle (P3)} in kWh,
+  so the app can reconcile the total and value battery time-shift at the right tariff period. Use null
+  for periods the bill does not show. Numbers use Spanish format: "13.800" = 13800, "2.086,92" = 2086.92.
 - Ignore gas, water, telecoms, taxes expressed as percentages, and meter serials. Do not use the
   contracted power (kW) as consumption, but DO report it separately in contracted_power_kw.
 - Extract the variable electricity energy charge separately from fixed charges and taxes when visible.
@@ -114,6 +121,17 @@ BILL_SCHEMA: dict[str, Any] = {
                 "additionalProperties": False,
             },
         },
+        "consumption_periods": {
+            "type": ["object", "null"],
+            "description": "Per-tariff-period consumption in kWh: P1=punta, P2=llano, P3=valle.",
+            "properties": {
+                "punta": {"type": ["number", "null"], "description": "P1 (punta) kWh."},
+                "llano": {"type": ["number", "null"], "description": "P2 (llano) kWh."},
+                "valle": {"type": ["number", "null"], "description": "P3 (valle) kWh."},
+            },
+            "required": ["punta", "llano", "valle"],
+            "additionalProperties": False,
+        },
         "total_eur": {
             "type": ["number", "null"],
             "description": "Final bill amount including taxes, numeric value in the invoice currency.",
@@ -181,6 +199,7 @@ BILL_SCHEMA: dict[str, Any] = {
         "vat_base_eur",
         "contracted_power_kw",
         "consumption_history",
+        "consumption_periods",
         "total_eur",
         "currency",
         "month",
@@ -332,6 +351,24 @@ def _normalize_openai_bill(parsed: dict[str, Any]) -> dict[str, Any]:
     if kwh is not None and not (0 < kwh <= MAX_BILL_KWH):
         warnings.append("Consumo fuera del rango esperado; revisa los kWh.")
         kwh = None
+
+    periods = _optional_periods(parsed.get("consumption_periods"))
+    period_sum = round(sum(periods.values()), 1) if periods else None
+    # Trampa "una sola columna por el total": si el kWh detectado coincide con una
+    # columna de periodo y la suma de periodos es claramente mayor, se corrige al
+    # total real (la columna sumada) en vez de dejar el dimensionado a 1/6.
+    if (
+        kwh is not None
+        and period_sum is not None
+        and period_sum > kwh * 1.2
+        and any(abs(kwh - v) <= max(0.02 * v, 2) for v in periods.values())
+    ):
+        warnings.append(
+            f"El consumo detectado ({kwh:.0f} kWh) era una sola columna de periodo; "
+            f"se usa la suma de periodos ({period_sum:.0f} kWh)."
+        )
+        kwh = period_sum
+
     if amount is not None and amount <= 0:
         amount = None
 
@@ -340,7 +377,7 @@ def _normalize_openai_bill(parsed: dict[str, Any]) -> dict[str, Any]:
     if amount is None:
         warnings.append("No se detectó el importe de la factura")
 
-    return {
+    bill = {
         "kwh": kwh,
         "amount_eur": amount,
         "energy_eur": energy,
@@ -353,6 +390,7 @@ def _normalize_openai_bill(parsed: dict[str, Any]) -> dict[str, Any]:
         "vat_base_eur": _optional_float(parsed.get("vat_base_eur")),
         "contracted_power_kw": _optional_float(parsed.get("contracted_power_kw")),
         "consumption_history": _optional_history(parsed.get("consumption_history")),
+        "consumption_periods": periods or None,
         "total_eur": total,
         "currency": currency,
         "month": month,
@@ -366,8 +404,33 @@ def _normalize_openai_bill(parsed: dict[str, Any]) -> dict[str, Any]:
         "region": _optional_text(parsed.get("region")),
         "language": language,
         "parser": "openai",
-        "warnings": _dedupe(warnings),
     }
+
+    # Guardas de reconciliación/precio efectivo, agnósticas al parser: convierten
+    # un consumo mal extraído en estado 'revisar factura' en vez de un resultado
+    # seguro y equivocado.
+    review_reasons = validate_bill_consumption(bill)
+    if review_reasons:
+        bill["needs_review"] = True
+        bill["review_reasons"] = review_reasons
+        warnings.extend(review_reasons)
+    else:
+        bill["needs_review"] = False
+        bill["review_reasons"] = []
+    bill["warnings"] = _dedupe(warnings)
+    return bill
+
+
+def _optional_periods(value: Any) -> dict[str, float]:
+    """Normaliza el split por periodo del parser IA a {punta,llano,valle} en kWh."""
+    if not isinstance(value, dict):
+        return {}
+    periods: dict[str, float] = {}
+    for key in ("punta", "llano", "valle"):
+        kwh = _optional_float(value.get(key))
+        if kwh is not None and 0 < kwh <= MAX_BILL_KWH:
+            periods[key] = kwh
+    return periods
 
 
 def _optional_history(value: Any) -> list[dict[str, float]]:

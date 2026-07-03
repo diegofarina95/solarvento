@@ -52,6 +52,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
   const fileRef = useRef(null)
   const [uploading, setUploading] = useState(false)
   const [notice, setNotice] = useState(null)
+  const [review, setReview] = useState(null)
 
   function update(index, key, value) {
     setBills((prev) => prev.map((b, i) => (i === index ? { ...b, [key]: value } : b)))
@@ -64,8 +65,10 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
   async function handleFiles(fileList) {
     setUploading(true)
     setNotice(null)
+    setReview(null)
     const added = []
     const problems = []
+    const reviews = []
     let detectedLocation = null
     // Los PDFs se parsean en paralelo: con varios archivos y un parser lento
     // la espera secuencial se multiplicaba por el número de facturas.
@@ -102,7 +105,13 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         vat_base_eur: parsed.vat_base_eur ?? null,
         consumptionHistory: parsed.consumption_history ?? null,
       }))
-      if (parsed.warnings?.length) {
+      if (parsed.needs_review && parsed.review_reasons?.length) {
+        // Guarda de reconciliación/precio efectivo: el consumo detectado es
+        // sospechoso. Se marca en rojo y con el motivo concreto para que el
+        // usuario confirme el kWh antes de calcular (mejor revisar que un
+        // número seguro y equivocado).
+        reviews.push({ file: file.name, reasons: parsed.review_reasons })
+      } else if (parsed.warnings?.length) {
         problems.push(t('errors.billNeedsReview', { file: file.name }))
       }
       if (parsed.lat != null && parsed.lon != null) {
@@ -116,6 +125,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
     if (added.length) setBills((prev) => [...prev, ...added])
     if (detectedLocation) onLocationDetected?.(detectedLocation)
     if (problems.length) setNotice(problems.join(' '))
+    if (reviews.length) setReview(reviews)
     setUploading(false)
   }
 
@@ -249,6 +259,19 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         </div>
       )}
 
+      {review && (
+        <div className="mt-2 rounded-md border border-red-300 bg-red-50 p-2.5 text-xs text-red-800">
+          <p className="font-semibold">{t('errors.billReviewTitle')}</p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-4">
+            {review.map((item, i) => (
+              <li key={i}>
+                <span className="font-medium">{item.file}:</span> {item.reasons.join(' ')}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1.5 text-red-700">{t('errors.billReviewHint')}</p>
+        </div>
+      )}
       {notice && <p className="mt-2 text-xs text-amber-700">{notice}</p>}
     </div>
   )

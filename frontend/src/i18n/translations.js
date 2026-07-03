@@ -59,6 +59,9 @@ export const translations = {
       incompatibleResponse: 'El servidor ha devuelto una respuesta antigua o incompleta. Recarga la página e inténtalo de nuevo.',
       billNoConsumption: ({ file }) => `${file}: no se detectó el consumo; añádelo a mano.`,
       billNeedsReview: ({ file }) => `${file}: factura importada; revisa los campos detectados.`,
+      billReviewTitle: 'Revisar factura antes de calcular',
+      billReviewHint:
+        'El consumo detectado no cuadra: confirma o corrige los kWh del periodo en la tabla antes de continuar.',
       billParseFailed: ({ file, detail }) => detail ? `${file}: no se pudo leer la factura (${detail}).` : `${file}: no se pudo leer la factura.`,
     },
     confidence: {
@@ -453,6 +456,9 @@ export const translations = {
       incompatibleResponse: 'The server returned an old or incomplete response. Reload the page and try again.',
       billNoConsumption: ({ file }) => `${file}: consumption was not detected; add it manually.`,
       billNeedsReview: ({ file }) => `${file}: bill imported; review the detected fields.`,
+      billReviewTitle: 'Review the bill before calculating',
+      billReviewHint:
+        'The detected consumption does not reconcile: confirm or fix the period kWh in the table before continuing.',
       billParseFailed: ({ file, detail }) => detail ? `${file}: the bill could not be read (${detail}).` : `${file}: the bill could not be read.`,
     },
     confidence: {
@@ -847,6 +853,9 @@ export const translations = {
       incompatibleResponse: 'Le serveur a renvoyé une réponse ancienne ou incomplète. Rechargez la page et réessayez.',
       billNoConsumption: ({ file }) => `${file} : la consommation n’a pas été détectée ; ajoutez-la manuellement.`,
       billNeedsReview: ({ file }) => `${file} : facture importée ; vérifiez les champs détectés.`,
+      billReviewTitle: 'Vérifiez la facture avant de calculer',
+      billReviewHint:
+        'La consommation détectée ne concorde pas : confirmez ou corrigez les kWh par période dans le tableau avant de continuer.',
       billParseFailed: ({ file, detail }) => detail ? `${file} : la facture n’a pas pu être lue (${detail}).` : `${file} : la facture n’a pas pu être lue.`,
     },
     confidence: {
@@ -1241,6 +1250,9 @@ export const translations = {
       incompatibleResponse: 'Il server ha restituito una risposta vecchia o incompleta. Ricarica la pagina e riprova.',
       billNoConsumption: ({ file }) => `${file}: consumo non rilevato; aggiungilo manualmente.`,
       billNeedsReview: ({ file }) => `${file}: bolletta importata; controlla i campi rilevati.`,
+      billReviewTitle: 'Controlla la bolletta prima di calcolare',
+      billReviewHint:
+        'Il consumo rilevato non torna: conferma o correggi i kWh per periodo nella tabella prima di continuare.',
       billParseFailed: ({ file, detail }) => detail ? `${file}: impossibile leggere la bolletta (${detail}).` : `${file}: impossibile leggere la bolletta.`,
     },
     confidence: {

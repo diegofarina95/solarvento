@@ -14,6 +14,14 @@ class BillHistoryEntry(BaseModel):
     eur: float | None = Field(None, ge=0, le=100000, description="Importe del mes, si consta.")
 
 
+class ConsumptionPeriods(BaseModel):
+    """Consumo por periodo horario 2.0TD/3.0TD (P1=punta, P2=llano, P3=valle)."""
+
+    punta: float | None = Field(None, ge=0, le=60000)
+    llano: float | None = Field(None, ge=0, le=60000)
+    valle: float | None = Field(None, ge=0, le=60000)
+
+
 class BillInput(BaseModel):
     """Una factura de la luz: consumo y, opcionalmente, importe y periodo."""
 
@@ -63,6 +71,9 @@ class BillInput(BaseModel):
     )
     consumption_history: list[BillHistoryEntry] | None = Field(
         None, max_length=24, description="Histórico mensual de consumo (mes → kWh)."
+    )
+    consumption_periods: ConsumptionPeriods | None = Field(
+        None, description="Consumo por periodo horario (P1/P2/P3), para valorar la batería."
     )
     currency: str | None = Field(None, min_length=3, max_length=3)
     # Alias histórico. Se conserva para clientes antiguos, pero el precio
@@ -479,6 +490,9 @@ class ParsedBill(BaseModel):
     vat_base_eur: float | None = None
     contracted_power_kw: float | None = None
     consumption_history: list[BillHistoryEntry] = []
+    consumption_periods: ConsumptionPeriods | None = None
+    needs_review: bool = False
+    review_reasons: list[str] = []
     currency: str | None = None
     month: int | None = None
     start_date: date | None = None

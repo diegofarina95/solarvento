@@ -151,6 +151,18 @@ PRICE_PLAUSIBILITY_BY_CURRENCY = {
     "UAH": (1.00, 25.00),
 }
 
+# Precio efectivo = importe TOTAL de la factura / consumo. Distinto de
+# PRICE_PLAUSIBILITY_BY_CURRENCY (que acota el término de energía): incluye
+# potencia, impuestos e IVA, así que la banda es más estrecha por arriba. Una
+# doméstica española 2.0TD ronda 0,15–0,35 €/kWh todo incluido; fuera de la banda
+# es señal de consumo mal detectado (p. ej. una sola columna de periodo tomada
+# por el total: 3.029 € / 2.150 kWh = 1,41 €/kWh), no de un precio real.
+EFFECTIVE_PRICE_BOUNDS_BY_CURRENCY = {
+    "EUR": (0.10, 0.40),
+    "GBP": (0.10, 0.60),
+    "CHF": (0.10, 0.60),
+}
+
 _ENERGY_CHARGE_LABELS = [
     r"energ[ií]a\s+(?:consumida|facturada|activa)",
     r"t[ée]rmino\s+de\s+energ[ií]a",
@@ -344,6 +356,114 @@ def _consumption_table_candidates(text: str) -> list[float]:
         candidates.append(round(sum(tariff_values), 1))
 
     return candidates
+
+
+# Un periodo horario canónico por familia (2.0TD = P1/P2/P3; 3.0TD añade más,
+# pero el split para batería/tiempo sólo distingue punta/llano/valle).
+_PERIOD_CANONICAL = {
+    "p1": "punta", "punta": "punta", "peak": "punta",
+    "p2": "llano", "llano": "llano", "shoulder": "llano",
+    "p3": "valle", "valle": "valle", "offpeak": "valle", "off-peak": "valle",
+}
+_PERIOD_LABEL_RE = re.compile(
+    r"^(?:periodo\s+)?(p[1-6]|punta|llano|valle|peak|off[-\s]?peak|shoulder)\b",
+    re.IGNORECASE,
+)
+
+
+def _parse_period_table(text: str) -> dict | None:
+    """Consumo por periodo horario leído por ETIQUETA, no por posición.
+
+    El consumo total de una factura multi-periodo (2.0TD/3.0TD) es la SUMA de las
+    columnas de periodo (P1+P2+P3…), nunca una sola. Reconoce filas 'P1 Punta …',
+    tomando como kWh el número seguido de 'kWh' o, si no lo hay, el primer número
+    de la fila (el precio €/kWh y el importe € quedan descartados por el rango).
+
+    Devuelve {'periods': {punta,llano,valle}, 'total_kwh': suma} o None si no hay
+    al menos dos filas de periodo (una sola fila no es una tabla fiable).
+    """
+    periods: dict[str, float] = {}
+    raw_total = 0.0
+    seen = 0
+    for line in _clean_lines(text):
+        match = _PERIOD_LABEL_RE.match(line)
+        if not match:
+            continue
+        rest = line[match.end():]
+        unit = re.search(rf"{_NUM}\s*kWh", rest, re.IGNORECASE)
+        if unit:
+            value = _to_float(unit.group(1))
+        else:
+            numbers = re.findall(_NUM, rest)
+            value = _to_float(numbers[0]) if numbers else None
+        if value is None or not (1 <= value <= MAX_BILL_KWH):
+            continue
+        raw_total += value
+        seen += 1
+        canonical = _PERIOD_CANONICAL.get(match.group(1).lower().replace(" ", ""))
+        if canonical and canonical not in periods:
+            periods[canonical] = value
+    if seen < 2:
+        return None
+    return {"periods": periods, "total_kwh": round(raw_total, 1)}
+
+
+def _effective_price_bounds(currency: str | None) -> tuple[float, float]:
+    """Banda del precio efectivo (importe total / consumo) por moneda."""
+    cur = (currency or DEFAULT_CURRENCY).upper()
+    if cur in EFFECTIVE_PRICE_BOUNDS_BY_CURRENCY:
+        return EFFECTIVE_PRICE_BOUNDS_BY_CURRENCY[cur]
+    # Sin banda específica: se reutiliza la del término de energía como red de
+    # seguridad (más laxa, pero mejor que no comprobar nada).
+    return _price_bounds(cur)
+
+
+def validate_bill_consumption(bill: dict) -> list[str]:
+    """Guardas de plausibilidad y reconciliación del consumo detectado.
+
+    Agnóstica al parser (IA o local): atrapa tanto una sola columna de periodo
+    tomada por el total como un precio efectivo imposible. Devuelve motivos de
+    revisión (lista vacía = sin objeciones). No lanza: el llamador decide si
+    degrada a estado 'revisar factura'.
+    """
+    reasons: list[str] = []
+    kwh = bill.get("kwh")
+    if not kwh or kwh <= 0:
+        return reasons  # sin consumo no hay nada que reconciliar
+    currency = bill.get("currency")
+
+    # (4) Precio efectivo = total / consumo. 3.027 € / 2.150 kWh = 1,41 lo dispara.
+    total = bill.get("total_eur") or bill.get("amount_eur")
+    if total:
+        effective = total / kwh
+        low, high = _effective_price_bounds(currency)
+        if effective < low or effective > high:
+            reasons.append(
+                f"El precio efectivo detectado ({effective:.2f} {currency or 'EUR'}/kWh) queda "
+                f"fuera de lo razonable ({low:.2f}–{high:.2f} {currency or 'EUR'}/kWh): el consumo "
+                "puede ser una sola columna de periodo en vez del total. Revisa el consumo."
+            )
+
+    # (3) Reconciliación: la suma de columnas de periodo (P1+P2+P3) == consumo total.
+    periods = bill.get("consumption_periods") or {}
+    period_sum = sum(v for v in periods.values() if isinstance(v, (int, float)) and v > 0)
+    if period_sum > 0 and abs(period_sum - kwh) > max(0.02 * kwh, 5):
+        reasons.append(
+            f"La suma de los periodos ({period_sum:.0f} kWh) no cuadra con el consumo "
+            f"detectado ({kwh:.0f} kWh); revisa qué columna es el total del periodo."
+        )
+
+    # (3b) Reconciliación con el histórico mensual: 11-12 meses ES anual, sin
+    # depender de las fechas (que el parser IA entrega como texto, no date).
+    history = bill.get("consumption_history") or []
+    if len(history) >= 11:
+        history_sum = sum(h.get("kwh", 0) for h in history if isinstance(h, dict))
+        if history_sum > 0 and abs(history_sum - kwh) > max(0.10 * kwh, 50):
+            reasons.append(
+                f"El consumo anual ({kwh:.0f} kWh) no cuadra con la suma del histórico "
+                f"mensual ({history_sum:.0f} kWh)."
+            )
+    return reasons
 
 
 def _month_from_token(token: str) -> int | None:
@@ -824,6 +944,9 @@ def parse_bill_text(text: str) -> dict:
         "vat_base_eur": None,
         "contracted_power_kw": None,
         "consumption_history": [],
+        "consumption_periods": None,
+        "needs_review": False,
+        "review_reasons": [],
         "currency": _detect_currency(text),
         "month": None,
         "start_date": None,
@@ -873,8 +996,17 @@ def parse_bill_text(text: str) -> dict:
             result["country_code"] = "ES"
             result["region"] = result["region"] or province[0]
 
+    # --- Tabla de periodos horarios (P1/P2/P3): el total es la SUMA, no una columna ---
+    period_table = _parse_period_table(text)
+    if period_table:
+        result["consumption_periods"] = period_table["periods"] or None
+
     # --- kWh: consumo del periodo > diferencia de lecturas > kWh no acumulados ---
     period_candidates = _period_consumption_candidates(text)
+    if period_table:
+        # La suma de todas las columnas de periodo es el candidato autoritativo
+        # (mayor que cualquier columna suelta, así que max() lo elige).
+        period_candidates.append(period_table["total_kwh"])
     reading_candidates = _reading_difference_candidates(text)
     fallback_candidates = _fallback_kwh_candidates(text)
     result["kwh"] = _select_consumption_kwh(
@@ -887,6 +1019,13 @@ def parse_bill_text(text: str) -> dict:
     )
     if result["kwh"] is None:
         warnings.append("No se detectó el consumo en kWh")
+
+    # --- Guardas: reconciliación y precio efectivo → estado 'revisar factura' ---
+    review_reasons = validate_bill_consumption(result)
+    if review_reasons:
+        result["needs_review"] = True
+        result["review_reasons"] = review_reasons
+        warnings.extend(review_reasons)
 
     # --- Periodo de facturación ---
     period = re.search(
@@ -1417,8 +1556,23 @@ def aggregate_bills(
             elif total_amount_days > 0:
                 annual_amount = round(total_bill_amount / total_amount_days * 365.25, 1)
 
+    # Fuente única de consumo: el mismo annual_kwh alimenta precio y dimensionado.
+    # Si el importe/precio implica un consumo muy distinto, algo se detectó mal.
+    currency_out = currencies[0] if currencies else (default_currency or DEFAULT_CURRENCY)
+    agg_review: list[str] = []
+    if annual_amount and annual_kwh > 0:
+        effective = annual_amount / annual_kwh
+        low, high = _effective_price_bounds(currency_out)
+        if effective < low or effective > high:
+            agg_review.append(
+                f"El precio efectivo anual ({effective:.2f} {currency_out}/kWh) queda fuera de "
+                f"lo razonable ({low:.2f}–{high:.2f}); revisa el consumo detectado."
+            )
+
     return {
         "annual_kwh": round(annual_kwh, 1),
+        "needs_review": bool(agg_review),
+        "review_reasons": agg_review,
         "avg_price_eur_kwh": price,
         "avg_price_kwh": price,
         "marginal_price_eur_kwh": marginal_price,
