@@ -990,3 +990,87 @@ def test_upload_global_cap(client, monkeypatch):
         assert blocked.status_code == 429
         assert "cupo diario" in blocked.json()["detail"]
     get_settings.cache_clear()
+
+
+@respx.mock
+def test_solar_estimate_multiyear_economics(respx_mock, client):
+    mock_pvgis(respx_mock)
+    resp = client.post(
+        "/api/solar-estimate",
+        json={
+            "lat": 42.88,
+            "lon": -8.54,
+            "peak_power_kwp": 5.0,
+            "tilt_deg": 20,
+            "azimuth_deg": 45,
+            "annual_consumption_kwh": 4000,
+            "installation_cost_eur": 7000,
+            "electricity_price_eur_kwh": 0.20,
+        },
+    )
+    assert resp.status_code == 200
+    eco = resp.json()["economics"]
+    assert eco["payback_years"] is not None
+    assert eco["simple_payback_years"] is not None
+    assert eco["savings_25yr_eur"] is not None
+    assert len(eco["cumulative_cashflow"]) == 30
+    a = eco["assumptions"]
+    assert a["price_escalation_pct_per_year"] == 2.0
+    assert a["inverter_replacement_year"] == 13
+    assert a["inverter_replacement_cost_eur"] > 0
+    assert a["om_eur_per_year"] == pytest.approx(70.0)  # 1% de 7000
+    # Precio manual: sin corrección fiscal
+    assert eco["marginal_price_factor"] == 1.0
+    assert eco["effective_price_eur_kwh"] == 0.20
+    # El año 13 refleja el reemplazo del inversor
+    year13 = eco["cumulative_cashflow"][12]
+    year12 = eco["cumulative_cashflow"][11]
+    assert year13["net_eur"] < year12["net_eur"]
+    # Escenarios de batería con métricas plurianuales
+    scenarios = resp.json()["battery_analysis"]["scenarios"]
+    assert all("npv_eur" in s for s in scenarios)
+
+
+@respx.mock
+def test_solar_estimate_subsidy_reduces_payback(respx_mock, client):
+    mock_pvgis(respx_mock)
+    base_body = {
+        "lat": 42.88,
+        "lon": -8.54,
+        "peak_power_kwp": 5.0,
+        "annual_consumption_kwh": 4000,
+        "installation_cost_eur": 7000,
+        "electricity_price_eur_kwh": 0.20,
+    }
+    base = client.post("/api/solar-estimate", json=base_body).json()["economics"]
+    subsidized = client.post(
+        "/api/solar-estimate", json={**base_body, "subsidy_eur": 2000}
+    ).json()["economics"]
+    assert subsidized["net_investment_eur"] == 5000.0
+    assert subsidized["subsidy_eur"] == 2000.0
+    assert subsidized["payback_years"] < base["payback_years"]
+
+
+@respx.mock
+def test_bills_price_gets_tax_factor(respx_mock, client):
+    mock_pvgis(respx_mock)
+    resp = client.post(
+        "/api/solar-estimate",
+        json={
+            "lat": 42.88,
+            "lon": -8.54,
+            "peak_power_kwp": 5.0,
+            "bills": [
+                {"kwh": 300, "energy_eur": 45.0, "month": 1},
+                {"kwh": 250, "energy_eur": 38.0, "month": 6},
+            ],
+        },
+    )
+    assert resp.status_code == 200
+    eco = resp.json()["economics"]
+    assert eco["electricity_price_source"] == "bills"
+    # España: el término de energía va sin impuestos; el kWh evitado los incluye
+    assert eco["marginal_price_factor"] == pytest.approx(1.27, abs=0.01)
+    assert eco["effective_price_eur_kwh"] == pytest.approx(
+        eco["electricity_price_eur_kwh"] * 1.27, rel=0.01
+    )

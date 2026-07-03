@@ -200,6 +200,52 @@ export default function PrintReport({ data, i18n, fmt, variant }) {
         </table>
       </Section>
 
+      {eco.assumptions && (
+        <Section title={t('financial.title')}>
+          <table className="pr-table pr-kv">
+            <tbody>
+              <Row
+                label={t('results.savings25', { years: eco.assumptions.headline_years })}
+                value={eco.savings_25yr_eur != null ? fmt.money0.format(eco.savings_25yr_eur) : null}
+              />
+              <Row
+                label={t('financial.netInvestment')}
+                value={eco.net_investment_eur != null ? fmt.money0.format(eco.net_investment_eur) : null}
+              />
+              <Row
+                label={t('financial.npv', {
+                  rate: fmt.nf1.format(eco.assumptions.discount_rate_pct),
+                  years: eco.assumptions.headline_years,
+                })}
+                value={eco.npv_eur != null ? fmt.money0.format(eco.npv_eur) : null}
+              />
+              <Row
+                label={t('financial.irr')}
+                value={eco.irr_pct != null ? `${fmt.nf1.format(eco.irr_pct)} %` : null}
+              />
+              <Row
+                label={t('financial.escalation')}
+                value={`+${fmt.nf1.format(eco.assumptions.price_escalation_pct_per_year)} %/${t('units.year')}`}
+              />
+              <Row
+                label={t('financial.degradation')}
+                value={`${fmt.nf2.format(eco.assumptions.panel_degradation_pct_per_year)} %/${t('units.year')}`}
+              />
+              <Row
+                label={t('financial.om')}
+                value={`${fmt.money0.format(eco.assumptions.om_eur_per_year)}/${t('units.year')}`}
+              />
+              {eco.assumptions.inverter_replacement_cost_eur > 0 && (
+                <Row
+                  label={t('financial.inverter', { year: eco.assumptions.inverter_replacement_year })}
+                  value={fmt.money0.format(eco.assumptions.inverter_replacement_cost_eur)}
+                />
+              )}
+            </tbody>
+          </table>
+        </Section>
+      )}
+
       {data.battery_analysis && (
         <Section title={t('battery.title')}>
           <p className="pr-note">{batteryRecommendation(data.battery_analysis, i18n, fmt)}</p>

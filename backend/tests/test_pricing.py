@@ -162,3 +162,23 @@ def test_europe_bounds_exclude_north_africa_but_keep_islands():
     # Fuera: Marrakech, El Cairo, Tel Aviv, Nueva York
     for lat, lon in [(31.6, -8.0), (30.0, 31.2), (32.1, 34.8), (40.7, -74.0)]:
         assert not ensure_european_location(lat, lon), (lat, lon)
+
+
+def test_electricity_tax_factor_present_for_verified_countries():
+    from app.pricing.default_prices import ELECTRICITY_TAX_FACTOR_BY_COUNTRY
+
+    assert ELECTRICITY_TAX_FACTOR_BY_COUNTRY["ES"] == pytest.approx(1.27, abs=0.01)
+    # Solo países con dato verificado; el resto no corrige (factor 1.0)
+    assert "MD" not in ELECTRICITY_TAX_FACTOR_BY_COUNTRY
+
+
+def test_quote_includes_electricity_tax_factor():
+    from app.pricing.fetch_prices import _build_quote
+
+    spain = country_for_coordinates(40.4, -3.7, None)
+    quote = _build_quote(spain, [])
+    assert quote["electricity_tax_factor"] == pytest.approx(1.27, abs=0.01)
+
+    poland = country_for_coordinates(52.2, 21.0, None)
+    quote_pl = _build_quote(poland, [])
+    assert quote_pl["electricity_tax_factor"] == 1.0

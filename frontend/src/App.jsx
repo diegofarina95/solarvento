@@ -58,6 +58,7 @@ export default function App() {
     surplusPrice: '',
     costPerKwp: '',
     batteryCost: '',
+    subsidy: '',
     occupancyProfile: 'standard',
     hasHeatPump: false,
     hasEv: false,
@@ -197,6 +198,11 @@ export default function App() {
             t,
             { thousands: true },
           )
+        }
+        if (form.subsidy) {
+          params.subsidy_eur = requireLocaleNumber(form.subsidy, t('form.subsidy'), t, {
+            thousands: true,
+          })
         }
         if (form.price) {
           params.electricity_price_eur_kwh = requireLocaleNumber(

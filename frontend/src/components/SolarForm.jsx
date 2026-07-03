@@ -260,7 +260,18 @@ export default function SolarForm({
                   className={inputClass}
                 />
               </Field>
+              <Field label={t('form.subsidy')} hint={t('form.subsidyHint')}>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={form.subsidy}
+                  onChange={set('subsidy')}
+                  placeholder="0"
+                  className={inputClass}
+                />
+              </Field>
             </div>
+            <p className="mt-2 text-xs text-stone-500">{t('form.subsidyNote')}</p>
           </details>
         </>
       )}

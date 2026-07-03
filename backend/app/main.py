@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 
 from . import bills as bills_mod
-from . import calculations, simulation
+from . import calculations, cashflow, simulation
 from .cache import TTLCache
 from .config import get_settings
 from .geocode import GeocodeError, NominatimClient
@@ -741,7 +741,11 @@ def _validate_estimate_consistency(
 
     consumption = annual_energy.get("consumption_kwh")
     if consumption and consumption > 0:
-        annual_spend = consumption * economics["electricity_price_eur_kwh"]
+        reference_price = (
+            economics.get("effective_price_eur_kwh")
+            or economics["electricity_price_eur_kwh"]
+        )
+        annual_spend = consumption * reference_price
         if economics["annual_savings_eur"] > annual_spend + 0.5:
             warnings.append("annual savings exceed annual electricity spend")
 
@@ -887,7 +891,14 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         # El default del país (en su moneda) antes que el genérico en EUR
         price_quote.get("electricity_price_kwh") or settings.electricity_price_eur_kwh,
     )
-    _attach_consumption_costs(consumption_summary, price)
+    # El término de energía de las facturas va sin impuestos: cada kWh
+    # autoconsumido evita también impuesto eléctrico + IVA. Los precios por
+    # defecto ya los incluyen y el manual se asume final.
+    marginal_price_factor = (
+        price_quote.get("electricity_tax_factor", 1.0) if price_source == "bills" else 1.0
+    )
+    effective_price = round(price * marginal_price_factor, 4)
+    _attach_consumption_costs(consumption_summary, effective_price)
 
     cost_details = calculate_system_cost(
         price_quote,
@@ -906,6 +917,20 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         if req.surplus_price_eur_kwh is not None
         else price_quote["surplus_price_eur_kwh"]
     )
+    export_scheme = price_quote.get("export_scheme", "capped_compensation")
+    # En esquemas que descuentan de la factura, la compensación reduce también
+    # la base imponible; en feed-in/mercado el vertido es un ingreso sin IVA evitado.
+    effective_surplus = (
+        round(surplus_price * marginal_price_factor, 4)
+        if export_scheme in ("capped_compensation", "net_metering")
+        else surplus_price
+    )
+    subsidy = req.subsidy_eur or 0.0
+    om_eur = round(cost * cashflow.OM_PCT_PER_YEAR, 2)
+    inverter_replacement_cost = round(
+        cost_details["inverter_price_per_kwp"]["medium"] * analysis_power_kwp, 2
+    )
+    replacements = {cashflow.INVERTER_REPLACEMENT_YEAR: inverter_replacement_cost}
 
     battery_analysis = None
     typical_day = None
@@ -943,17 +968,50 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
             hourly_production,
             cons_profile,
             capacities,
-            price,
-            surplus_price,
+            effective_price,
+            effective_surplus,
             cost,
             battery_unit_costs,
-            export_scheme=price_quote.get("export_scheme", "capped_compensation"),
+            export_scheme=export_scheme,
         )
         _attach_battery_cost_ranges(
             scenarios,
             cost_details["system_cost_range"],
             cost_details["battery_option_costs"],
         )
+        # Métricas plurianuales por escenario: el payback mostrado y la
+        # recomendación de batería usan el flujo de caja real, no el año 1.
+        scenario_yearly = {
+            s["battery_kwh"]: cashflow.simulated_yearly_savings(
+                hourly_production,
+                cons_profile,
+                s["battery_kwh"],
+                effective_price,
+                effective_surplus,
+                export_scheme,
+            )
+            for s in scenarios
+        }
+        base_yearly = scenario_yearly[0.0]
+        base_analysis = None
+        for s in scenarios:
+            analysis = cashflow.cashflow_analysis(
+                scenario_yearly[s["battery_kwh"]],
+                investment_eur=s["investment_eur"],
+                subsidy_eur=subsidy,
+                om_eur_per_year=om_eur,
+                replacements=replacements,
+            )
+            s["payback_years"] = analysis["payback_years"]
+            s["npv_eur"] = analysis["npv_eur"]
+            if s["battery_kwh"] == 0:
+                base_analysis = analysis
+            else:
+                s["battery_marginal_payback_years"] = cashflow.marginal_battery_payback(
+                    scenario_yearly[s["battery_kwh"]],
+                    base_yearly,
+                    s["investment_eur"] - cost,
+                )
         recommended_kwh, recommendation = _battery_recommendation(scenarios)
         base_scenario = scenarios[0]
         annual_energy.update(
@@ -972,7 +1030,7 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
             "recommended_battery_kwh": recommended_kwh,
             "recommendation": recommendation,
             "battery_lifetime_years": BATTERY_LIFETIME_YEARS,
-            "export_scheme": price_quote.get("export_scheme", "capped_compensation"),
+            "export_scheme": export_scheme,
             "surplus_price_eur_kwh": surplus_price,
             "battery_cost_per_kwh_eur": battery_cost_per_kwh,
             "battery_cost_range_eur_per_kwh": cost_details[
@@ -985,13 +1043,24 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         savings = scenarios[0]["annual_savings_eur"]
     else:
         savings = calculations.annual_savings_eur(
-            selected["annual_production_kwh"], price, annual_consumption
+            selected["annual_production_kwh"], effective_price, annual_consumption
+        )
+        savings = _cap_savings_to_annual_spend(
+            savings, annual_consumption, effective_price, export_scheme
+        )
+        base_analysis = cashflow.cashflow_analysis(
+            cashflow.simple_yearly_savings(savings),
+            investment_eur=cost,
+            subsidy_eur=subsidy,
+            om_eur_per_year=om_eur,
+            replacements=replacements,
         )
     savings = _cap_savings_to_annual_spend(
-        savings, annual_consumption, price, price_quote.get("export_scheme", "capped_compensation")
+        savings, annual_consumption, effective_price, export_scheme
     )
 
-    payback = calculations.payback_years(cost, savings)
+    payback = base_analysis["payback_years"]
+    simple_payback = calculations.payback_years(base_analysis["net_investment_eur"], savings)
     roi_pct = round(savings / cost * 100, 1) if cost > 0 else None
     economics = {
         "electricity_price_eur_kwh": price,
@@ -999,10 +1068,20 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         "electricity_price_bill_count": price_bill_count,
         "annual_savings_eur": savings,
         "payback_years": payback,
+        "simple_payback_years": simple_payback,
         "installation_cost_eur": cost,
         "installation_cost_range_eur": cost_details["system_cost_range"],
         "cost_is_estimated": cost_is_estimated,
         "roi_pct": roi_pct,
+        "savings_25yr_eur": base_analysis["savings_headline_eur"],
+        "npv_eur": base_analysis["npv_eur"],
+        "irr_pct": base_analysis["irr_pct"],
+        "subsidy_eur": subsidy if subsidy > 0 else None,
+        "net_investment_eur": base_analysis["net_investment_eur"],
+        "effective_price_eur_kwh": effective_price,
+        "marginal_price_factor": marginal_price_factor,
+        "cumulative_cashflow": base_analysis["cumulative"],
+        "assumptions": base_analysis["assumptions"],
     }
     if panels is not None:
         panels["explanation"] = _panels_explanation(panels)
