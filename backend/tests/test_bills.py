@@ -2,7 +2,13 @@ from datetime import date
 
 import pytest
 
-from app.bills import BillParseError, aggregate_bills, parse_bill_text
+from app.bills import (
+    BillParseError,
+    _statutory_rates_es,
+    aggregate_bills,
+    derive_bill_tax_rates,
+    parse_bill_text,
+)
 from app.profiles import DAYS_PER_MONTH, MONTHLY_WEIGHTS
 
 SAMPLE_BILL = """
@@ -532,17 +538,31 @@ class TestBillTaxRates:
             < result_standard["marginal_price_factor"]
         )
 
-    def test_statutory_fallback_by_period_dates_reduced_window(self):
-        # Sin líneas de impuestos: el periodo (mayo 2026) cae en la ventana reducida
+    def test_statutory_fallback_reduced_window_small_power_gets_reduced_iva(self):
+        # Sin líneas de impuestos, periodo (mayo 2026) en la ventana reducida y
+        # potencia ≤ 10 kW → IEE 0,5% e IVA 10%
         bill = {
             "kwh": 1500,
             "energy_eur": 300.0,
+            "contracted_power_kw": 5.0,
             "start_date": date(2026, 5, 1),
             "end_date": date(2026, 5, 31),
         }
         result = aggregate_bills([bill], country_code="ES")
         assert result["marginal_price_factor"] == pytest.approx(1.1055, abs=0.001)
         assert result["tax_rates_source"] == "statutory"
+
+    def test_statutory_fallback_reduced_window_large_power_keeps_standard_iva(self):
+        # Misma ventana pero > 10 kW: el IVA 10% no aplica → IEE 0,5% pero IVA 21%
+        bill = {
+            "kwh": 1500,
+            "energy_eur": 300.0,
+            "contracted_power_kw": 14.49,
+            "start_date": date(2026, 5, 1),
+            "end_date": date(2026, 5, 31),
+        }
+        result = aggregate_bills([bill], country_code="ES")
+        assert result["marginal_price_factor"] == pytest.approx(1.005 * 1.21, abs=0.001)
 
     def test_statutory_fallback_standard_when_no_dates(self):
         bill = {"kwh": 300, "energy_eur": 60.0, "month": 1}
@@ -808,3 +828,93 @@ class TestAnnualBills:
             country_code="ES",
         )
         assert agg["seasonality_source"] != "annual_bill"
+
+
+class TestTaxPlausibilityGuards:
+    """BUG A: tipos derivados fuera de banda se rechazan y caen al normativo."""
+
+    def test_implausible_low_iee_is_rejected_and_falls_back(self):
+        # Fixture anual: IEE 22,50 / (5350,51 + 586,92) = 0,379% < 0,5% legal
+        bill = {
+            "kwh": 25637,
+            "energy_eur": 5350.51,
+            "power_eur": 586.92,
+            "iee_eur": 22.50,
+            "iva_eur": 1272.53,
+            "iva_rate": 0.21,
+            "vat_base_eur": 6059.65,
+            "contracted_power_kw": 14.49,
+            "start_date": date(2026, 1, 1),
+            "end_date": date(2026, 12, 31),
+        }
+        rates = derive_bill_tax_rates(bill, "ES")
+        # IEE de la factura (0,379%) rechazado → normativo ponderado del año
+        assert rates["iee_source"] == "statutory-fallback"
+        assert rates["iee_rate"] > 0.005
+        # IVA sí es plausible (21%) → de la factura
+        assert rates["iva_source"] == "from-bill"
+        assert rates["iva_rate"] == 0.21
+        assert rates["source"] == "mixed"
+
+    def test_clean_itemised_iee_uses_from_bill(self):
+        bill = {
+            "kwh": 2455,
+            "energy_eur": 486.09,
+            "power_eur": 62.00,
+            "iee_eur": 28.02,  # 28,02/(486,09+62)=5,11% plausible
+            "iva_rate": 0.21,
+            "start_date": date(2026, 2, 1),
+            "end_date": date(2026, 2, 28),
+        }
+        rates = derive_bill_tax_rates(bill, "ES")
+        assert rates["iee_source"] == "from-bill"
+        assert rates["iee_rate"] == pytest.approx(0.0511, abs=0.001)
+        assert rates["source"] == "bill"
+
+    def test_lumped_iee_line_not_parsed_falls_back(self):
+        # 'Impuesto eléctrico y cargos regulados' no se extrae como iee_eur
+        text = """
+        Factura de electricidad
+        Periodo de facturación: del 01/01/2026 al 31/01/2026
+        Consumo en el periodo: 500 kWh
+        Término de energía 100,00 €
+        Impuesto eléctrico y cargos regulados 27,41 €
+        IVA (21%) 26,00 €
+        TOTAL FACTURA 160,00 €
+        """
+        parsed = parse_bill_text(text)
+        assert parsed["iee_eur"] is None  # línea agrupada no se usa
+        rates = derive_bill_tax_rates(parsed, "ES")
+        assert rates["iee_source"] == "statutory-fallback"
+
+    def test_weighted_statutory_across_rate_change(self):
+        # Periodo anual que cruza la ventana reducida: IEE ponderado por días
+        bill = {
+            "kwh": 25637,
+            "energy_eur": 5350.51,
+            "contracted_power_kw": 14.49,
+            "start_date": date(2026, 1, 1),
+            "end_date": date(2026, 12, 31),
+        }
+        iee, iva = _statutory_rates_es(bill)
+        # 71 días reducidos (22-mar..31-may), resto estándar
+        expected_iee = (294 * 0.0511269632 + 71 * 0.005) / 365
+        assert iee == pytest.approx(expected_iee, abs=1e-4)
+        assert iva == pytest.approx(0.21, abs=1e-6)  # 14,49 kW > 10 kW → sin IVA reducido
+
+    def test_implausible_iva_ratio_is_rejected(self):
+        # IVA/base absurdo (no cerca de 21% ni 10%) se descarta
+        bill = {"kwh": 300, "energy_eur": 60.0, "iva_eur": 5.0, "vat_base_eur": 100.0}
+        # 5/100 = 5% → no cerca de 10% ni 21% → None
+        from app.bills import _derived_iva_rate
+        assert _derived_iva_rate(bill) is None
+
+    def test_contracted_power_parsed_from_text(self):
+        text = """
+        Factura de electricidad
+        Periodo de facturación: del 01/01/2026 al 31/01/2026
+        Potencia contratada 14,49 kW punta / 14,49 kW valle
+        Consumo en el periodo: 500 kWh
+        TOTAL FACTURA 160,00 €
+        """
+        assert parse_bill_text(text)["contracted_power_kw"] == 14.49

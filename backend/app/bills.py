@@ -7,12 +7,15 @@ el usuario lo corrija a mano en el formulario.
 """
 
 import io
+import logging
 import re
 from datetime import date, timedelta
 
 from pypdf import PdfReader
 
 from .profiles import DAYS_PER_MONTH, MONTHLY_WEIGHTS
+
+logger = logging.getLogger(__name__)
 
 MONTH_NAMES = {
     "enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
@@ -605,6 +608,22 @@ def _find_charge_amount(
     return round(sum(values), 2) if values else None
 
 
+def _find_contracted_power_kw(text: str) -> float | None:
+    """Potencia contratada en kW (la mayor entre punta/valle si difieren)."""
+    values = []
+    for match in re.finditer(
+        r"(?:potencia\s+(?:contratada|punta|valle|m[aá]xima)"
+        r"|puissance\s+souscrite|potenza\s+impegnata)"
+        r"[^\n\d]{0,40}?(\d{1,3}(?:[.,]\d+)?)\s*kW\b",
+        text,
+        re.IGNORECASE,
+    ):
+        value = _to_float(match.group(1))
+        if 0 < value <= 1000:
+            values.append(value)
+    return max(values) if values else None
+
+
 def _find_iva_rate(text: str) -> float | None:
     """Tipo de IVA impreso en la etiqueta, p. ej. 'IVA (21%)' → 0.21."""
     match = re.search(r"\biva\b[^\n%]{0,15}?(\d{1,2}(?:[.,]\d+)?)\s*%", text, re.IGNORECASE)
@@ -701,6 +720,7 @@ def parse_bill_text(text: str) -> dict:
         "iva_eur": None,
         "iva_rate": None,
         "vat_base_eur": None,
+        "contracted_power_kw": None,
         "consumption_history": [],
         "currency": _detect_currency(text),
         "month": None,
@@ -732,6 +752,7 @@ def parse_bill_text(text: str) -> dict:
     result["iva_eur"] = _find_charge_amount(text, _IVA_AMOUNT_LABELS)
     result["iva_rate"] = _find_iva_rate(text)
     result["vat_base_eur"] = _find_charge_amount(text, _VAT_BASE_LABELS)
+    result["contracted_power_kw"] = _find_contracted_power_kw(text)
     result["consumption_history"] = parse_consumption_history(text)
 
     # --- kWh: consumo del periodo > diferencia de lecturas > kWh no acumulados ---
@@ -854,19 +875,64 @@ IEE_REDUCED_RATE = 0.005
 IVA_STANDARD_RATE = 0.21
 IVA_REDUCED_RATE = 0.10
 # Rebaja temporal española: devengos del 22-mar-2026 al 31-may-2026.
-# (El IVA al 10% exigía potencia contratada ≤ 10 kW: se asume, esta calculadora
-# es residencial. Una posible reaparición del 10% en ago-sep 2026 era
-# condicional: se prefiere siempre el valor derivado de la propia factura.)
+# (El IVA al 10% exigía potencia contratada ≤ 10 kW; el IEE al 0,5% se aplicó a
+# todos. Una posible reaparición del 10% en ago-sep 2026 era condicional: se
+# prefiere siempre el valor derivado de la propia factura.)
 _ES_REDUCED_TAX_WINDOW = (date(2026, 3, 22), date(2026, 5, 31))
+_IVA_REDUCED_MAX_POWER_KW = 10.0
 
+# Bandas de plausibilidad de los tipos derivados de una factura. El IEE legal
+# nunca baja de 0,5% (rebaja temporal) ni supera ~5,11%; se da un pequeño
+# margen. Fuera de banda, el valor de la factura es ruido (redondeos, líneas
+# agrupadas) y se descarta a favor del tipo normativo del periodo.
+IEE_MIN_RATE = 0.005
+IEE_MAX_RATE = 0.052
 _IVA_KNOWN_RATES = (IVA_REDUCED_RATE, IVA_STANDARD_RATE)
+_IVA_SNAP_TOLERANCE = 0.015
 
 
-def _statutory_rates_es(period_mid: date | None) -> tuple[float, float]:
-    """(IEE, IVA) normativos para el periodo facturado; estándar si no hay fecha."""
-    if period_mid and _ES_REDUCED_TAX_WINDOW[0] <= period_mid <= _ES_REDUCED_TAX_WINDOW[1]:
-        return IEE_REDUCED_RATE, IVA_REDUCED_RATE
-    return IEE_STANDARD_RATE, IVA_STANDARD_RATE
+def _in_reduced_window(day: date) -> bool:
+    return _ES_REDUCED_TAX_WINDOW[0] <= day <= _ES_REDUCED_TAX_WINDOW[1]
+
+
+def _statutory_iee_for_day(day: date) -> float:
+    return IEE_REDUCED_RATE if _in_reduced_window(day) else IEE_STANDARD_RATE
+
+
+def _statutory_iva_for_day(day: date, contracted_power_kw: float | None) -> float:
+    if (
+        _in_reduced_window(day)
+        and contracted_power_kw is not None
+        and contracted_power_kw <= _IVA_REDUCED_MAX_POWER_KW
+    ):
+        return IVA_REDUCED_RATE
+    return IVA_STANDARD_RATE
+
+
+def _statutory_rates_es(bill: dict) -> tuple[float, float]:
+    """(IEE, IVA) normativos ponderados por día del periodo facturado.
+
+    Si el periodo cruza el cambio de tipos de 2026, cada tramo pesa por sus días.
+    Sin fechas se usa el punto medio disponible o el tipo estándar.
+    """
+    start, end = bill.get("start_date"), bill.get("end_date")
+    contracted = bill.get("contracted_power_kw")
+    if not (start and end) or end < start:
+        mid = _bill_period_mid(bill)
+        if mid is None:
+            return IEE_STANDARD_RATE, IVA_STANDARD_RATE
+        return _statutory_iee_for_day(mid), _statutory_iva_for_day(mid, contracted)
+
+    iee_sum = 0.0
+    iva_sum = 0.0
+    days = 0
+    cursor = start
+    while cursor <= end:
+        iee_sum += _statutory_iee_for_day(cursor)
+        iva_sum += _statutory_iva_for_day(cursor, contracted)
+        cursor += timedelta(days=1)
+        days += 1
+    return iee_sum / days, iva_sum / days
 
 
 def _bill_period_mid(bill: dict) -> date | None:
@@ -877,24 +943,31 @@ def _bill_period_mid(bill: dict) -> date | None:
 
 
 def _derived_iva_rate(bill: dict) -> float | None:
-    """IVA de la factura: % impreso en la etiqueta o importe / base imponible."""
+    """IVA plausible de la factura: se ajusta a un tipo legal conocido o se descarta.
+
+    Del % impreso en la etiqueta o de importe/base imponible; en ambos casos
+    debe caer cerca de un tipo estatutario (21% o 10%). Si no, es ruido y se
+    rechaza (→ fallback normativo).
+    """
+    candidates = []
     labelled = bill.get("iva_rate")
-    if labelled and 0.0 < float(labelled) <= 0.30:
-        return float(labelled)
+    if labelled:
+        candidates.append(float(labelled))
     iva, base = bill.get("iva_eur"), bill.get("vat_base_eur")
-    if not iva or not base:
-        return None
-    ratio = float(iva) / float(base)
-    # El cociente se ajusta al tipo legal más próximo (21% o 10%): el redondeo
-    # de importes en factura desplaza el cociente unas décimas.
-    nearest = min(_IVA_KNOWN_RATES, key=lambda rate: abs(rate - ratio))
-    if abs(nearest - ratio) <= 0.01:
-        return nearest
-    return round(ratio, 4) if 0.03 <= ratio <= 0.30 else None
+    if iva and base and float(base) > 0:
+        candidates.append(float(iva) / float(base))
+    for value in candidates:
+        nearest = min(_IVA_KNOWN_RATES, key=lambda rate: abs(rate - value))
+        if abs(nearest - value) <= _IVA_SNAP_TOLERANCE:
+            return nearest
+    return None
 
 
 def _derived_iee_rate(bill: dict) -> float | None:
-    """IEE de la factura: impuesto eléctrico / (término energía + potencia)."""
+    """IEE plausible de la factura: impuesto eléctrico / (energía + potencia).
+
+    Debe caer en [0,5%, 5,2%]; fuera de banda se descarta (→ fallback normativo).
+    """
     iee, energy = bill.get("iee_eur"), bill.get("energy_eur")
     if not iee or not energy:
         return None
@@ -902,28 +975,47 @@ def _derived_iee_rate(bill: dict) -> float | None:
     if taxable <= 0:
         return None
     ratio = float(iee) / taxable
-    return ratio if 0.001 <= ratio <= 0.08 else None
+    return ratio if IEE_MIN_RATE <= ratio <= IEE_MAX_RATE else None
 
 
 def derive_bill_tax_rates(bill: dict, country_code: str | None = None) -> dict | None:
-    """Tipos impositivos de una factura: derivados de sus líneas o normativos.
+    """Tipos impositivos de una factura: derivados de sus líneas (si son plausibles)
+    o normativos del periodo.
 
-    Devuelve {"iee_rate", "iva_rate", "source"} con source "bill" (ambos
-    derivados), "statutory" (ambos de la tabla por fechas) o "mixed".
-    Para países sin tabla normativa propia solo se derivan de las líneas.
+    Devuelve {"iee_rate","iva_rate","iee_source","iva_source","source"}, con cada
+    *_source en {"from-bill","statutory-fallback"} y source agregado en
+    {"bill","statutory","mixed"}. Para países sin tabla normativa propia solo se
+    aceptan tipos derivados de las líneas.
     """
     iva = _derived_iva_rate(bill)
     iee = _derived_iee_rate(bill)
-    if iva is not None and iee is not None:
-        return {"iee_rate": iee, "iva_rate": iva, "source": "bill"}
     if (country_code or "").upper() != "ES" and (iva is None or iee is None):
-        # Sin tabla normativa fuera de España: exige ambas líneas en la factura
         return None
-    statutory_iee, statutory_iva = _statutory_rates_es(_bill_period_mid(bill))
-    source = "statutory" if iva is None and iee is None else "mixed"
+
+    statutory_iee, statutory_iva = _statutory_rates_es(bill)
+    iee_source = "from-bill" if iee is not None else "statutory-fallback"
+    iva_source = "from-bill" if iva is not None else "statutory-fallback"
+    result_iee = iee if iee is not None else statutory_iee
+    result_iva = iva if iva is not None else statutory_iva
+    if iee_source == iva_source:
+        source = "bill" if iee_source == "from-bill" else "statutory"
+    else:
+        source = "mixed"
+
+    logger.info(
+        "Tax rates: IEE %.4f (%s), IVA %.3f (%s) [period %s..%s]",
+        result_iee,
+        iee_source,
+        result_iva,
+        iva_source,
+        bill.get("start_date"),
+        bill.get("end_date"),
+    )
     return {
-        "iee_rate": iee if iee is not None else statutory_iee,
-        "iva_rate": iva if iva is not None else statutory_iva,
+        "iee_rate": result_iee,
+        "iva_rate": result_iva,
+        "iee_source": iee_source,
+        "iva_source": iva_source,
         "source": source,
     }
 

@@ -57,6 +57,9 @@ class BillInput(BaseModel):
     vat_base_eur: float | None = Field(
         None, ge=0, le=100000, description="Base imponible del IVA."
     )
+    contracted_power_kw: float | None = Field(
+        None, ge=0, le=1000, description="Potencia contratada en kW."
+    )
     consumption_history: list[BillHistoryEntry] | None = Field(
         None, max_length=24, description="Histórico mensual de consumo (mes → kWh)."
     )
@@ -377,6 +380,7 @@ class ParsedBill(BaseModel):
     iva_eur: float | None = None
     iva_rate: float | None = None
     vat_base_eur: float | None = None
+    contracted_power_kw: float | None = None
     consumption_history: list[BillHistoryEntry] = []
     currency: str | None = None
     month: int | None = None
