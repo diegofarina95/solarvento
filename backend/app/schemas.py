@@ -94,6 +94,12 @@ class SolarEstimateRequest(BaseModel):
     battery_cost_per_kwh_eur: float | None = Field(
         None, gt=0, le=5000, description="Override manual del coste de batería por kWh"
     )
+    subsidy_eur: float | None = Field(
+        None,
+        ge=0,
+        le=100_000_000,
+        description="Subvención o deducción estimada; se resta de la inversión neta",
+    )
     occupancy_profile: Literal["standard", "home_day", "evening", "night"] = Field(
         "standard",
         description="Forma horaria del consumo residencial.",
@@ -141,6 +147,25 @@ class PriceRange(BaseModel):
     high: float
 
 
+class YearCashflow(BaseModel):
+    year: int
+    net_eur: float
+    cumulative_eur: float
+
+
+class CashflowAssumptions(BaseModel):
+    horizon_years: int
+    headline_years: int
+    panel_degradation_pct_per_year: float
+    price_escalation_pct_per_year: float
+    battery_degradation_pct_per_year: float
+    om_pct_per_year: float
+    om_eur_per_year: float
+    inverter_replacement_year: int
+    inverter_replacement_cost_eur: float
+    discount_rate_pct: float
+
+
 class Economics(BaseModel):
     electricity_price_eur_kwh: float
     electricity_price_source: str = "default"  # 'manual' | 'bills' | 'default'
@@ -151,6 +176,17 @@ class Economics(BaseModel):
     installation_cost_range_eur: PriceRange | None = None
     cost_is_estimated: bool = False
     roi_pct: float | None = None
+    # Flujo de caja plurianual: payback_years pasa a ser el payback real
+    simple_payback_years: float | None = None
+    savings_25yr_eur: float | None = None
+    npv_eur: float | None = None
+    irr_pct: float | None = None
+    subsidy_eur: float | None = None
+    net_investment_eur: float | None = None
+    effective_price_eur_kwh: float | None = None
+    marginal_price_factor: float = 1.0
+    cumulative_cashflow: list[YearCashflow] = Field(default_factory=list)
+    assumptions: CashflowAssumptions | None = None
 
 
 class ConsumptionSummary(BaseModel):
@@ -190,6 +226,7 @@ class BatteryScenario(BaseModel):
     exported_kwh: float
     imported_kwh: float
     battery_marginal_payback_years: float | None = None
+    npv_eur: float | None = None
 
 
 class AnnualEnergySummary(BaseModel):
