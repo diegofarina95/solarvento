@@ -6,10 +6,19 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, model_validator
 
 
+class BillHistoryEntry(BaseModel):
+    """Un mes del histórico de consumo impreso en la factura."""
+
+    month: int = Field(..., ge=1, le=12)
+    kwh: float = Field(..., ge=0, le=20000)
+
+
 class BillInput(BaseModel):
     """Una factura de la luz: consumo y, opcionalmente, importe y periodo."""
 
-    kwh: float = Field(..., gt=0, le=20000)
+    # Tope alto para admitir facturas anuales de viviendas grandes; una lectura
+    # acumulada del contador se filtra por precio implícito, no por este máximo.
+    kwh: float = Field(..., gt=0, le=60000)
     energy_eur: float | None = Field(
         None,
         gt=0,
@@ -33,6 +42,23 @@ class BillInput(BaseModel):
         gt=0,
         le=10000,
         description="Total final de la factura, en la moneda local.",
+    )
+    # Líneas detalladas para derivar el coste marginal evitado (IEE + IVA)
+    power_eur: float | None = Field(
+        None, ge=0, le=10000, description="Término de potencia del periodo."
+    )
+    iee_eur: float | None = Field(
+        None, ge=0, le=10000, description="Impuesto especial sobre la electricidad."
+    )
+    iva_eur: float | None = Field(None, ge=0, le=10000, description="Importe de IVA.")
+    iva_rate: float | None = Field(
+        None, ge=0, le=0.3, description="Tipo de IVA impreso en la factura (0-0.3)."
+    )
+    vat_base_eur: float | None = Field(
+        None, ge=0, le=100000, description="Base imponible del IVA."
+    )
+    consumption_history: list[BillHistoryEntry] | None = Field(
+        None, max_length=24, description="Histórico mensual de consumo (mes → kWh)."
     )
     currency: str | None = Field(None, min_length=3, max_length=3)
     # Alias histórico. Se conserva para clientes antiguos, pero el precio
@@ -194,6 +220,10 @@ class ConsumptionSummary(BaseModel):
     source: str  # 'bills' | 'input'
     avg_price_eur_kwh: float | None = None
     avg_price_kwh: float | None = None
+    # Coste marginal evitado derivado de las facturas (término energía × IEE × IVA)
+    marginal_price_eur_kwh: float | None = None
+    marginal_price_factor: float | None = None
+    tax_rates_source: str | None = None  # 'bill' | 'statutory' | 'mixed'
     bill_count: int = 0
     priced_bill_count: int = 0
     total_amount_bill_count: int = 0
@@ -206,6 +236,7 @@ class ConsumptionSummary(BaseModel):
     annual_amount: float | None = None
     currency: str | None = None
     observed_months: list[int] = Field(default_factory=list)
+    estimated_months: list[int] = Field(default_factory=list)
     seasonality_source: str | None = None
     profile: dict | None = None
 
@@ -334,6 +365,12 @@ class ParsedBill(BaseModel):
     fixed_eur: float | None = None
     taxes_eur: float | None = None
     total_eur: float | None = None
+    power_eur: float | None = None
+    iee_eur: float | None = None
+    iva_eur: float | None = None
+    iva_rate: float | None = None
+    vat_base_eur: float | None = None
+    consumption_history: list[BillHistoryEntry] = []
     currency: str | None = None
     month: int | None = None
     start_date: date | None = None
