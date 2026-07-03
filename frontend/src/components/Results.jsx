@@ -314,8 +314,10 @@ function electricityPriceBasis(data, fmt, t) {
     const count =
       data.economics.electricity_price_bill_count || data.consumption?.priced_bill_count || 0
     const ignored = data.consumption?.ignored_price_bill_count || 0
+    // El precio de facturas es el término de energía (sin impuestos); el ahorro
+    // usa el coste marginal evitado, que se muestra en su propia tarjeta.
     return [
-      price,
+      `${price} · ${t('basis.energyTerm')}`,
       t('basis.fromBills', { count }),
       ignored ? t('basis.ignoredBills', { count: ignored }) : null,
     ]

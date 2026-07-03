@@ -155,7 +155,7 @@ export default function PrintReport({ data, i18n, fmt, variant }) {
               />
               {data.consumption.avg_price_eur_kwh != null && (
                 <Row
-                  label={t('basis.electricityPrice')}
+                  label={t('basis.energyTerm')}
                   value={`${fmt.money2.format(data.consumption.avg_price_eur_kwh)}/kWh`}
                 />
               )}
