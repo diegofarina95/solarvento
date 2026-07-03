@@ -1,0 +1,179 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+:root {
+  /* Roles de la paleta de datos (referencia dataviz, modo claro) */
+  --surface-1: #fcfcfb;
+  --page: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --series-production: #2a78d6; /* azul, slot 1 */
+  --series-irradiation: #c98500; /* paso oscuro del ramp amarillo, legible en claro */
+  --series-consumption: #199e70; /* aqua (paso oscuro del ramp, legible en claro) */
+  --series-consumption-estimated: #9fd5c0;
+  --series-cost: #6554b8;
+}
+
+html {
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text-primary);
+}
+
+.leaflet-container {
+  font: inherit;
+}
+
+/* --- Informe imprimible ---
+   En pantalla el informe está oculto; al imprimir se oculta la app y se
+   muestra solo el informe (que vive fuera de #app-shell vía portal). */
+.print-report {
+  display: none;
+}
+
+@media print {
+  #app-shell {
+    display: none !important;
+  }
+  .print-report {
+    display: block !important;
+    padding: 0;
+    color: #000;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  @page {
+    margin: 16mm 14mm;
+  }
+}
+
+.print-report .pr-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #111;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+}
+.print-report h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+.print-report h1 span {
+  color: #d97706;
+}
+.print-report .pr-subtitle {
+  font-size: 12px;
+  color: #444;
+  margin: 2px 0 0;
+}
+.print-report .pr-meta {
+  text-align: right;
+  font-size: 10px;
+  color: #555;
+}
+.print-report .pr-meta p {
+  margin: 0;
+}
+.print-report .pr-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.print-report .pr-kpi {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px;
+}
+.print-report .pr-kpi-label {
+  display: block;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #666;
+}
+.print-report .pr-kpi-value {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+.print-report .pr-kpi-value small {
+  font-size: 10px;
+  font-weight: 400;
+  color: #666;
+}
+.print-report .pr-section {
+  margin-bottom: 12px;
+  break-inside: avoid;
+}
+.print-report .pr-section h2 {
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 3px;
+  margin: 0 0 6px;
+}
+.print-report .pr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5px;
+}
+.print-report .pr-kv td {
+  padding: 3px 6px;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
+}
+.print-report .pr-kv .pr-label {
+  color: #555;
+  width: 45%;
+}
+.print-report .pr-kv .pr-value {
+  font-weight: 600;
+  text-align: right;
+}
+.print-report .pr-months th,
+.print-report .pr-months td,
+.print-report .pr-scenarios th,
+.print-report .pr-scenarios td {
+  border: 1px solid #ddd;
+  padding: 3px 4px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.print-report .pr-months .pr-label,
+.print-report .pr-scenarios td:first-child {
+  text-align: left;
+  color: #555;
+}
+.print-report .pr-note {
+  font-size: 10.5px;
+  background: #f5f5f4;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin: 0 0 6px;
+}
+.print-report .pr-footer {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #ccc;
+  font-size: 9px;
+  color: #666;
+}
+.print-report .pr-footer p {
+  margin: 2px 0;
+}

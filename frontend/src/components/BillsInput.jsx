@@ -1,0 +1,219 @@
+import { useRef, useState } from 'react'
+import { ApiError, parseBill } from '../api'
+
+const inputClass =
+  'w-full min-w-0 rounded-md border border-stone-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-200'
+
+const EMPTY_ROW = { month: '', kwh: '', amount: '', start: '', end: '' }
+
+// Ids estables para las filas: con key={index}, borrar una fila intermedia
+// hace saltar el foco y reutiliza estado de inputs de la fila siguiente.
+let nextRowId = 1
+function newRow(fields) {
+  return { id: nextRowId++, ...EMPTY_ROW, ...fields }
+}
+
+function parseDateInput(value) {
+  if (!value) return null
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return null
+  return new Date(year, month - 1, day)
+}
+
+function inferBillMonth(start, end) {
+  const startDate = parseDateInput(start)
+  const endDate = parseDateInput(end)
+  const date = startDate && endDate
+    ? new Date((startDate.getTime() + endDate.getTime()) / 2)
+    : (startDate ?? endDate)
+  return date ? String(date.getMonth() + 1) : ''
+}
+
+function MiniField({ label, children }) {
+  return (
+    <label className="block min-w-0">
+      <span className="mb-0.5 block text-[10px] font-medium text-stone-500">{label}</span>
+      {children}
+    </label>
+  )
+}
+
+export default function BillsInput({ bills, setBills, i18n, onLocationDetected }) {
+  const { t, months } = i18n
+  const fileRef = useRef(null)
+  const [uploading, setUploading] = useState(false)
+  const [notice, setNotice] = useState(null)
+
+  function update(index, key, value) {
+    setBills(bills.map((b, i) => (i === index ? { ...b, [key]: value } : b)))
+  }
+
+  function removeRow(index) {
+    setBills(bills.filter((_, i) => i !== index))
+  }
+
+  async function handleFiles(fileList) {
+    setUploading(true)
+    setNotice(null)
+    const added = []
+    const problems = []
+    let detectedLocation = null
+    // Los PDFs se parsean en paralelo: con varios archivos y un parser lento
+    // la espera secuencial se multiplicaba por el número de facturas.
+    const results = await Promise.allSettled(fileList.map((file) => parseBill(file)))
+    results.forEach((result, index) => {
+      const file = fileList[index]
+      if (result.status === 'rejected') {
+        const err = result.reason
+        problems.push(t('errors.billParseFailed', {
+          file: file.name,
+          detail: err instanceof ApiError ? err.detail : null,
+        }))
+        return
+      }
+      const parsed = result.value
+      if (parsed.kwh == null) {
+        problems.push(t('errors.billNoConsumption', { file: file.name }))
+      }
+      added.push(newRow({
+        month: parsed.month ? String(parsed.month) : inferBillMonth(parsed.start_date, parsed.end_date),
+        kwh: parsed.kwh ?? '',
+        amount: parsed.amount_eur ?? '',
+        start: parsed.start_date ?? '',
+        end: parsed.end_date ?? '',
+      }))
+      if (parsed.warnings?.length) {
+        problems.push(t('errors.billNeedsReview', { file: file.name }))
+      }
+      if (parsed.lat != null && parsed.lon != null) {
+        detectedLocation = parsed
+      } else if (!detectedLocation && parsed.country_code) {
+        detectedLocation = parsed
+      }
+    })
+    // Updater funcional: si el usuario editó o añadió filas mientras se
+    // parseaban los PDFs, sus cambios no se sobrescriben.
+    if (added.length) setBills((prev) => [...prev, ...added])
+    if (detectedLocation) onLocationDetected?.(detectedLocation)
+    if (problems.length) setNotice(problems.join(' '))
+    setUploading(false)
+  }
+
+  return (
+    <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-sm font-medium text-stone-700">{t('bills.title')}</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="rounded-md border border-stone-300 bg-white px-2.5 py-1 text-xs font-medium text-stone-700 hover:border-amber-500 disabled:opacity-50"
+          >
+            {uploading ? t('bills.importing') : t('bills.importPdf')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setBills((prev) => [...prev, newRow()])}
+            className="rounded-md border border-stone-300 bg-white px-2.5 py-1 text-xs font-medium text-stone-700 hover:border-amber-500"
+          >
+            {t('bills.addRow')}
+          </button>
+        </div>
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files?.length) handleFiles([...e.target.files])
+          e.target.value = ''
+        }}
+      />
+
+      {bills.length === 0 && <p className="text-xs text-stone-500">{t('bills.empty')}</p>}
+
+      {bills.length > 0 && (
+        <div className="space-y-2">
+          {bills.map((bill, i) => (
+            <div key={bill.id ?? i} className="rounded-md border border-stone-200 bg-white p-2">
+              <div className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_auto] gap-1.5">
+                <MiniField label={t('bills.month')}>
+                  <select
+                    value={bill.month ?? ''}
+                    onChange={(e) => update(i, 'month', e.target.value)}
+                    className={inputClass}
+                    aria-label={t('bills.monthAria', { index: i + 1 })}
+                  >
+                    <option value="">{t('bills.auto')}</option>
+                    {months.long.map((month, monthIndex) => (
+                      <option key={month} value={monthIndex + 1}>
+                        {month}
+                      </option>
+                    ))}
+                  </select>
+                </MiniField>
+                <MiniField label="kWh">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    required
+                    value={bill.kwh}
+                    onChange={(e) => update(i, 'kwh', e.target.value)}
+                    placeholder="312"
+                    className={inputClass}
+                    aria-label={t('bills.kwhAria', { index: i + 1 })}
+                  />
+                </MiniField>
+                <MiniField label={t('bills.amount')}>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={bill.amount}
+                    onChange={(e) => update(i, 'amount', e.target.value)}
+                    placeholder="71,39"
+                    className={inputClass}
+                    aria-label={t('bills.amountAria', { index: i + 1 })}
+                  />
+                </MiniField>
+                <button
+                  type="button"
+                  onClick={() => removeRow(i)}
+                  className="mt-[18px] h-8 px-1.5 text-sm text-stone-400 hover:text-red-600"
+                  aria-label={t('bills.remove', { index: i + 1 })}
+                >
+                  x
+                </button>
+              </div>
+              <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+                <MiniField label={t('bills.start')}>
+                  <input
+                    type="date"
+                    value={bill.start}
+                    onChange={(e) => update(i, 'start', e.target.value)}
+                    className={inputClass}
+                    aria-label={t('bills.startAria', { index: i + 1 })}
+                  />
+                </MiniField>
+                <MiniField label={t('bills.end')}>
+                  <input
+                    type="date"
+                    value={bill.end}
+                    onChange={(e) => update(i, 'end', e.target.value)}
+                    className={inputClass}
+                    aria-label={t('bills.endAria', { index: i + 1 })}
+                  />
+                </MiniField>
+              </div>
+            </div>
+          ))}
+          <p className="text-[11px] text-stone-500">{t('bills.datesNote')}</p>
+        </div>
+      )}
+
+      {notice && <p className="mt-2 text-xs text-amber-700">{notice}</p>}
+    </div>
+  )
+}
