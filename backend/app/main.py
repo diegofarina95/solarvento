@@ -599,6 +599,91 @@ def _battery_recommendation(scenarios: list[dict]) -> tuple[float, str]:
     )
 
 
+def _size_scenarios(
+    *,
+    per_kwp_hourly: list[list[float]],
+    cons_profile: list[list[float]],
+    price: float,
+    surplus_price: float,
+    export_scheme: str,
+    annual_consumption: float,
+    subsidy: float,
+    om_pct: float,
+    inverter_per_kwp: float,
+    cost_fn,
+    coverage_kwp: float,
+    step_kwp: float,
+) -> tuple[list[dict], float, float]:
+    """Barrido de tamaños de PV (sin batería): payback/ROI/VAN por potencia.
+
+    El óptimo económico maximiza el VAN: añadir kWp deja de compensar cuando su
+    producción marginal ya solo se vierte a la tarifa de excedentes en vez de
+    evitar compra de red. El de 'máximo ahorro' es la cobertura ~100%.
+    """
+    sizes: set[float] = {round(coverage_kwp, 2)}
+    k = max(step_kwp, 1.0)
+    while k < coverage_kwp:
+        sizes.add(round(k, 2))
+        k += step_kwp
+
+    scenarios: list[dict] = []
+    for kwp in sorted(sizes):
+        production = [[value * kwp for value in month] for month in per_kwp_hourly]
+        balance = simulation.simulate_self_consumption(production, cons_profile, 0.0)
+        savings = simulation.annual_savings_with_surplus(
+            balance, price, surplus_price, export_scheme
+        )
+        savings = _cap_savings_to_annual_spend(
+            savings, annual_consumption, price, export_scheme
+        )
+        cost = cost_fn(kwp)
+        analysis = cashflow.cashflow_analysis(
+            cashflow.simple_yearly_savings(savings),
+            investment_eur=cost,
+            subsidy_eur=subsidy,
+            om_eur_per_year=round(cost * om_pct, 2),
+            replacements={
+                cashflow.INVERTER_REPLACEMENT_YEAR: round(inverter_per_kwp * kwp, 2)
+            },
+        )
+        scenarios.append(
+            {
+                "power_kwp": kwp,
+                "annual_savings_eur": savings,
+                "investment_eur": round(cost, 2),
+                "payback_years": analysis["payback_years"],
+                "npv_eur": analysis["npv_eur"],
+                "roi_pct": round(savings / cost * 100, 1) if cost > 0 else None,
+                "production_kwh": balance["production_kwh"],
+                "self_consumption_pct": balance["self_consumption_pct"],
+                "self_sufficiency_pct": balance["self_sufficiency_pct"],
+                "self_consumed_kwh": round(
+                    balance["direct_kwh"] + balance["battery_kwh"], 1
+                ),
+                "exported_kwh": balance["exported_kwh"],
+                "imported_kwh": balance["imported_kwh"],
+            }
+        )
+
+    # Óptimo económico = la mayor potencia cuya ÚLTIMA porción añadida todavía
+    # se autoconsume mayoritariamente (evita compra de red a precio alto). Más
+    # allá, cada kWp extra solo se vierte a la tarifa de excedentes: engorda el
+    # ahorro absoluto pero hunde ROI y payback. La fracción autoconsumida marginal
+    # decrece de forma monótona con el tamaño, así que basta avanzar hasta el codo.
+    SELF_CONSUMPTION_KNEE = 0.5
+    optimum = scenarios[0]
+    for prev, cur in zip(scenarios, scenarios[1:], strict=False):
+        marginal_production = cur["production_kwh"] - prev["production_kwh"]
+        marginal_self = cur["self_consumed_kwh"] - prev["self_consumed_kwh"]
+        fraction = marginal_self / marginal_production if marginal_production > 0 else 0.0
+        if fraction >= SELF_CONSUMPTION_KNEE:
+            optimum = cur
+        else:
+            break
+    max_savings = max(scenarios, key=lambda s: s["annual_savings_eur"])
+    return scenarios, optimum["power_kwp"], max_savings["power_kwp"]
+
+
 def _attach_battery_cost_ranges(
     scenarios: list[dict],
     system_cost_range: dict,
@@ -878,52 +963,16 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
     except PVGISError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
-    panels = None
-    analysis_power_kwp = req.peak_power_kwp
-    if annual_consumption is not None:
-        per_kwp = selected["annual_production_kwh"] / req.peak_power_kwp
-        panels = calculations.recommended_panels(
-            annual_consumption, per_kwp, req.panel_power_w
-        )
-        recommended_production = per_kwp * panels["total_kwp"]
-        recommended_coverage = _coverage_pct(recommended_production, annual_consumption)
-        panels["coverage_pct"] = recommended_coverage
-        panels["production_to_consumption_pct"] = recommended_coverage
-        # Con consumo conocido y auto-dimensionado, la potencia analizada (y por
-        # tanto producción, ahorro y payload) es la recomendada, no el 5 kWp por
-        # defecto del formulario. La producción PVGIS escala linealmente con la
-        # potencia, así que se reescala el resultado de la semilla.
-        if req.auto_size_power:
-            analysis_power_kwp = panels["total_kwp"]
-
-    if abs(analysis_power_kwp - req.peak_power_kwp) > 1e-9:
-        optimal = _scale_system(optimal, analysis_power_kwp, req.peak_power_kwp)
-        if user_system is not None:
-            user_system = _scale_system(user_system, analysis_power_kwp, req.peak_power_kwp)
-    selected = user_system or optimal
-
-    # La serie horaria se pide siempre a 1 kWp (la clave de caché no varía con
-    # cada potencia analizada) y se reescala aquí a la producción del sistema
-    # que se muestra en producción, ahorro y payback.
-    if hourly_production is not None:
-        hourly_production = _normalize_hourly_profile(
-            hourly_production, selected["annual_production_kwh"]
-        )
-
-    # Precio: prioridad al explícito, luego al derivado de facturas, luego default.
-    # Si hay facturas con cargo variable de energía válido, no se usa un precio medio nacional.
+    # Precio (no depende de la potencia analizada): explícito > facturas > país.
     price, price_source, price_bill_count = _resolve_electricity_price(
         req,
         consumption_summary,
-        # El default del país (en su moneda) antes que el genérico en EUR
         price_quote.get("electricity_price_kwh") or settings.electricity_price_eur_kwh,
     )
     # El término de energía de las facturas va sin impuestos: cada kWh
     # autoconsumido evita también impuesto eléctrico + IVA (coste marginal
-    # evitado). Los tipos se derivan de las propias facturas (o de la tabla
-    # normativa por fechas); la tabla fija por país queda como último recurso
-    # para facturas sin datos de países sin tabla normativa propia. Los precios
-    # por defecto ya incluyen impuestos y el manual se asume final.
+    # evitado). Los tipos se derivan de la factura o de la tabla normativa; los
+    # precios por defecto ya los incluyen y el manual se asume final.
     if price_source == "bills":
         marginal_price_factor = (
             (consumption_summary or {}).get("marginal_price_factor")
@@ -933,6 +982,92 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         marginal_price_factor = 1.0
     effective_price = round(price * marginal_price_factor, 4)
     _attach_consumption_costs(consumption_summary, effective_price)
+    surplus_price = (
+        req.surplus_price_eur_kwh
+        if req.surplus_price_eur_kwh is not None
+        else price_quote["surplus_price_eur_kwh"]
+    )
+    export_scheme = price_quote.get("export_scheme", "capped_compensation")
+    # El excedente se paga a su tarifa de compensación (con tope mensual); el
+    # factor fiscal solo aplica al kWh autoconsumido evitado.
+    effective_surplus = surplus_price
+    subsidy = req.subsidy_eur or 0.0
+
+    # --- Dimensionado: recomendación de cobertura + barrido económico ---
+    panels = None
+    analysis_power_kwp = req.peak_power_kwp
+    sizing_analysis = None
+    cons_profile = None
+    if annual_consumption is not None:
+        per_kwp = selected["annual_production_kwh"] / req.peak_power_kwp
+        panels = calculations.recommended_panels(
+            annual_consumption, per_kwp, req.panel_power_w
+        )
+        recommended_production = per_kwp * panels["total_kwp"]
+        recommended_coverage = _coverage_pct(recommended_production, annual_consumption)
+        panels["coverage_pct"] = recommended_coverage
+        panels["production_to_consumption_pct"] = recommended_coverage
+
+        if hourly_production is not None:
+            cons_profile = consumption_profile(
+                annual_consumption,
+                consumption_summary.get("monthly_kwh") if consumption_summary else None,
+                country_code=country.code,
+                occupancy_profile=req.occupancy_profile,
+                has_heat_pump=req.has_heat_pump,
+                has_ev=req.has_ev,
+                has_pool=req.has_pool,
+            )
+            # Barrido de tamaños solo cuando el coste se estima (no si el usuario
+            # fijó un coste total para un sistema concreto).
+            if req.installation_cost_eur is None:
+                per_kwp_hourly = _normalize_hourly_profile(hourly_production, per_kwp)
+
+                def _size_cost(kwp: float) -> float:
+                    return calculate_system_cost(
+                        price_quote,
+                        power_kwp=kwp,
+                        panel_power_w=req.panel_power_w,
+                        battery_options_kwh=[],
+                        cost_per_kwp=req.cost_per_kwp_eur,
+                    )["system_cost_range"]["medium"]
+
+                size_list, optimum_kwp, max_savings_kwp = _size_scenarios(
+                    per_kwp_hourly=per_kwp_hourly,
+                    cons_profile=cons_profile,
+                    price=effective_price,
+                    surplus_price=effective_surplus,
+                    export_scheme=export_scheme,
+                    annual_consumption=annual_consumption,
+                    subsidy=subsidy,
+                    om_pct=cashflow.OM_PCT_PER_YEAR,
+                    inverter_per_kwp=price_quote["inverter_price_per_kwp"]["medium"],
+                    cost_fn=_size_cost,
+                    coverage_kwp=panels["total_kwp"],
+                    step_kwp=max(0.5, req.panel_power_w / 1000),
+                )
+                sizing_analysis = {
+                    "scenarios": size_list,
+                    "economic_optimum_kwp": optimum_kwp,
+                    "max_savings_kwp": max_savings_kwp,
+                }
+                # El titular por defecto es el ÓPTIMO ECONÓMICO (mejor VAN), no
+                # la cobertura del 100% (que minimiza ROI/payback).
+                if req.auto_size_power:
+                    analysis_power_kwp = optimum_kwp
+
+    if abs(analysis_power_kwp - req.peak_power_kwp) > 1e-9:
+        optimal = _scale_system(optimal, analysis_power_kwp, req.peak_power_kwp)
+        if user_system is not None:
+            user_system = _scale_system(user_system, analysis_power_kwp, req.peak_power_kwp)
+    selected = user_system or optimal
+
+    # La serie horaria (pedida a 1 kWp) se reescala a la producción del sistema
+    # analizado que se muestra en producción, ahorro y payback.
+    if hourly_production is not None:
+        hourly_production = _normalize_hourly_profile(
+            hourly_production, selected["annual_production_kwh"]
+        )
 
     cost_details = calculate_system_cost(
         price_quote,
@@ -946,16 +1081,6 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
     cost = cost_details["system_cost_range"]["medium"]
     cost_is_estimated = req.installation_cost_eur is None
     battery_cost_per_kwh = cost_details["battery_cost_per_kwh"]["medium"]
-    surplus_price = (
-        req.surplus_price_eur_kwh
-        if req.surplus_price_eur_kwh is not None
-        else price_quote["surplus_price_eur_kwh"]
-    )
-    export_scheme = price_quote.get("export_scheme", "capped_compensation")
-    # El excedente se paga a la tarifa de compensación tal cual (con su tope
-    # mensual): el factor fiscal solo aplica al kWh autoconsumido evitado.
-    effective_surplus = surplus_price
-    subsidy = req.subsidy_eur or 0.0
     om_eur = round(cost * cashflow.OM_PCT_PER_YEAR, 2)
     inverter_replacement_cost = round(
         cost_details["inverter_price_per_kwp"]["medium"] * analysis_power_kwp, 2
@@ -973,15 +1098,7 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         "production_to_consumption_pct": coverage,
     }
     if hourly_production is not None:
-        cons_profile = consumption_profile(
-            annual_consumption,
-            consumption_summary.get("monthly_kwh") if consumption_summary else None,
-            country_code=country.code,
-            occupancy_profile=req.occupancy_profile,
-            has_heat_pump=req.has_heat_pump,
-            has_ev=req.has_ev,
-            has_pool=req.has_pool,
-        )
+        # cons_profile ya se construyó en el bloque de dimensionado (mismo perfil)
         capacities = [0.0] + sorted(
             {c for c in req.battery_options_kwh if c > 0}
         )
@@ -1150,6 +1267,7 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         consumption=consumption_summary,
         annual_energy=annual_energy,
         battery_analysis=battery_analysis,
+        sizing_analysis=sizing_analysis,
         typical_day=typical_day,
         confidence=_confidence_summary(consumption_summary, price_source, price_quote),
     )

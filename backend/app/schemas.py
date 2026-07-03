@@ -294,6 +294,27 @@ class BatteryAnalysis(BaseModel):
     battery_cost_range_eur_per_kwh: PriceRange | None = None
 
 
+class SizingScenario(BaseModel):
+    power_kwp: float
+    annual_savings_eur: float
+    investment_eur: float
+    payback_years: float | None = None
+    npv_eur: float | None = None
+    roi_pct: float | None = None
+    production_kwh: float
+    self_consumption_pct: float
+    self_sufficiency_pct: float
+    self_consumed_kwh: float
+    exported_kwh: float
+    imported_kwh: float
+
+
+class SizingAnalysis(BaseModel):
+    scenarios: list[SizingScenario]
+    economic_optimum_kwp: float
+    max_savings_kwp: float
+
+
 class BatteryOptionCost(BaseModel):
     battery_kwh: float
     investment_range: PriceRange
@@ -366,6 +387,7 @@ class SolarEstimateResponse(BaseModel):
     consumption: ConsumptionSummary | None = None
     annual_energy: AnnualEnergySummary
     battery_analysis: BatteryAnalysis | None = None
+    sizing_analysis: SizingAnalysis | None = None
     typical_day: TypicalDay | None = None
     confidence: CalculationConfidence
 

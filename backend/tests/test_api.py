@@ -1168,17 +1168,15 @@ def test_auto_size_power_uses_recommended_kwp(respx_mock, client):
 
     # Sin auto: analiza los 5 kWp pedidos (comportamiento actual)
     assert manual["analysis_power_kwp"] == 5.0
-    # Con auto: analiza la potencia recomendada, no el 5 kWp por defecto
+    # Con auto: analiza el ÓPTIMO ECONÓMICO del barrido, no el 5 kWp por defecto
     assert auto["requested_peak_power_kwp"] == 5.0
-    assert auto["analysis_power_kwp"] == auto["panels"]["total_kwp"]
-    assert auto["analysis_power_kwp"] > 5.0
+    assert auto["analysis_power_kwp"] == pytest.approx(
+        auto["sizing_analysis"]["economic_optimum_kwp"], abs=0.01
+    )
     # La producción escala linealmente con la potencia (mismo rendimiento/kWp)
     per_kwp_manual = manual["optimal"]["annual_production_kwh"] / 5.0
     per_kwp_auto = auto["optimal"]["annual_production_kwh"] / auto["analysis_power_kwp"]
     assert per_kwp_auto == pytest.approx(per_kwp_manual, rel=0.01)
-    # Mayor sistema → mayor inversión y mayor ahorro
-    assert auto["economics"]["installation_cost_eur"] > manual["economics"]["installation_cost_eur"]
-    assert auto["economics"]["annual_savings_eur"] > manual["economics"]["annual_savings_eur"]
 
 
 @respx.mock
@@ -1213,3 +1211,36 @@ def test_annual_bill_confidence_is_high(respx_mock, client):
     assert conf["level"] == "high"
     assert conf["real_months"] == 12
     assert conf["improvement_hints"] == []  # ya no pide "otra factura"
+
+
+def test_sizing_economic_optimum_beats_full_coverage():
+    from app.main import _size_scenarios
+
+    day = [0.0] * 24
+    for h, v in zip(range(8, 18), [0.2, 0.4, 0.6, 0.75, 0.85, 0.85, 0.75, 0.6, 0.4, 0.2]):
+        day[h] = v
+    per_kwp_hourly = [day[:] for _ in range(12)]
+    cons_profile = [[1.5] * 24 for _ in range(12)]
+
+    scenarios, optimum_kwp, max_savings_kwp = _size_scenarios(
+        per_kwp_hourly=per_kwp_hourly,
+        cons_profile=cons_profile,
+        price=0.26,
+        surplus_price=0.06,
+        export_scheme="capped_compensation",
+        annual_consumption=sum(sum(m) for m in cons_profile) * 30.4,
+        subsidy=0.0,
+        om_pct=0.01,
+        inverter_per_kwp=160.0,
+        cost_fn=lambda kwp: 1200.0 * kwp,
+        coverage_kwp=15.0,
+        step_kwp=1.0,
+    )
+    assert optimum_kwp < max_savings_kwp
+    by_kwp = {s["power_kwp"]: s for s in scenarios}
+    opt_s = by_kwp[optimum_kwp]
+    cov_s = by_kwp[max_savings_kwp]
+    assert opt_s["roi_pct"] > cov_s["roi_pct"]
+    assert opt_s["payback_years"] < cov_s["payback_years"]
+    assert cov_s["annual_savings_eur"] > opt_s["annual_savings_eur"]
+    assert opt_s["self_consumption_pct"] > cov_s["self_consumption_pct"]
