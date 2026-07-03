@@ -712,8 +712,9 @@ def test_parse_bill_geocodes_openai_supply_address(respx_mock, openai_client):
     geocode_call = [
         call for call in respx_mock.calls if call.request.url.path.endswith("/search")
     ][0]
-    assert "10 Rue de Rivoli" in geocode_call.request.url.params["q"]
+    # Primaria: CP + municipio (la calle ya no se envía en la query)
     assert "75001" in geocode_call.request.url.params["q"]
+    assert "Paris" in geocode_call.request.url.params["q"]
 
 
 @respx.mock

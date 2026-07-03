@@ -349,23 +349,23 @@ def _bill_location_query(parsed: dict) -> str | None:
     hace que el geocoder devuelva el centroide provincial ignorando el CP; por
     eso NO se envía como objetivo, solo se usa después como filtro de validación.
     """
-    # Sin ninguna parte de dirección (calle/CP/municipio) no se geocodifica:
-    # el país solo NO es una ubicación útil.
-    address_parts = [
-        parsed.get("supply_address"),
-        parsed.get("postal_code"),
-        parsed.get("city"),
-    ]
-    if not any(str(p or "").strip() for p in address_parts):
-        return None
+    cp = str(parsed.get("postal_code") or "").strip()
+    city = str(parsed.get("city") or "").strip()
     country = "España" if _is_spanish(parsed) else (
         str(parsed.get("country_name") or parsed.get("country_code") or "").strip()
     )
-    # Calle + CP + municipio (NO la provincia, que es el objetivo que confundía al
-    # geocoder). El país ancla la búsqueda; la provincia solo filtra el resultado.
-    parts = [*address_parts, country]
-    query = ", ".join(str(p).strip() for p in parts if str(p or "").strip())
-    return query or None
+    # Primaria: CP + municipio. NO se manda la dirección de suministro completa:
+    # suele traer la provincia (y a veces CP/municipio duplicados), que confunde
+    # al geocoder y devuelve 0 resultados o el centroide provincial. La provincia
+    # solo filtra el resultado; el país ancla la búsqueda.
+    if cp or city:
+        base = " ".join(part for part in (cp, city) if part)
+    else:
+        # Último recurso, sin CP ni municipio: la calle tal cual.
+        base = str(parsed.get("supply_address") or "").strip()
+    if not base:
+        return None
+    return f"{base}, {country}" if country else base
 
 
 def _is_spanish(parsed: dict) -> bool:
