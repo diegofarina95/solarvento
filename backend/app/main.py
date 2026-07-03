@@ -220,9 +220,8 @@ async def parse_bill(request: Request, file: UploadFile):
         # (aunque falte el consumo) para que el usuario lo complete a mano.
         if remote is not None:
             return await _enrich_bill_location(remote)
-        raise HTTPException(
-            status_code=422,
-            detail="No se pudo leer la imagen de la factura; revísala o introduce los datos a mano.",
+        return _unreadable_bill(
+            "No se pudo leer la imagen de la factura; introduce los datos a mano."
         )
 
     # pypdf es CPU-bound: fuera del event loop para no bloquear otras peticiones
@@ -231,7 +230,10 @@ async def parse_bill(request: Request, file: UploadFile):
     except bills_mod.BillParseError as exc:
         if remote is not None:
             return await _enrich_bill_location(remote)
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        # Contrato uniforme con y sin OpenAI: factura ilegible → 200 con avisos
+        # y campos vacíos para completar a mano (el 422 se reserva para
+        # peticiones inválidas: tipo de archivo, tamaño…).
+        return _unreadable_bill(str(exc))
 
     if remote is not None:
         if local.get("kwh") is None:
@@ -241,6 +243,11 @@ async def parse_bill(request: Request, file: UploadFile):
             [*local.get("warnings", []), *remote.get("warnings", [])]
         )
     return await _enrich_bill_location(local)
+
+
+def _unreadable_bill(reason: str) -> dict:
+    """Respuesta 200 para facturas ilegibles: fila vacía + aviso."""
+    return {"kwh": None, "amount_eur": None, "parser": "local", "warnings": [reason]}
 
 
 def _merge_bill_context(target: dict, source: dict | None) -> None:

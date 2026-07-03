@@ -132,3 +132,15 @@ async def test_pricing_service_aggregates_provider_feed(tmp_path):
     assert quote["updated_at"] == "2026-07-02"
     assert quote["turnkey_cost_per_kwp"] == {"low": 1200.0, "medium": 1300.0, "high": 1400.0}
     assert quote["battery_price_per_kwh"] == {"low": 620.0, "medium": 660.0, "high": 700.0}
+
+
+def test_europe_bounds_exclude_north_africa_but_keep_islands():
+    from app.pricing.countries import ensure_european_location
+
+    # Dentro: península, Canarias, Madeira, Azores, Creta, Malta, Chipre
+    for lat, lon in [(40.4, -3.7), (28.1, -15.4), (32.7, -16.9), (37.7, -25.7),
+                     (35.3, 25.1), (35.9, 14.5), (35.1, 33.4)]:
+        assert ensure_european_location(lat, lon), (lat, lon)
+    # Fuera: Marrakech, El Cairo, Tel Aviv, Nueva York
+    for lat, lon in [(31.6, -8.0), (30.0, 31.2), (32.1, 34.8), (40.7, -74.0)]:
+        assert not ensure_european_location(lat, lon), (lat, lon)

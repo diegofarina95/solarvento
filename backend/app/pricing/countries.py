@@ -141,10 +141,25 @@ def _in_bounds(lat: float, lon: float, bounds: tuple[float, float, float, float]
     return min_lat <= lat <= max_lat and min_lon <= lon <= max_lon
 
 
+# El rectángulo general baja hasta 27° solo por las islas atlánticas; sin estas
+# cajas específicas dejaba pasar el norte de África y Oriente Próximo (El Cairo,
+# Marrakech, Tel Aviv…), contradiciendo el mensaje de "solo Europa".
+_ATLANTIC_ISLAND_BOXES = (
+    (27.0, 29.6, -18.5, -13.0),  # Canarias
+    (32.3, 33.3, -17.6, -15.8),  # Madeira
+    (36.8, 39.9, -31.5, -24.8),  # Azores
+)
+_EUROPE_MAINLAND_MIN_LAT = 34.4  # Chipre/Creta/Malta quedan dentro; Israel/Egipto fuera
+
+
 def ensure_european_location(lat: float, lon: float) -> bool:
     """Return whether the coordinates are inside SolVento's current coverage."""
 
-    return _in_bounds(lat, lon, EUROPE_BOUNDS)
+    if not _in_bounds(lat, lon, EUROPE_BOUNDS):
+        return False
+    if lat >= _EUROPE_MAINLAND_MIN_LAT:
+        return True
+    return any(_in_bounds(lat, lon, box) for box in _ATLANTIC_ISLAND_BOXES)
 
 
 def normalize_country_code(country_code: str | None) -> str:

@@ -357,13 +357,19 @@ def test_pvgis_responses_are_cached(respx_mock, client):
     assert respx_mock.calls.call_count == calls_first
 
 
-def test_parse_bill_rejects_non_pdf(client):
+def test_parse_bill_unreadable_pdf_returns_empty_row(client):
+    # Contrato uniforme: factura ilegible → 200 con aviso, no 422
     resp = client.post(
         "/api/parse-bill",
         files={"file": ("factura.pdf", b"esto no es un pdf", "application/pdf")},
     )
-    assert resp.status_code == 422
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["kwh"] is None
+    assert data["warnings"]
 
+
+def test_parse_bill_rejects_wrong_file_type(client):
     resp = client.post(
         "/api/parse-bill",
         files={"file": ("factura.txt", b"texto", "text/plain")},
@@ -387,13 +393,13 @@ def test_parse_bill_rate_limited_per_ip(client, monkeypatch):
     from app.main import app
 
     with TestClient(app) as c:
-        # Un PDF basura da 422 de parseo, pero cada intento cuenta para el límite
+        # Un PDF ilegible da 200 con aviso, y cada intento cuenta para el límite
         for _ in range(3):
             r = c.post(
                 "/api/parse-bill",
                 files={"file": ("f.pdf", b"%PDF-1.4 basura", "application/pdf")},
             )
-            assert r.status_code == 422
+            assert r.status_code == 200
         blocked = c.post(
             "/api/parse-bill",
             files={"file": ("f.pdf", b"%PDF-1.4 basura", "application/pdf")},
@@ -828,7 +834,7 @@ def test_upload_global_cap(client, monkeypatch):
                 "/api/parse-bill",
                 files={"file": ("f.pdf", b"%PDF-1.4 x", "application/pdf")},
             )
-            assert r.status_code == 422  # parseo falla pero cuenta
+            assert r.status_code == 200  # ilegible pero cuenta para el cupo
         blocked = c.post(
             "/api/parse-bill",
             files={"file": ("f.pdf", b"%PDF-1.4 x", "application/pdf")},
