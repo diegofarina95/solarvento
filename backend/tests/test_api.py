@@ -1189,3 +1189,27 @@ def test_auto_size_power_ignored_without_consumption(respx_mock, client):
     }).json()
     # Sin consumo no hay recomendación: se respeta la potencia pedida
     assert data["analysis_power_kwp"] == 5.0
+
+
+@respx.mock
+def test_annual_bill_confidence_is_high(respx_mock, client):
+    mock_pvgis(respx_mock)
+    real = {1: 2902, 2: 2640, 3: 2210, 4: 1874, 5: 1632, 6: 1542,
+            7: 1810, 8: 1948, 9: 1765, 10: 2009, 11: 2430, 12: 2875}
+    history = [{"month": m, "kwh": k} for m, k in real.items()]
+    resp = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0,
+        "bills": [{
+            "kwh": 25637, "energy_eur": 5350.51, "total_eur": 7332.17,
+            "iee_eur": 22.5, "iva_rate": 0.21, "vat_base_eur": 6059.65,
+            "contracted_power_kw": 14.49,
+            "start_date": "2026-01-01", "end_date": "2026-12-31",
+            "consumption_history": history,
+        }],
+    })
+    assert resp.status_code == 200
+    conf = resp.json()["confidence"]
+    # Un año completo de meses reales (aunque sea 1 factura) → confianza alta
+    assert conf["level"] == "high"
+    assert conf["real_months"] == 12
+    assert conf["improvement_hints"] == []  # ya no pide "otra factura"

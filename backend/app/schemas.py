@@ -340,6 +340,7 @@ class CalculationConfidence(BaseModel):
     level: str
     bill_count: int = 0
     priced_bill_count: int = 0
+    real_months: int = 0
     pvgis_ok: bool = True
     prices_current: bool = False
     estimated_inputs: list[str] = Field(default_factory=list)

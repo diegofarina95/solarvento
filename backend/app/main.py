@@ -668,13 +668,15 @@ def _confidence_summary(
     observed_months = (
         consumption_summary.get("observed_months", []) if consumption_summary else []
     )
-    seasonal_spread = len(set(observed_months)) >= 2
+    # La confianza depende de cuántos MESES REALES de consumo se cubren, no de
+    # cuántos ficheros se suban: una sola factura anual con su detalle mensual
+    # aporta 12 meses reales. La producción (PVGIS) es fiable de por sí y los
+    # precios de mercado son orientativos; el feed de proveedores suma pero no
+    # es condición necesaria.
+    real_months = len(set(observed_months))
+    seasonal_spread = real_months >= 2
 
-    # 'Alta' es alcanzable con datos que el usuario controla: ≥2 facturas con
-    # importe repartidas en ≥2 meses. La producción (PVGIS) es fiable de por sí
-    # y los precios de mercado son orientativos en cualquier caso; el feed de
-    # proveedores suma (prices_current) pero no es condición necesaria.
-    if priced_bill_count >= 2 and seasonal_spread:
+    if real_months >= 12 or (priced_bill_count >= 2 and seasonal_spread):
         level = "high"
     elif priced_bill_count >= 1 or (
         consumption_summary is not None and price_source in {"manual", "bills"}
@@ -684,7 +686,8 @@ def _confidence_summary(
         level = "low"
 
     hints = []
-    if level != "high":
+    # Con un año completo de datos reales no tiene sentido pedir más meses.
+    if level != "high" and real_months < 12:
         if priced_bill_count == 0:
             hints.append("add_priced_bills")
         elif priced_bill_count < 2 or not seasonal_spread:
@@ -694,6 +697,7 @@ def _confidence_summary(
         "level": level,
         "bill_count": bill_count,
         "priced_bill_count": priced_bill_count,
+        "real_months": real_months,
         "pvgis_ok": True,
         "prices_current": prices_current,
         "estimated_inputs": estimated_inputs,
