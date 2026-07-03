@@ -248,6 +248,7 @@ class ConsumptionSummary(BaseModel):
     currency: str | None = None
     observed_months: list[int] = Field(default_factory=list)
     estimated_months: list[int] = Field(default_factory=list)
+    contracted_power_kw: float | None = None
     seasonality_source: str | None = None
     profile: dict | None = None
 
@@ -292,6 +293,16 @@ class BatteryAnalysis(BaseModel):
     surplus_price_eur_kwh: float
     battery_cost_per_kwh_eur: float
     battery_cost_range_eur_per_kwh: PriceRange | None = None
+
+
+class GridLimits(BaseModel):
+    """Aviso informativo cuando la potencia recomendada roza límites de red."""
+
+    contracted_power_kw: float
+    tariff_threshold_kw: float
+    recommended_power_kwp: float
+    exceeds_contracted: bool
+    exceeds_tariff: bool
 
 
 class SizingScenario(BaseModel):
@@ -388,6 +399,7 @@ class SolarEstimateResponse(BaseModel):
     annual_energy: AnnualEnergySummary
     battery_analysis: BatteryAnalysis | None = None
     sizing_analysis: SizingAnalysis | None = None
+    grid_limits: GridLimits | None = None
     typical_day: TypicalDay | None = None
     confidence: CalculationConfidence
 

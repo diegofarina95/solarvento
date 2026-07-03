@@ -325,6 +325,9 @@ export const translations = {
       forInformative: 'Informe informativo',
       forInstaller: 'Informe para instalador',
     },
+    grid: {
+      note: ({ power, contracted, threshold }) => `Aviso: la potencia recomendada más alta (${power} kWp) roza o supera tu potencia contratada (${contracted} kW) y el techo de ${threshold} kW de la tarifa 2.0TD. Puede implicar límites de inyección o un trámite de conexión distinto; consúltalo con tu instalador y distribuidora.`,
+    },
     sizing: {
       title: 'Tamaño del sistema: escenarios',
       intro: 'La cobertura del 100% no es la más rentable: vierte mucho excedente barato. El óptimo económico prioriza autoconsumo, ROI y amortización.',
@@ -697,6 +700,9 @@ export const translations = {
       download: 'Download report',
       forInformative: 'Informative report',
       forInstaller: 'Installer report',
+    },
+    grid: {
+      note: ({ power, contracted, threshold }) => `Note: the largest recommended power (${power} kWp) approaches or exceeds your contracted power (${contracted} kW) and the ${threshold} kW ceiling of the 2.0TD tariff. This can imply injection limits or a different connection procedure; check with your installer and DSO.`,
     },
     sizing: {
       title: 'System size: scenarios',
@@ -1071,6 +1077,9 @@ export const translations = {
       forInformative: 'Rapport informatif',
       forInstaller: 'Rapport pour installateur',
     },
+    grid: {
+      note: ({ power, contracted, threshold }) => `Remarque : la puissance recommandée la plus élevée (${power} kWp) approche ou dépasse votre puissance souscrite (${contracted} kW) et le plafond de ${threshold} kW du tarif 2.0TD. Cela peut impliquer des limites d’injection ou une procédure de raccordement différente ; vérifiez avec votre installateur et le gestionnaire de réseau.`,
+    },
     sizing: {
       title: 'Taille du système : scénarios',
       intro: 'La couverture à 100% n’est pas la plus rentable : elle injecte beaucoup de surplus bon marché. L’optimum économique privilégie l’autoconsommation, le ROI et le retour.',
@@ -1443,6 +1452,9 @@ export const translations = {
       download: 'Scarica il report',
       forInformative: 'Report informativo',
       forInstaller: 'Report per installatore',
+    },
+    grid: {
+      note: ({ power, contracted, threshold }) => `Nota: la potenza consigliata più alta (${power} kWp) sfiora o supera la potenza impegnata (${contracted} kW) e il tetto di ${threshold} kW della tariffa 2.0TD. Può comportare limiti di immissione o un iter di connessione diverso; verifica con l’installatore e il distributore.`,
     },
     sizing: {
       title: 'Dimensione impianto: scenari',

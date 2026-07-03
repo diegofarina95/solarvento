@@ -188,6 +188,7 @@ def test_solar_estimate_advanced_mode(respx_mock, client):
         "currency": "EUR",
         "observed_months": [],
         "estimated_months": [],
+        "contracted_power_kw": None,
         "seasonality_source": "manual_annual",
         "profile": {
             "country_code": "ES",
@@ -1244,3 +1245,39 @@ def test_sizing_economic_optimum_beats_full_coverage():
     assert opt_s["payback_years"] < cov_s["payback_years"]
     assert cov_s["annual_savings_eur"] > opt_s["annual_savings_eur"]
     assert opt_s["self_consumption_pct"] > cov_s["self_consumption_pct"]
+
+
+@respx.mock
+def test_grid_limits_note_when_recommended_exceeds_contracted(respx_mock, client):
+    mock_pvgis(respx_mock)
+    real = {1: 2902, 2: 2640, 3: 2210, 4: 1874, 5: 1632, 6: 1542,
+            7: 1810, 8: 1948, 9: 1765, 10: 2009, 11: 2430, 12: 2875}
+    history = [{"month": m, "kwh": k} for m, k in real.items()]
+    data = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0,
+        "bills": [{
+            "kwh": 25637, "energy_eur": 5350.51, "total_eur": 7332.17,
+            "contracted_power_kw": 14.49,
+            "start_date": "2026-01-01", "end_date": "2026-12-31",
+            "consumption_history": history,
+        }],
+    }).json()
+    gl = data["grid_limits"]
+    assert gl is not None
+    assert gl["contracted_power_kw"] == 14.49
+    assert gl["tariff_threshold_kw"] == 15.0
+    # La cobertura 100% (~20 kWp) supera potencia contratada y techo 2.0TD
+    assert gl["exceeds_contracted"] is True
+    assert gl["exceeds_tariff"] is True
+
+
+@respx.mock
+def test_no_grid_limits_note_for_small_system(respx_mock, client):
+    mock_pvgis(respx_mock)
+    data = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 3.0,
+        "annual_consumption_kwh": 3000, "electricity_price_eur_kwh": 0.20,
+        "auto_size_power": False,
+    }).json()
+    # Sin facturas no hay potencia contratada conocida → sin aviso
+    assert data["grid_limits"] is None

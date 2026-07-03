@@ -309,6 +309,16 @@ export default function PrintReport({ data, i18n, fmt, variant }) {
         </Section>
       )}
 
+      {data.grid_limits && (
+        <p className="pr-note">
+          {t('grid.note', {
+            power: fmt.nf2.format(data.grid_limits.recommended_power_kwp),
+            contracted: fmt.nf2.format(data.grid_limits.contracted_power_kw),
+            threshold: fmt.nf.format(data.grid_limits.tariff_threshold_kw),
+          })}
+        </p>
+      )}
+
       <footer className="pr-footer">
         <p>{t('app.professionalDisclaimer')}</p>
         <p>{t('report.dataSource')}</p>

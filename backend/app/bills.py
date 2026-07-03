@@ -1270,6 +1270,13 @@ def aggregate_bills(
     if total_kwh <= 0 or total_days <= 0:
         raise BillParseError("Las facturas no contienen consumos válidos")
 
+    contracted_powers = [
+        float(bill["contracted_power_kw"])
+        for bill in bills
+        if bill.get("contracted_power_kw")
+    ]
+    contracted_power_kw = max(contracted_powers) if contracted_powers else None
+
     # Consumo anual, por orden de fiabilidad:
     #  1) histórico mensual de la factura (determinista, no depende de qué meses
     #     se suban);
@@ -1367,6 +1374,7 @@ def aggregate_bills(
         "monthly_kwh": monthly,
         "observed_months": observed_months,
         "estimated_months": estimated_months,
+        "contracted_power_kw": contracted_power_kw,
         "seasonality_source": seasonality_source,
         "currency": currencies[0] if currencies else (default_currency or DEFAULT_CURRENCY),
     }

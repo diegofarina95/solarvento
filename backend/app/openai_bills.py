@@ -21,7 +21,8 @@ Return the schema exactly. Use null when a value is absent or uncertain.
 Rules:
 - Extract electricity consumption for the billed period in kWh. Do not use cumulative meter readings.
 - If the bill has tariff periods such as P1/P2/P3, sum the period electricity kWh.
-- Ignore gas, water, telecoms, contracted power kW, taxes expressed as percentages, and meter serials.
+- Ignore gas, water, telecoms, taxes expressed as percentages, and meter serials. Do not use the
+  contracted power (kW) as consumption, but DO report it separately in contracted_power_kw.
 - Extract the variable electricity energy charge separately from fixed charges and taxes when visible.
 - Extract the final amount to pay including taxes as total_eur and amount_eur. Field names ending
   in _eur are historical; keep numeric amounts in the bill currency.
@@ -89,6 +90,10 @@ BILL_SCHEMA: dict[str, Any] = {
         "vat_base_eur": {
             "type": ["number", "null"],
             "description": "VAT taxable base (base imponible).",
+        },
+        "contracted_power_kw": {
+            "type": ["number", "null"],
+            "description": "Contracted power in kW (potencia contratada); the higher of peak/valley.",
         },
         "consumption_history": {
             "type": ["array", "null"],
@@ -172,6 +177,7 @@ BILL_SCHEMA: dict[str, Any] = {
         "iva_eur",
         "iva_rate",
         "vat_base_eur",
+        "contracted_power_kw",
         "consumption_history",
         "total_eur",
         "currency",
@@ -343,6 +349,7 @@ def _normalize_openai_bill(parsed: dict[str, Any]) -> dict[str, Any]:
         "iva_eur": _optional_float(parsed.get("iva_eur")),
         "iva_rate": _optional_float(parsed.get("iva_rate")),
         "vat_base_eur": _optional_float(parsed.get("vat_base_eur")),
+        "contracted_power_kw": _optional_float(parsed.get("contracted_power_kw")),
         "consumption_history": _optional_history(parsed.get("consumption_history")),
         "total_eur": total,
         "currency": currency,

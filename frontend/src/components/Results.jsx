@@ -812,6 +812,16 @@ export default function Results({ data, i18n }) {
         <SizingSection analysis={data.sizing_analysis} i18n={i18n} fmt={fmt} />
       )}
 
+      {data.grid_limits && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          {t('grid.note', {
+            power: fmt.nf2.format(data.grid_limits.recommended_power_kwp),
+            contracted: fmt.nf2.format(data.grid_limits.contracted_power_kw),
+            threshold: fmt.nf.format(data.grid_limits.tariff_threshold_kw),
+          })}
+        </div>
+      )}
+
       {data.battery_analysis && (
         <BatterySection analysis={data.battery_analysis} i18n={i18n} pricing={pricing} fmt={fmt} />
       )}

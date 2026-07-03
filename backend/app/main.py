@@ -315,6 +315,7 @@ def _merge_bill_context(target: dict, source: dict | None) -> None:
         "iva_eur",
         "iva_rate",
         "vat_base_eur",
+        "contracted_power_kw",
         "consumption_history",
         "total_eur",
         "currency",
@@ -463,6 +464,7 @@ def _resolve_consumption(
             "currency": agg["currency"],
             "observed_months": agg["observed_months"],
             "estimated_months": agg["estimated_months"],
+            "contracted_power_kw": agg["contracted_power_kw"],
             "seasonality_source": agg["seasonality_source"],
             "profile": _profile_summary(req, country_code),
         }
@@ -1241,6 +1243,28 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         analysis_power_kwp=analysis_power_kwp,
     )
 
+    # Aviso informativo de límites de red: recomendar un inversor que roza o
+    # supera la potencia contratada o el techo de la tarifa 2.0TD (15 kW) tiene
+    # consecuencias (límites de inyección, tipo de trámite de conexión).
+    grid_limits = None
+    contracted_power_kw = (consumption_summary or {}).get("contracted_power_kw")
+    if contracted_power_kw:
+        TARIFF_THRESHOLD_KW = 15.0  # techo de la tarifa 2.0TD
+        candidate_powers = [analysis_power_kwp]
+        if sizing_analysis:
+            candidate_powers.append(sizing_analysis["max_savings_kwp"])
+        if panels:
+            candidate_powers.append(panels["total_kwp"])
+        recommended_power = max(candidate_powers)
+        if recommended_power >= contracted_power_kw or recommended_power >= 0.9 * TARIFF_THRESHOLD_KW:
+            grid_limits = {
+                "contracted_power_kw": contracted_power_kw,
+                "tariff_threshold_kw": TARIFF_THRESHOLD_KW,
+                "recommended_power_kwp": round(recommended_power, 2),
+                "exceeds_contracted": recommended_power > contracted_power_kw,
+                "exceeds_tariff": recommended_power > TARIFF_THRESHOLD_KW,
+            }
+
     return SolarEstimateResponse(
         lat=round(req.lat, 2),
         lon=round(req.lon, 2),
@@ -1268,6 +1292,7 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         annual_energy=annual_energy,
         battery_analysis=battery_analysis,
         sizing_analysis=sizing_analysis,
+        grid_limits=grid_limits,
         typical_day=typical_day,
         confidence=_confidence_summary(consumption_summary, price_source, price_quote),
     )
