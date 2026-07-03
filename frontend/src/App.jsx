@@ -214,6 +214,10 @@ export default function App() {
           vat_base_eur: b.vat_base_eur ?? null,
           // Histórico mensual del parser: fuente determinista del consumo anual
           consumption_history: b.consumptionHistory ?? null,
+          // Split por periodo y precios €/kWh: reconciliación del total y
+          // valoración de la batería al precio de valle que desplaza.
+          consumption_periods: b.consumptionPeriods ?? null,
+          consumption_period_prices: b.consumptionPeriodPrices ?? null,
         }))
       }
       if (advanced) {

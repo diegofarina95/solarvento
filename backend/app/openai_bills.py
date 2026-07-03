@@ -28,6 +28,9 @@ Rules:
 - Also report the per-period split in consumption_periods: {punta (P1), llano (P2), valle (P3)} in kWh,
   so the app can reconcile the total and value battery time-shift at the right tariff period. Use null
   for periods the bill does not show. Numbers use Spanish format: "13.800" = 13800, "2.086,92" = 2086.92.
+- Report the per-period ENERGY UNIT PRICE in consumption_period_prices: {punta, llano, valle} in
+  currency per kWh (e.g. valle ≈ 0.112). These value the battery at the (cheaper) valle price it
+  actually displaces. Use null for periods without a shown unit price.
 - Ignore gas, water, telecoms, taxes expressed as percentages, and meter serials. Do not use the
   contracted power (kW) as consumption, but DO report it separately in contracted_power_kw.
 - Extract the variable electricity energy charge separately from fixed charges and taxes when visible.
@@ -132,6 +135,17 @@ BILL_SCHEMA: dict[str, Any] = {
             "required": ["punta", "llano", "valle"],
             "additionalProperties": False,
         },
+        "consumption_period_prices": {
+            "type": ["object", "null"],
+            "description": "Per-tariff-period energy unit price in currency/kWh (P1/P2/P3).",
+            "properties": {
+                "punta": {"type": ["number", "null"], "description": "P1 (punta) €/kWh."},
+                "llano": {"type": ["number", "null"], "description": "P2 (llano) €/kWh."},
+                "valle": {"type": ["number", "null"], "description": "P3 (valle) €/kWh."},
+            },
+            "required": ["punta", "llano", "valle"],
+            "additionalProperties": False,
+        },
         "total_eur": {
             "type": ["number", "null"],
             "description": "Final bill amount including taxes, numeric value in the invoice currency.",
@@ -200,6 +214,7 @@ BILL_SCHEMA: dict[str, Any] = {
         "contracted_power_kw",
         "consumption_history",
         "consumption_periods",
+        "consumption_period_prices",
         "total_eur",
         "currency",
         "month",
@@ -391,6 +406,9 @@ def _normalize_openai_bill(parsed: dict[str, Any]) -> dict[str, Any]:
         "contracted_power_kw": _optional_float(parsed.get("contracted_power_kw")),
         "consumption_history": _optional_history(parsed.get("consumption_history")),
         "consumption_periods": periods or None,
+        "consumption_period_prices": _optional_period_prices(
+            parsed.get("consumption_period_prices")
+        ) or None,
         "total_eur": total,
         "currency": currency,
         "month": month,
@@ -431,6 +449,18 @@ def _optional_periods(value: Any) -> dict[str, float]:
         if kwh is not None and 0 < kwh <= MAX_BILL_KWH:
             periods[key] = kwh
     return periods
+
+
+def _optional_period_prices(value: Any) -> dict[str, float]:
+    """Normaliza el precio €/kWh por periodo del parser IA (0 < precio <= 10)."""
+    if not isinstance(value, dict):
+        return {}
+    prices: dict[str, float] = {}
+    for key in ("punta", "llano", "valle"):
+        price = _optional_float(value.get(key))
+        if price is not None and 0 < price <= 10:
+            prices[key] = price
+    return prices
 
 
 def _optional_history(value: Any) -> list[dict[str, float]]:

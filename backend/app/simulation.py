@@ -123,9 +123,24 @@ def annual_savings_with_surplus(
     price_eur_kwh: float,
     surplus_price_eur_kwh: float,
     export_scheme: str = "capped_compensation",
+    battery_discharge_price_eur_kwh: float | None = None,
 ) -> float:
-    """Ahorro anual: autoconsumo a precio de compra + excedentes según el país."""
-    self_consumed_value = (balance["direct_kwh"] + balance["battery_kwh"]) * price_eur_kwh
+    """Ahorro anual: autoconsumo a precio de compra + excedentes según el país.
+
+    La energía servida por la batería se valora a su propio precio cuando se
+    indica: en un perfil nocturno (2.0TD valle-dominante) la batería desplaza
+    consumo de VALLE, más barato que el precio medio, así que valorarla a plano
+    sobreestima su ahorro. El consumo directo (diurno, punta/llano) sigue al
+    precio medio. Por defecto usa el precio medio (sin cambio de comportamiento).
+    """
+    battery_price = (
+        battery_discharge_price_eur_kwh
+        if battery_discharge_price_eur_kwh is not None
+        else price_eur_kwh
+    )
+    self_consumed_value = (
+        balance["direct_kwh"] * price_eur_kwh + balance["battery_kwh"] * battery_price
+    )
     annual_spend = balance["consumption_kwh"] * price_eur_kwh
 
     if export_scheme == "net_metering":
@@ -143,12 +158,12 @@ def annual_savings_with_surplus(
     # capped_compensation (default): tope mensual al coste de lo importado
     savings = 0.0
     for month in balance["monthly"]:
-        self_consumed = month["direct"] + month["battery"]
+        self_consumed_value_m = month["direct"] * price_eur_kwh + month["battery"] * battery_price
         compensation = min(
             month["exported"] * surplus_price_eur_kwh,
             month["imported"] * price_eur_kwh,
         )
-        savings += self_consumed * price_eur_kwh + compensation
+        savings += self_consumed_value_m + compensation
     return round(min(savings, annual_spend), 2)
 
 
@@ -161,6 +176,7 @@ def battery_scenarios(
     system_cost_eur: float,
     battery_cost_eur_kwh: float,
     export_scheme: str = "capped_compensation",
+    battery_discharge_price_eur_kwh: float | None = None,
 ) -> list[dict]:
     """Compara escenarios de batería (0 = sin batería incluida si se pasa).
 
@@ -180,7 +196,11 @@ def battery_scenarios(
     for capacity in capacities_kwh:
         balance = simulate_self_consumption(production, consumption, capacity)
         savings = annual_savings_with_surplus(
-            balance, price_eur_kwh, surplus_price_eur_kwh, export_scheme
+            balance,
+            price_eur_kwh,
+            surplus_price_eur_kwh,
+            export_scheme,
+            battery_discharge_price_eur_kwh,
         )
         investment = system_cost_eur + capacity * _unit_cost(capacity)
         scenario = {

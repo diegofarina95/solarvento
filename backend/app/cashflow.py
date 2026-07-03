@@ -47,11 +47,15 @@ def simulated_yearly_savings(
     panel_degradation: float = PANEL_DEGRADATION_PER_YEAR,
     battery_degradation: float = BATTERY_DEGRADATION_PER_YEAR,
     price_escalation: float = PRICE_ESCALATION_PER_YEAR,
+    battery_discharge_price_eur_kwh: float | None = None,
 ) -> list[float]:
     """Ahorro anual re-simulando cada año con paneles y batería envejecidos.
 
     El precio del excedente solo escala en esquemas ligados al precio
-    minorista; las tarifas de inyección reguladas (feed_in) quedan fijas.
+    minorista; las tarifas de inyección reguladas (feed_in) quedan fijas. La
+    energía servida por la batería se valora a su precio de periodo (valle) si
+    se indica, escalando igual que el precio minorista, para que el payback
+    plurianual sea coherente con el ahorro del año 1.
     """
     surplus_escalates = export_scheme != "feed_in"
     savings = []
@@ -65,8 +69,15 @@ def simulated_yearly_savings(
         escalation = (1 + price_escalation) ** y
         price_y = price_eur_kwh * escalation
         surplus_y = surplus_price_eur_kwh * (escalation if surplus_escalates else 1.0)
+        battery_price_y = (
+            battery_discharge_price_eur_kwh * escalation
+            if battery_discharge_price_eur_kwh is not None
+            else None
+        )
         savings.append(
-            annual_savings_with_surplus(balance, price_y, surplus_y, export_scheme)
+            annual_savings_with_surplus(
+                balance, price_y, surplus_y, export_scheme, battery_price_y
+            )
         )
     return savings
 

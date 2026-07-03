@@ -104,6 +104,8 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         iva_rate: parsed.iva_rate ?? null,
         vat_base_eur: parsed.vat_base_eur ?? null,
         consumptionHistory: parsed.consumption_history ?? null,
+        consumptionPeriods: parsed.consumption_periods ?? null,
+        consumptionPeriodPrices: parsed.consumption_period_prices ?? null,
       }))
       if (parsed.needs_review && parsed.review_reasons?.length) {
         // Guarda de reconciliación/precio efectivo: el consumo detectado es

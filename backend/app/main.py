@@ -329,6 +329,7 @@ def _merge_bill_context(target: dict, source: dict | None) -> None:
         "contracted_power_kw",
         "consumption_history",
         "consumption_periods",
+        "consumption_period_prices",
         "total_eur",
         "currency",
         "month",
@@ -545,6 +546,7 @@ def _resolve_consumption(
             "avg_price_kwh": agg["avg_price_kwh"],
             "marginal_price_eur_kwh": agg["marginal_price_eur_kwh"],
             "marginal_price_factor": agg["marginal_price_factor"],
+            "valle_price_eur_kwh": agg["valle_price_eur_kwh"],
             "tax_rates_source": agg["tax_rates_source"],
             "bill_count": agg["bill_count"],
             "priced_bill_count": agg["priced_bill_count"],
@@ -1124,6 +1126,18 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
     else:
         marginal_price_factor = 1.0
     effective_price = round(price * marginal_price_factor, 4)
+    # Precio marginal evitado del periodo valle (energía valle × factor fiscal),
+    # con el que se valora la energía servida por la batería: desplaza consumo
+    # nocturno de valle, más barato que el precio medio. None si la factura no
+    # trae el precio por periodo → la batería se valora al precio medio (sin cambio).
+    valle_price = (consumption_summary or {}).get("valle_price_eur_kwh") if (
+        price_source == "bills"
+    ) else None
+    battery_discharge_price = (
+        round(valle_price * marginal_price_factor, 4)
+        if valle_price and valle_price > 0
+        else None
+    )
     _attach_consumption_costs(consumption_summary, effective_price)
     surplus_price = (
         req.surplus_price_eur_kwh
@@ -1285,6 +1299,7 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
             cost,
             battery_unit_costs,
             export_scheme=export_scheme,
+            battery_discharge_price_eur_kwh=battery_discharge_price,
         )
         _attach_battery_cost_ranges(
             scenarios,
@@ -1301,10 +1316,10 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
                 effective_price,
                 effective_surplus,
                 export_scheme,
+                battery_discharge_price_eur_kwh=battery_discharge_price,
             )
             for s in scenarios
         }
-        base_yearly = scenario_yearly[0.0]
         base_analysis = None
         for s in scenarios:
             analysis = cashflow.cashflow_analysis(

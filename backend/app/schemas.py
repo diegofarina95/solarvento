@@ -22,6 +22,14 @@ class ConsumptionPeriods(BaseModel):
     valle: float | None = Field(None, ge=0, le=60000)
 
 
+class PeriodPrices(BaseModel):
+    """Precio de energía €/kWh por periodo horario (para valorar la batería)."""
+
+    punta: float | None = Field(None, ge=0, le=10)
+    llano: float | None = Field(None, ge=0, le=10)
+    valle: float | None = Field(None, ge=0, le=10)
+
+
 class BillInput(BaseModel):
     """Una factura de la luz: consumo y, opcionalmente, importe y periodo."""
 
@@ -74,6 +82,9 @@ class BillInput(BaseModel):
     )
     consumption_periods: ConsumptionPeriods | None = Field(
         None, description="Consumo por periodo horario (P1/P2/P3), para valorar la batería."
+    )
+    consumption_period_prices: PeriodPrices | None = Field(
+        None, description="Precio €/kWh por periodo; la batería se valora al precio de valle."
     )
     currency: str | None = Field(None, min_length=3, max_length=3)
     # Alias histórico. Se conserva para clientes antiguos, pero el precio
@@ -491,6 +502,7 @@ class ParsedBill(BaseModel):
     contracted_power_kw: float | None = None
     consumption_history: list[BillHistoryEntry] = []
     consumption_periods: ConsumptionPeriods | None = None
+    consumption_period_prices: PeriodPrices | None = None
     needs_review: bool = False
     review_reasons: list[str] = []
     currency: str | None = None

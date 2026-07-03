@@ -379,10 +379,13 @@ def _parse_period_table(text: str) -> dict | None:
     tomando como kWh el número seguido de 'kWh' o, si no lo hay, el primer número
     de la fila (el precio €/kWh y el importe € quedan descartados por el rango).
 
-    Devuelve {'periods': {punta,llano,valle}, 'total_kwh': suma} o None si no hay
-    al menos dos filas de periodo (una sola fila no es una tabla fiable).
+    Devuelve {'periods': {punta,llano,valle}, 'total_kwh': suma, 'prices':
+    {punta,llano,valle} €/kWh} o None si no hay al menos dos filas de periodo
+    (una sola fila no es una tabla fiable). 'prices' permite valorar la batería
+    al precio del periodo que desplaza (valle), sin inventar cifras.
     """
     periods: dict[str, float] = {}
+    prices: dict[str, float] = {}
     raw_total = 0.0
     seen = 0
     for line in _clean_lines(text):
@@ -398,14 +401,28 @@ def _parse_period_table(text: str) -> dict | None:
             value = _to_float(numbers[0]) if numbers else None
         if value is None or not (1 <= value <= MAX_BILL_KWH):
             continue
+        # Precio €/kWh del periodo: el número pegado a '/kWh', o el primer número
+        # de la fila con pinta de precio unitario (0 < x < 2, distinto del kWh).
+        price = None
+        pmatch = re.search(rf"{_NUM}\s*(?:€|EUR)?\s*/\s*kWh", rest, re.IGNORECASE)
+        if pmatch:
+            price = _to_float(pmatch.group(1))
+        else:
+            for token in re.findall(_NUM, rest):
+                candidate = _to_float(token)
+                if candidate != value and 0 < candidate < 2:
+                    price = candidate
+                    break
         raw_total += value
         seen += 1
         canonical = _PERIOD_CANONICAL.get(match.group(1).lower().replace(" ", ""))
         if canonical and canonical not in periods:
             periods[canonical] = value
+            if price is not None:
+                prices[canonical] = price
     if seen < 2:
         return None
-    return {"periods": periods, "total_kwh": round(raw_total, 1)}
+    return {"periods": periods, "total_kwh": round(raw_total, 1), "prices": prices or None}
 
 
 def _effective_price_bounds(currency: str | None) -> tuple[float, float]:
@@ -945,6 +962,7 @@ def parse_bill_text(text: str) -> dict:
         "contracted_power_kw": None,
         "consumption_history": [],
         "consumption_periods": None,
+        "consumption_period_prices": None,
         "needs_review": False,
         "review_reasons": [],
         "currency": _detect_currency(text),
@@ -1000,6 +1018,7 @@ def parse_bill_text(text: str) -> dict:
     period_table = _parse_period_table(text)
     if period_table:
         result["consumption_periods"] = period_table["periods"] or None
+        result["consumption_period_prices"] = period_table["prices"]
 
     # --- kWh: consumo del periodo > diferencia de lecturas > kWh no acumulados ---
     period_candidates = _period_consumption_candidates(text)
@@ -1556,6 +1575,20 @@ def aggregate_bills(
             elif total_amount_days > 0:
                 annual_amount = round(total_bill_amount / total_amount_days * 365.25, 1)
 
+    # Precio de energía del periodo valle (pre-impuestos), ponderado por kWh de
+    # valle entre facturas: sirve para valorar la batería, que desplaza consumo
+    # nocturno (valle), no punta. None si ninguna factura trae el precio por periodo.
+    valle_num = valle_den = 0.0
+    for bill in bills:
+        prices = bill.get("consumption_period_prices") or {}
+        periods = bill.get("consumption_periods") or {}
+        valle_price = prices.get("valle") if isinstance(prices, dict) else None
+        if valle_price and valle_price > 0:
+            weight = (periods.get("valle") if isinstance(periods, dict) else None) or 1.0
+            valle_num += valle_price * weight
+            valle_den += weight
+    valle_price_eur_kwh = round(valle_num / valle_den, 4) if valle_den > 0 else None
+
     # Fuente única de consumo: el mismo annual_kwh alimenta precio y dimensionado.
     # Si el importe/precio implica un consumo muy distinto, algo se detectó mal.
     currency_out = currencies[0] if currencies else (default_currency or DEFAULT_CURRENCY)
@@ -1573,6 +1606,7 @@ def aggregate_bills(
         "annual_kwh": round(annual_kwh, 1),
         "needs_review": bool(agg_review),
         "review_reasons": agg_review,
+        "valle_price_eur_kwh": valle_price_eur_kwh,
         "avg_price_eur_kwh": price,
         "avg_price_kwh": price,
         "marginal_price_eur_kwh": marginal_price,
