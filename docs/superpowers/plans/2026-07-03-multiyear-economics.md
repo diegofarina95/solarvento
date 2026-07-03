@@ -34,7 +34,7 @@
   - `cashflow_analysis(yearly_savings: list[float], *, investment_eur: float, subsidy_eur=0.0, om_eur_per_year=0.0, replacements: dict[int, float] | None = None, discount_rate=0.03, headline_years=25) -> dict` con claves `payback_years`, `net_investment_eur`, `savings_headline_eur`, `npv_eur`, `irr_pct`, `cumulative` (lista `{year, net_eur, cumulative_eur}`), `assumptions` (dict).
   - Constantes: `HORIZON_YEARS=30`, `HEADLINE_YEARS=25`, `PANEL_DEGRADATION_PER_YEAR=0.005`, `PRICE_ESCALATION_PER_YEAR=0.02`, `BATTERY_DEGRADATION_PER_YEAR=0.02`, `OM_PCT_PER_YEAR=0.01`, `INVERTER_REPLACEMENT_YEAR=13`, `DISCOUNT_RATE=0.03`.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 Crear `backend/tests/test_cashflow.py`:
 
@@ -147,12 +147,12 @@ def test_assumptions_reflect_inputs():
     assert a["horizon_years"] == 30
 ```
 
-- [ ] **Step 2: Comprobar que fallan**
+- [x] **Step 2: Comprobar que fallan**
 
 Run: `cd backend && .venv/bin/python -m pytest tests/test_cashflow.py -v`
 Expected: FAIL / ERROR con `ModuleNotFoundError: app.cashflow` o `ImportError`.
 
-- [ ] **Step 3: Implementar `backend/app/cashflow.py`**
+- [x] **Step 3: Implementar `backend/app/cashflow.py`**
 
 ```python
 """Flujo de caja plurianual de la instalación.
@@ -339,12 +339,12 @@ def _irr(net_investment: float, flows: list[float]) -> float | None:
 
 Nota: `simulated_yearly_savings` y `marginal_battery_payback` se testean en la Task 2; se incluyen ya para no editar el módulo dos veces.
 
-- [ ] **Step 4: Comprobar que pasan**
+- [x] **Step 4: Comprobar que pasan**
 
 Run: `cd backend && .venv/bin/python -m pytest tests/test_cashflow.py -v`
 Expected: PASS (12 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/cashflow.py backend/tests/test_cashflow.py
@@ -365,7 +365,7 @@ git commit -m "Motor de flujo de caja plurianual: payback real, VAN, TIR y curva
   - `simulated_yearly_savings(production: list[list[float]], consumption: list[list[float]], battery_kwh: float, price_eur_kwh: float, surplus_price_eur_kwh: float, export_scheme: str, *, years=30, ...) -> list[float]`
   - `marginal_battery_payback(yearly_savings: list[float], base_yearly_savings: list[float], extra_cost_eur: float) -> float | None`
 
-- [ ] **Step 1: Añadir los tests**
+- [x] **Step 1: Añadir los tests**
 
 Añadir al final de `backend/tests/test_cashflow.py`:
 
@@ -461,12 +461,12 @@ def test_marginal_battery_payback_none_cases():
     assert cashflow.marginal_battery_payback([200.0] * 30, [100.0] * 30, 0.0) is None
 ```
 
-- [ ] **Step 2: Ejecutar los tests**
+- [x] **Step 2: Ejecutar los tests**
 
 Run: `cd backend && .venv/bin/python -m pytest tests/test_cashflow.py -v`
 Expected: PASS (la implementación existe desde Task 1; si algo falla, corregir `cashflow.py`).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add backend/tests/test_cashflow.py
@@ -487,7 +487,7 @@ git commit -m "Tests del ahorro re-simulado por año y del payback marginal de b
 - Consumes: `DEFAULT_PRICING_BY_COUNTRY` (existente).
 - Produces: `ELECTRICITY_TAX_FACTOR_BY_COUNTRY: dict[str, float]` en `default_prices.py`; campo `electricity_tax_factor: float` en el quote de `_build_quote` y en `PricingSummary` (default 1.0).
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 Añadir a `backend/tests/test_pricing.py` (seguir el estilo de los tests existentes del quote; si construyen el quote vía `PricingService` o `_build_quote`, replicarlo):
 
@@ -515,12 +515,12 @@ def test_quote_includes_electricity_tax_factor():
 
 (Si `test_pricing.py` no importa `pytest`, añadir el import al principio.)
 
-- [ ] **Step 2: Comprobar que falla**
+- [x] **Step 2: Comprobar que falla**
 
 Run: `cd backend && .venv/bin/python -m pytest tests/test_pricing.py -v -k tax_factor`
 Expected: FAIL con ImportError/KeyError.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 En `backend/app/pricing/default_prices.py`, añadir tras `DEFAULT_PRICING_BY_COUNTRY`:
 
@@ -558,12 +558,12 @@ En `backend/app/schemas.py`, en `PricingSummary` (junto a `export_scheme`):
     electricity_tax_factor: float = 1.0
 ```
 
-- [ ] **Step 4: Comprobar que pasa y que nada se rompe**
+- [x] **Step 4: Comprobar que pasa y que nada se rompe**
 
 Run: `cd backend && .venv/bin/python -m pytest tests/test_pricing.py tests/test_api.py -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/pricing/default_prices.py backend/app/pricing/fetch_prices.py backend/app/schemas.py backend/tests/test_pricing.py
@@ -586,7 +586,7 @@ git commit -m "Factor fiscal del kWh evitado por país (impuesto eléctrico + IV
   - `Economics` ampliado: `simple_payback_years`, `savings_25yr_eur`, `npv_eur`, `irr_pct`, `subsidy_eur`, `net_investment_eur`, `effective_price_eur_kwh`, `marginal_price_factor`, `cumulative_cashflow`, `assumptions`
   - `BatteryScenario.npv_eur: float | None`
 
-- [ ] **Step 1: Editar `schemas.py`**
+- [x] **Step 1: Editar `schemas.py`**
 
 En `SolarEstimateRequest`, tras `battery_cost_per_kwh_eur`:
 
@@ -643,12 +643,12 @@ En `BatteryScenario`, tras `battery_marginal_payback_years`:
     npv_eur: float | None = None
 ```
 
-- [ ] **Step 2: Comprobar que los tests existentes siguen pasando**
+- [x] **Step 2: Comprobar que los tests existentes siguen pasando**
 
 Run: `cd backend && .venv/bin/python -m pytest tests/test_api.py -v`
 Expected: PASS (todos los campos nuevos son opcionales).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add backend/app/schemas.py
@@ -667,7 +667,7 @@ git commit -m "Schemas: subvención en la petición y economía plurianual en la
 - Consumes: `cashflow.simple_yearly_savings`, `cashflow.simulated_yearly_savings`, `cashflow.cashflow_analysis`, `cashflow.marginal_battery_payback`, constantes `OM_PCT_PER_YEAR` e `INVERTER_REPLACEMENT_YEAR`; `price_quote["electricity_tax_factor"]`; `req.subsidy_eur`.
 - Produces: respuesta con `economics` plurianual y escenarios de batería con payback plurianual.
 
-- [ ] **Step 1: Escribir los tests que fallan**
+- [x] **Step 1: Escribir los tests que fallan**
 
 Añadir a `backend/tests/test_api.py`:
 
@@ -758,12 +758,12 @@ def test_bills_price_gets_tax_factor(respx_mock, client):
 
 (Si `test_api.py` no importa `pytest`, ya lo importa — verificar en cabecera.)
 
-- [ ] **Step 2: Comprobar que fallan**
+- [x] **Step 2: Comprobar que fallan**
 
 Run: `cd backend && .venv/bin/python -m pytest tests/test_api.py -v -k "multiyear or subsidy or tax_factor"`
 Expected: FAIL (faltan campos en la respuesta).
 
-- [ ] **Step 3: Implementar en `main.py`**
+- [x] **Step 3: Implementar en `main.py`**
 
 3a. Import: en `from . import bills as bills_mod` (línea ~14) añadir `cashflow`:
 
@@ -914,12 +914,12 @@ from . import calculations, cashflow, simulation
 
 3i. En `battery_analysis` (línea ~970), el `export_scheme` ya está en variable: usar `"export_scheme": export_scheme`.
 
-- [ ] **Step 4: Ejecutar todos los tests backend**
+- [x] **Step 4: Ejecutar todos los tests backend**
 
 Run: `cd backend && .venv/bin/python -m pytest -v`
 Expected: PASS. Ojo con tests existentes que comparen `payback_years` con valores concretos: la semántica cambió; si alguno falla por eso, actualizar su aserción (comprobar que el nuevo valor es coherente, p. ej. menor que el simple con escalada 2% > degradación 0.5%).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/main.py backend/tests/test_api.py
@@ -939,7 +939,7 @@ git commit -m "Economía plurianual en /api/solar-estimate: payback real, VAN/TI
 - Consumes: `params.subsidy_eur` (Task 4/5).
 - Produces: `form.subsidy` (string) en el estado del formulario.
 
-- [ ] **Step 1: Estado y payload en `App.jsx`**
+- [x] **Step 1: Estado y payload en `App.jsx`**
 
 En el estado inicial del formulario, tras `batteryCost: '',`:
 
@@ -957,7 +957,7 @@ En `calculate()`, dentro del bloque `if (advanced)`, tras el bloque de `form.bat
         }
 ```
 
-- [ ] **Step 2: Campo en `SolarForm.jsx`**
+- [x] **Step 2: Campo en `SolarForm.jsx`**
 
 En el `<details>` de `form.economicAssumptions`, dentro del `<div className="mt-3 grid gap-3 sm:grid-cols-3">`, añadir tras el campo `batteryCost`:
 
@@ -980,7 +980,7 @@ Y tras cerrar ese `<div>` (aún dentro del `<details>`):
             <p className="mt-2 text-xs text-stone-500">{t('form.subsidyNote')}</p>
 ```
 
-- [ ] **Step 3: Traducciones (bloque `form` de cada idioma)**
+- [x] **Step 3: Traducciones (bloque `form` de cada idioma)**
 
 ```js
 // es
@@ -1005,12 +1005,12 @@ Y tras cerrar ese `<div>` (aún dentro del `<details>`):
         'Molti paesi offrono incentivi o detrazioni fiscali per l’autoconsumo (detrazioni fiscali, IVA ridotta, bandi locali…). Informati sulla tua zona e inserisci qui il valore stimato.',
 ```
 
-- [ ] **Step 4: Verificar build**
+- [x] **Step 4: Verificar build**
 
 Run: `cd frontend && npm run build`
 Expected: build sin errores.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/App.jsx frontend/src/components/SolarForm.jsx frontend/src/i18n/translations.js
@@ -1031,7 +1031,7 @@ git commit -m "Campo de subvención/deducción en el formulario avanzado"
 - Consumes: `economics.savings_25yr_eur`, `npv_eur`, `irr_pct`, `simple_payback_years`, `net_investment_eur`, `subsidy_eur`, `effective_price_eur_kwh`, `marginal_price_factor`, `cumulative_cashflow`, `assumptions` (Task 5).
 - Produces: `CashflowChart({ rows, i18n, currency })` exportada de `Charts.jsx`.
 
-- [ ] **Step 1: `CashflowChart` en `Charts.jsx`**
+- [x] **Step 1: `CashflowChart` en `Charts.jsx`**
 
 Añadir `ReferenceLine` al import de recharts y al final del archivo:
 
@@ -1072,7 +1072,7 @@ export function CashflowChart({ rows, i18n, currency }) {
 }
 ```
 
-- [ ] **Step 2: `Results.jsx`**
+- [x] **Step 2: `Results.jsx`**
 
 2a. Importar `CashflowChart` donde se importan las otras gráficas.
 
@@ -1190,7 +1190,7 @@ function FinancialDetails({ eco, i18n, fmt }) {
       )}
 ```
 
-- [ ] **Step 3: `PrintReport.jsx`**
+- [x] **Step 3: `PrintReport.jsx`**
 
 Tras la `<Section title={t('report.monthlyProduction')}>` (o tras la sección de batería), añadir para ambas variantes:
 
@@ -1242,7 +1242,7 @@ Tras la `<Section title={t('report.monthlyProduction')}>` (o tras la sección de
       )}
 ```
 
-- [ ] **Step 4: Traducciones**
+- [x] **Step 4: Traducciones**
 
 Bloque `results` (cada idioma):
 
@@ -1357,12 +1357,12 @@ Bloque `charts` (cada idioma):
       yearShort: 'a{value}',
 ```
 
-- [ ] **Step 5: Build y e2e**
+- [x] **Step 5: Build y e2e**
 
 Run: `cd frontend && npm run build && npx playwright test`
 Expected: build OK; e2e PASS (si el spec e2e asserta textos de payback antiguos, actualizarlos con el nuevo copy).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/components/Charts.jsx frontend/src/components/Results.jsx frontend/src/components/PrintReport.jsx frontend/src/i18n/translations.js
@@ -1375,17 +1375,17 @@ git commit -m "Resultados plurianuales: ahorro a 25 años, supuestos, VAN/TIR y 
 
 **Files:** ninguno nuevo.
 
-- [ ] **Step 1: Suite backend completa**
+- [x] **Step 1: Suite backend completa**
 
 Run: `cd backend && .venv/bin/python -m pytest -v`
 Expected: PASS.
 
-- [ ] **Step 2: Build frontend + e2e**
+- [x] **Step 2: Build frontend + e2e**
 
 Run: `cd frontend && npm run build && npx playwright test`
 Expected: PASS.
 
-- [ ] **Step 3: Prueba manual del endpoint**
+- [x] **Step 3: Prueba manual del endpoint**
 
 Arrancar el backend y lanzar una petición representativa; comprobar a ojo que payback plurianual < payback simple (escalada 2% > degradación 0.5% + O&M), que `cumulative_cashflow` tiene 30 filas y que el año 13 tiene un neto menor:
 
@@ -1413,6 +1413,6 @@ EOF
 
 Expected: valores coherentes y sin excepciones.
 
-- [ ] **Step 4: Recordatorio al usuario**
+- [x] **Step 4: Recordatorio al usuario**
 
 Decir a Diego que reinicie el servidor desde el panel de Taller para ver los cambios.
