@@ -1,0 +1,11 @@
+{
+  "provider": "A Estrada (sintético, valle-dominante)",
+  "expected_outcome": "compute",
+  "annual_consumption_kwh": 13800,
+  "period_split": {"punta": 2150, "llano": 2820, "valle": 8830},
+  "contracted_power_kw": 6.9,
+  "tariff": "2.0TD",
+  "billing_period": {"start": "2026-01-01", "end": "2026-12-31"},
+  "supply_address": {"cp": "36680", "municipio": "A Estrada"},
+  "effective_price_eur_kwh": 0.219
+}

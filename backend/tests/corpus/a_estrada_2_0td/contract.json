@@ -1,0 +1,30 @@
+{
+  "annual_consumption_kwh": {"raw_text": "2.150", "value": null, "source_label": "Consumo destacado (P1)", "confidence": 0.6},
+  "period_total_kwh": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+  "period_split": {
+    "p1_punta": {"raw_text": "2.150", "value": null, "source_label": "P1 Punta", "confidence": 0.9},
+    "p2_llano": {"raw_text": "2.820", "value": null, "source_label": "P2 Llano", "confidence": 0.9},
+    "p3_valle": {"raw_text": "8.830", "value": null, "source_label": "P3 Valle", "confidence": 0.9}
+  },
+  "period_split_prices": {
+    "p1_punta": {"raw_text": "0,189", "value": null, "source_label": "P1 EUR/kWh", "confidence": 0.85},
+    "p2_llano": {"raw_text": "0,151", "value": null, "source_label": "P2 EUR/kWh", "confidence": 0.85},
+    "p3_valle": {"raw_text": "0,112", "value": null, "source_label": "P3 EUR/kWh", "confidence": 0.85}
+  },
+  "monthly_history": [],
+  "contracted_power_kw": {"raw_text": "6,9", "value": null, "source_label": "Potencia contratada", "confidence": 0.95},
+  "tariff": "2.0TD",
+  "billing_period": {"start": "2026-01-01", "end": "2026-12-31"},
+  "energy_term_eur": {"raw_text": "2.086,92", "value": null, "source_label": "Término energía", "confidence": 0.9},
+  "energy_term_eur_per_kwh": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+  "total_amount_eur": {"raw_text": "3.027,14", "value": null, "source_label": "Total factura", "confidence": 0.95},
+  "electricity_tax_eur": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+  "vat_eur": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+  "vat_rate": {"raw_text": "0,21", "value": null, "source_label": "IVA %", "confidence": 0.9},
+  "currency": "EUR",
+  "country_code": "ES",
+  "language": "es",
+  "supply_address": {"street": "Rua do Muino 7", "cp": "36680", "municipio": "A Estrada", "provincia": "Pontevedra"},
+  "cups": "ES0031000000000002CD",
+  "warnings": ["La cifra destacada podría ser una sola columna de periodo."]
+}

@@ -1,0 +1,30 @@
+{
+  "annual_consumption_kwh": {"raw_text": "2.150", "value": null, "source_label": "Consumo (etiqueta ambigua)", "confidence": 0.5},
+  "period_total_kwh": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+  "period_split": {
+    "p1_punta": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+    "p2_llano": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+    "p3_valle": {"raw_text": null, "value": null, "source_label": null, "confidence": null}
+  },
+  "period_split_prices": {
+    "p1_punta": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+    "p2_llano": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+    "p3_valle": {"raw_text": null, "value": null, "source_label": null, "confidence": null}
+  },
+  "monthly_history": [],
+  "contracted_power_kw": {"raw_text": "6,9", "value": null, "source_label": "Potencia", "confidence": 0.9},
+  "tariff": "2.0TD",
+  "billing_period": {"start": "2026-01-01", "end": "2026-12-31"},
+  "energy_term_eur": {"raw_text": "2.086,92", "value": null, "source_label": "Energía", "confidence": 0.8},
+  "energy_term_eur_per_kwh": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+  "total_amount_eur": {"raw_text": "3.027,14", "value": null, "source_label": "Total", "confidence": 0.9},
+  "electricity_tax_eur": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+  "vat_eur": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+  "vat_rate": {"raw_text": "0,21", "value": null, "source_label": "IVA", "confidence": 0.9},
+  "currency": "EUR",
+  "country_code": "ES",
+  "language": "es",
+  "supply_address": {"street": null, "cp": "36680", "municipio": "A Estrada", "provincia": "Pontevedra"},
+  "cups": null,
+  "warnings": []
+}

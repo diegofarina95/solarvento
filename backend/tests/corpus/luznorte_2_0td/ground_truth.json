@@ -1,0 +1,11 @@
+{
+  "provider": "LuzNorte (sintético)",
+  "expected_outcome": "compute",
+  "annual_consumption_kwh": 6551,
+  "period_split": {"punta": 950, "llano": 1450, "valle": 4151},
+  "contracted_power_kw": 4.6,
+  "tariff": "2.0TD",
+  "billing_period": {"start": "2026-01-01", "end": "2026-12-31"},
+  "supply_address": {"cp": "15701", "municipio": "Santiago de Compostela"},
+  "effective_price_eur_kwh": 0.258
+}

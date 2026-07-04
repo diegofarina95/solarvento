@@ -1,0 +1,43 @@
+{
+  "annual_consumption_kwh": {"raw_text": "6.551", "value": null, "source_label": "Consumo facturado", "confidence": 0.95},
+  "period_total_kwh": {"raw_text": "6.551", "value": null, "source_label": "Total periodos", "confidence": 0.9},
+  "period_split": {
+    "p1_punta": {"raw_text": "950", "value": null, "source_label": "P1 Punta", "confidence": 0.95},
+    "p2_llano": {"raw_text": "1.450", "value": null, "source_label": "P2 Llano", "confidence": 0.95},
+    "p3_valle": {"raw_text": "4.151", "value": null, "source_label": "P3 Valle", "confidence": 0.95}
+  },
+  "period_split_prices": {
+    "p1_punta": {"raw_text": "0,241", "value": null, "source_label": "P1 EUR/kWh", "confidence": 0.9},
+    "p2_llano": {"raw_text": "0,205", "value": null, "source_label": "P2 EUR/kWh", "confidence": 0.9},
+    "p3_valle": {"raw_text": "0,158", "value": null, "source_label": "P3 EUR/kWh", "confidence": 0.9}
+  },
+  "monthly_history": [
+    {"month": 1, "kwh": {"raw_text": "612", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 2, "kwh": {"raw_text": "560", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 3, "kwh": {"raw_text": "545", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 4, "kwh": {"raw_text": "520", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 5, "kwh": {"raw_text": "498", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 6, "kwh": {"raw_text": "470", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 7, "kwh": {"raw_text": "455", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 8, "kwh": {"raw_text": "460", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 9, "kwh": {"raw_text": "500", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 10, "kwh": {"raw_text": "540", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 11, "kwh": {"raw_text": "600", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 12, "kwh": {"raw_text": "791", "value": null, "source_label": "Histórico", "confidence": 0.8}}
+  ],
+  "contracted_power_kw": {"raw_text": "4,6", "value": null, "source_label": "Potencia contratada", "confidence": 0.95},
+  "tariff": "2.0TD",
+  "billing_period": {"start": "2026-01-01", "end": "2026-12-31"},
+  "energy_term_eur": {"raw_text": "1.182,06", "value": null, "source_label": "Término energía", "confidence": 0.9},
+  "energy_term_eur_per_kwh": {"raw_text": "0,180", "value": null, "source_label": "Precio medio", "confidence": 0.7},
+  "total_amount_eur": {"raw_text": "1.689,65", "value": null, "source_label": "Total a pagar", "confidence": 0.95},
+  "electricity_tax_eur": {"raw_text": "86,40", "value": null, "source_label": "IEE", "confidence": 0.85},
+  "vat_eur": {"raw_text": "293,20", "value": null, "source_label": "IVA", "confidence": 0.9},
+  "vat_rate": {"raw_text": "0,21", "value": null, "source_label": "IVA %", "confidence": 0.95},
+  "currency": "EUR",
+  "country_code": "ES",
+  "language": "es",
+  "supply_address": {"street": "Rua Nova 3", "cp": "15701", "municipio": "Santiago de Compostela", "provincia": "A Coruña"},
+  "cups": "ES0031000000000001AB",
+  "warnings": []
+}
