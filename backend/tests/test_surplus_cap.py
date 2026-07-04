@@ -53,6 +53,17 @@ def test_summer_surplus_capped_no_negative_balance():
     assert capped < uncapped
 
 
+def test_summer_surplus_above_energy_term_earns_zero():
+    # El mes de máximo excedente (verano): el excedente por encima del término de
+    # energía importada de ese mes NO se paga (se capa; el exceso vale 0 €).
+    production, consumption = _low_consumption_big_system()
+    balance = simulate_self_consumption(production, consumption, 0.0)
+    m = max(balance["monthly"], key=lambda x: x["exported"])
+    assert m["exported"] * SURPLUS > m["imported"] * PRICE  # el excedente superaría el término
+    comp = min(m["exported"] * SURPLUS, m["imported"] * PRICE)
+    assert comp == m["imported"] * PRICE  # topado al término; el exceso = 0 €
+
+
 def test_capped_never_exceeds_feed_in():
     # feed_in (sin tope) siempre paga >= que capped_compensation con el mismo
     # excedente, confirmando que el tope reduce el ahorro y no al revés.

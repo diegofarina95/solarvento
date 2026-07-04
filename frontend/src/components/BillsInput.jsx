@@ -82,15 +82,19 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
       const file = fileList[index]
       if (result.status === 'rejected') {
         const err = result.reason
-        problems.push(t('errors.billParseFailed', {
+        // Se guardan datos, NO texto ya traducido: así el aviso se traduce al
+        // idioma actual en cada render (antes quedaba fijado al idioma de la
+        // importación y podía verse en inglés dentro de la app en español).
+        problems.push({
+          kind: 'billParseFailed',
           file: file.name,
           detail: err instanceof ApiError ? err.detail : null,
-        }))
+        })
         return
       }
       const parsed = result.value
       if (parsed.kwh == null) {
-        problems.push(t('errors.billNoConsumption', { file: file.name }))
+        problems.push({ kind: 'billNoConsumption', file: file.name })
       }
       added.push(newRow({
         month: parsed.month ? String(parsed.month) : inferBillMonth(parsed.start_date, parsed.end_date),
@@ -119,7 +123,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         // número seguro y equivocado).
         reviews.push({ file: file.name, reasons: parsed.review_reasons })
       } else if (parsed.warnings?.length) {
-        problems.push(t('errors.billNeedsReview', { file: file.name }))
+        problems.push({ kind: 'billNeedsReview', file: file.name })
       }
       if (parsed.lat != null && parsed.lon != null) {
         detectedLocation = parsed
@@ -150,7 +154,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
     // parseaban los PDFs, sus cambios no se sobrescriben.
     if (added.length) setBills((prev) => [...prev, ...added])
     if (detectedLocation) onLocationDetected?.(detectedLocation)
-    if (problems.length) setNotice(problems.join(' '))
+    if (problems.length) setNotice(problems)
     if (reviews.length) setReview(reviews)
     if (detectedList.length) setDetected(detectedList)
     setUploading(false)
@@ -336,7 +340,13 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
           ))}
         </div>
       )}
-      {notice && <p className="mt-2 text-xs text-amber-700">{notice}</p>}
+      {notice && notice.length > 0 && (
+        <p className="mt-2 text-xs text-amber-700">
+          {notice
+            .map((p) => t(`errors.${p.kind}`, { file: p.file, detail: p.detail }))
+            .join(' ')}
+        </p>
+      )}
     </div>
   )
 }
