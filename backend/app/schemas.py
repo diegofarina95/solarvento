@@ -188,6 +188,16 @@ class SolarEstimateRequest(BaseModel):
             "~100%) en vez de peak_power_kwp. peak_power_kwp sigue siendo la semilla."
         ),
     )
+    sizing_bias: float | None = Field(
+        None,
+        ge=0,
+        le=100,
+        description=(
+            "Sesgo del dimensionado automático 0–100: 0 = óptimo económico (máx "
+            "VAN), 100 = máximo ahorro (~100% cobertura). Interpola el tamaño entre "
+            "ambos. Requiere auto_size_power y consumo conocido."
+        ),
+    )
 
 
 class MonthlyProduction(BaseModel):

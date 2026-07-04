@@ -81,6 +81,49 @@ def mock_pvgis(respx_mock):
 
 
 @respx.mock
+def test_sizing_bias_slider_roi_to_independence(respx_mock, client):
+    # Slider ROI↔Independencia: bias 0 = óptimo económico; 100 = máximo ahorro.
+    # De 0→100 sube la autosuficiencia y empeora el payback (el tradeoff real).
+    mock_pvgis(respx_mock)
+
+    def estimate(bias):
+        resp = client.post("/api/solar-estimate", json={
+            "lat": 42.88, "lon": -8.54, "peak_power_kwp": 1.0,
+            "country_code": "ES", "annual_consumption_kwh": 6000,
+            "auto_size_power": True, "sizing_bias": bias,
+        })
+        assert resp.status_code == 200
+        return resp.json()
+
+    low, mid, high = estimate(0), estimate(50), estimate(100)
+    sa = low["sizing_analysis"]
+    # bias 0 → óptimo económico ; bias 100 → máximo ahorro.
+    assert low["recommended_system"]["kwp"] == pytest.approx(sa["economic_optimum_kwp"], abs=0.05)
+    assert high["recommended_system"]["kwp"] == pytest.approx(sa["max_savings_kwp"], abs=0.05)
+    # Monótono: más independencia = más kWp.
+    assert (low["recommended_system"]["kwp"]
+            <= mid["recommended_system"]["kwp"]
+            <= high["recommended_system"]["kwp"])
+    # El tradeoff: hacia independencia sube la autosuficiencia...
+    assert (high["recommended_system"]["self_sufficiency_pct"]
+            >= low["recommended_system"]["self_sufficiency_pct"])
+    # ...y empeora (sube) el payback.
+    assert high["recommended_system"]["payback_years"] >= low["recommended_system"]["payback_years"]
+
+
+@respx.mock
+def test_sizing_bias_ignored_without_auto_size(respx_mock, client):
+    mock_pvgis(respx_mock)
+    resp = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0,
+        "country_code": "ES", "annual_consumption_kwh": 6000, "sizing_bias": 100,
+    })
+    # Sin auto_size_power, sizing_bias no cambia la potencia semilla (5.0).
+    assert resp.status_code == 200
+    assert resp.json()["analysis_power_kwp"] == pytest.approx(5.0, abs=0.05)
+
+
+@respx.mock
 def test_solar_estimate_basic_mode(respx_mock, client):
     mock_pvgis(respx_mock)
     resp = client.post(

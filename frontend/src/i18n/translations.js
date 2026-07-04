@@ -149,6 +149,11 @@ export const translations = {
     form: {
       peakPower: 'Potencia pico (kWp)',
       autoSize: 'Dimensionar a mi consumo (recomendado)',
+      sizingRoi: 'Rentabilidad',
+      sizingIndependence: 'Independencia',
+      sizingBiasHint:
+        'Arrastra hacia la independencia para cubrir más consumo (más autosuficiencia), aunque baje la rentabilidad.',
+      sizingBiasAria: 'Equilibrio entre rentabilidad e independencia energética',
       peakPowerAutoHint: 'Se calcula para cubrir ~100% de tu consumo anual; desmárcalo para fijarla tú.',
       tilt: ({ value }) => `Inclinación del tejado: ${value}°`,
       orientation: 'Orientación',
@@ -546,6 +551,11 @@ export const translations = {
     form: {
       peakPower: 'Peak power (kWp)',
       autoSize: 'Size to my consumption (recommended)',
+      sizingRoi: 'ROI',
+      sizingIndependence: 'Independence',
+      sizingBiasHint:
+        'Slide toward independence to cover more of your usage (higher self-sufficiency), at a lower return.',
+      sizingBiasAria: 'Balance between return and energy independence',
       peakPowerAutoHint: 'Sized to cover ~100% of your annual consumption; uncheck to set it yourself.',
       tilt: ({ value }) => `Roof tilt: ${value}°`,
       orientation: 'Orientation',
@@ -943,6 +953,11 @@ export const translations = {
     form: {
       peakPower: 'Puissance crête (kWc)',
       autoSize: 'Dimensionner à ma consommation (recommandé)',
+      sizingRoi: 'Rentabilité',
+      sizingIndependence: 'Indépendance',
+      sizingBiasHint:
+        "Glissez vers l'indépendance pour couvrir plus de consommation (plus d'autosuffisance), au prix d'une rentabilité moindre.",
+      sizingBiasAria: 'Équilibre entre rentabilité et indépendance énergétique',
       peakPowerAutoHint: 'Calculée pour couvrir ~100% de votre consommation annuelle ; décochez pour la fixer.',
       tilt: ({ value }) => `Inclinaison du toit : ${value}°`,
       orientation: 'Orientation',
@@ -1340,6 +1355,11 @@ export const translations = {
     form: {
       peakPower: 'Potenza di picco (kWp)',
       autoSize: 'Dimensiona sul mio consumo (consigliato)',
+      sizingRoi: 'Redditività',
+      sizingIndependence: 'Indipendenza',
+      sizingBiasHint:
+        "Sposta verso l'indipendenza per coprire più consumo (più autosufficienza), con minore redditività.",
+      sizingBiasAria: 'Equilibrio tra redditività e indipendenza energetica',
       peakPowerAutoHint: 'Calcolata per coprire ~100% del consumo annuo; deseleziona per impostarla tu.',
       tilt: ({ value }) => `Inclinazione tetto: ${value}°`,
       orientation: 'Orientamento',

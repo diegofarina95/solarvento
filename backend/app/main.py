@@ -1198,9 +1198,16 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
                     "max_savings_kwp": max_savings_kwp,
                 }
                 # El titular por defecto es el ÓPTIMO ECONÓMICO (mejor VAN), no
-                # la cobertura del 100% (que minimiza ROI/payback).
+                # la cobertura del 100% (que minimiza ROI/payback). El slider
+                # ROI↔Independencia interpola entre el óptimo y el máximo ahorro.
                 if req.auto_size_power:
-                    analysis_power_kwp = optimum_kwp
+                    if req.sizing_bias is not None and max_savings_kwp > optimum_kwp:
+                        bias = min(100.0, max(0.0, req.sizing_bias)) / 100.0
+                        analysis_power_kwp = round(
+                            optimum_kwp + (max_savings_kwp - optimum_kwp) * bias, 2
+                        )
+                    else:
+                        analysis_power_kwp = optimum_kwp
 
     if abs(analysis_power_kwp - req.peak_power_kwp) > 1e-9:
         optimal = _scale_system(optimal, analysis_power_kwp, req.peak_power_kwp)
