@@ -194,7 +194,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
                     required
                     value={bill.kwh}
                     onChange={(e) => update(i, 'kwh', e.target.value)}
-                    placeholder="312"
+                    placeholder="kWh"
                     className={inputClass}
                     aria-label={t('bills.kwhAria', { index: i + 1 })}
                   />
@@ -215,7 +215,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
                     inputMode="decimal"
                     value={bill.energyAmount ?? ''}
                     onChange={(e) => update(i, 'energyAmount', e.target.value)}
-                    placeholder="43,06"
+                    placeholder="€"
                     className={inputClass}
                     aria-label={t('bills.energyAmountAria', { index: i + 1 })}
                   />
@@ -229,7 +229,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
                       update(i, 'totalAmount', e.target.value)
                       update(i, 'amount', e.target.value)
                     }}
-                    placeholder="71,39"
+                    placeholder="€"
                     className={inputClass}
                     aria-label={t('bills.totalAmountAria', { index: i + 1 })}
                   />

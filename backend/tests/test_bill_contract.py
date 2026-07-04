@@ -142,9 +142,26 @@ class TestContractSchemaStrict:
     def test_schema_is_strict_recursively(self):
         _assert_strict(BILL_CONTRACT_SCHEMA)
 
-    def test_numeric_fields_carry_the_envelope(self):
-        env = BILL_CONTRACT_SCHEMA["properties"]["annual_consumption_kwh"]["properties"]
-        assert set(env) == {"raw_text", "value", "source_label", "confidence"}
+    def test_numeric_fields_are_verbatim_strings(self):
+        # Los campos numéricos son STRING verbatim (la app normaliza). Sin sobre de
+        # 4 propiedades: eso disparó el esquema a 157 props > límite 100 de OpenAI.
+        field = BILL_CONTRACT_SCHEMA["properties"]["annual_consumption_kwh"]
+        assert field["type"] == ["string", "null"]
+
+    def test_schema_under_openai_property_limit(self):
+        # Guarda de regresión: structured-outputs rechaza >100 propiedades (400) y
+        # entonces NINGUNA factura se parsea. Nunca volver a pasarse.
+        def count(s):
+            n = 0
+            if isinstance(s, dict):
+                if isinstance(s.get("properties"), dict):
+                    n += len(s["properties"])
+                    for v in s["properties"].values():
+                        n += count(v)
+                if "items" in s:
+                    n += count(s["items"])
+            return n
+        assert count(BILL_CONTRACT_SCHEMA) < 100
 
 
 class TestSafeToFloat:

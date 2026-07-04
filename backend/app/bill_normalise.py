@@ -18,28 +18,38 @@ from typing import Any
 from . import bill_resolver, bills
 
 _LOW_CONFIDENCE = 0.4
-# Canónicos: P1..P3 = punta/llano/valle (perfil); P4..P6 solo para la suma total.
-_PERIOD_MAP = {
-    "p1_punta": "punta", "p2_llano": "llano", "p3_valle": "valle",
-    "p4": "p4", "p5": "p5", "p6": "p6",
-}
+# 2.0TD residencial: P1 punta / P2 llano / P3 valle.
+_PERIOD_MAP = {"p1_punta": "punta", "p2_llano": "llano", "p3_valle": "valle"}
 _PROFILE_PERIODS = ("punta", "llano", "valle")
 
 
 def _norm(field: Any) -> dict[str, Any]:
-    """Normaliza un sobre {raw_text,value,source_label,confidence} con safe_to_float."""
-    if not isinstance(field, dict):
+    """Normaliza un campo numérico con safe_to_float.
+
+    Acepta el formato actual (STRING verbatim, p. ej. "6.551") y, por
+    compatibilidad, el sobre antiguo {raw_text,value,source_label,confidence}."""
+    if field is None:
         return {"raw_text": None, "value": None, "source_label": None, "confidence": None}
-    raw = field.get("raw_text")
-    value = bills.safe_to_float(raw) if raw not in (None, "") else None
-    if value is None and isinstance(field.get("value"), (int, float)):
-        value = float(field["value"])
-    return {
-        "raw_text": raw,
-        "value": value,
-        "source_label": field.get("source_label"),
-        "confidence": field.get("confidence"),
-    }
+    if isinstance(field, (str, int, float)):
+        raw = None if field == "" else field
+        return {
+            "raw_text": raw if isinstance(raw, str) else (str(raw) if raw is not None else None),
+            "value": bills.safe_to_float(raw),
+            "source_label": None,
+            "confidence": None,
+        }
+    if isinstance(field, dict):
+        raw = field.get("raw_text")
+        value = bills.safe_to_float(raw) if raw not in (None, "") else None
+        if value is None and isinstance(field.get("value"), (int, float)):
+            value = float(field["value"])
+        return {
+            "raw_text": raw,
+            "value": value,
+            "source_label": field.get("source_label"),
+            "confidence": field.get("confidence"),
+        }
+    return {"raw_text": None, "value": None, "source_label": None, "confidence": None}
 
 
 def _val(field: Any) -> float | None:

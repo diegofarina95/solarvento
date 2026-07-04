@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,8 @@ import httpx
 
 from .bill_contract import BILL_CONTRACT_SCHEMA, EXTRACTION_SYSTEM_PROMPT
 from .bills import BillParseError
+
+logger = logging.getLogger(__name__)
 
 
 class OpenAIBillParser:
@@ -96,19 +99,31 @@ class OpenAIBillParser:
             },
         }
 
+        logger.info("bill extraction: POST /responses model=%s bytes=%d", self.model, len(content))
         try:
             response = await self._client.post("/responses", json=payload)
-            response.raise_for_status()
         except httpx.HTTPError as exc:
+            logger.warning("bill extraction: transport error: %s", exc)
             raise BillParseError("OpenAI no pudo analizar la factura") from exc
 
+        if response.status_code >= 400:
+            # Instrumentación: un 400 aquí suele ser el esquema rechazado (p. ej.
+            # demasiadas propiedades). Se registra el cuerpo para diagnóstico.
+            logger.warning(
+                "bill extraction: HTTP %s body=%s",
+                response.status_code, response.text[:800],
+            )
+            raise BillParseError("OpenAI no pudo analizar la factura")
+
         data = response.json()
+        logger.info("bill extraction: HTTP %s status=%s", response.status_code, data.get("status"))
         if data.get("status") == "incomplete":
             raise BillParseError("OpenAI devolvió un análisis incompleto de la factura")
         text = _extract_output_text(data)
         try:
             return json.loads(text)
         except json.JSONDecodeError as exc:
+            logger.warning("bill extraction: non-JSON output: %s", text[:400])
             raise BillParseError("OpenAI devolvió una respuesta no válida") from exc
 
 

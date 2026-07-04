@@ -1,0 +1,8 @@
+{
+  "provider": "Factura Enero 2026 (regresión conocida)",
+  "tags": "monthly, single-figure",
+  "expected_outcome": "compute",
+  "annual_consumption_kwh": 2902,
+  "contracted_power_kw": 5.75,
+  "tariff": "2.0TD"
+}
