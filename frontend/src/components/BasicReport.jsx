@@ -68,24 +68,26 @@ function MonthlyChart({ production, consumption, locale, t }) {
   return (
     <div className="card-solar px-4 py-3">
       <p className="mb-2 text-sm font-medium text-stone-700">{t('basic.chartTitle')}</p>
-      <div className="flex h-28 items-end gap-1">
+      <div className="flex items-end gap-1">
         {prod.map((p, i) => (
-          <div key={i} className="flex flex-1 flex-col items-center gap-0.5">
-            <div className="flex h-full w-full items-end justify-center gap-[2px]">
+          <div key={i} className="flex flex-1 flex-col items-center">
+            {/* Pista de altura FIJA (h-28 = 112px): los % de las barras resuelven
+                siempre, sin depender de alturas flex indefinidas. */}
+            <div className="flex h-28 w-full items-end justify-center gap-[2px]">
               <div
                 className="w-1/2 rounded-t bg-amber-400"
-                style={{ height: `${(p / max) * 100}%` }}
+                style={{ height: `${Math.max(2, (p / max) * 100)}%` }}
                 title={`${Math.round(p)} kWh`}
               />
               {cons && (
                 <div
                   className="w-1/2 rounded-t bg-stone-300"
-                  style={{ height: `${(cons[i] / max) * 100}%` }}
+                  style={{ height: `${Math.max(2, (cons[i] / max) * 100)}%` }}
                   title={`${Math.round(cons[i])} kWh`}
                 />
               )}
             </div>
-            <span className="text-[10px] text-stone-400">{labels[i]}</span>
+            <span className="mt-1 text-[10px] text-stone-400">{labels[i]}</span>
           </div>
         ))}
       </div>
