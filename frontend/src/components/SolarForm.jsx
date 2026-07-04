@@ -1,4 +1,20 @@
+import { useEffect, useState } from 'react'
 import BillsInput from './BillsInput'
+
+// Presets del objetivo de dimensionado (sesgo 0=rentabilidad ↔ 100=independencia).
+const BIAS_PRESETS = [
+  { key: 'presetRoi', value: 0 },
+  { key: 'presetBalanced', value: 50 },
+  { key: 'presetSavings', value: 80 },
+  { key: 'presetIndependence', value: 100 },
+]
+function biasModeKey(bias) {
+  const b = bias ?? 0
+  if (b < 25) return 'presetRoi'
+  if (b < 65) return 'presetBalanced'
+  if (b < 92) return 'presetSavings'
+  return 'presetIndependence'
+}
 
 const ORIENTATIONS = [
   { labelKey: 'orientations.south', suffix: 'S', value: 0 },
@@ -42,6 +58,20 @@ export default function SolarForm({
   const hasConsumption = hasBills || Boolean(String(form.consumption || '').trim())
   const autoSizing = Boolean(form.autoSize) && hasConsumption
 
+  // Un preset actualiza el sesgo y recalcula en el SIGUIENTE render (no en el
+  // mismo handler), para que onSubmit lea el valor nuevo y no el anterior.
+  const [pendingSubmit, setPendingSubmit] = useState(false)
+  useEffect(() => {
+    if (pendingSubmit) {
+      setPendingSubmit(false)
+      onSubmit()
+    }
+  }, [pendingSubmit, onSubmit])
+  function applyBias(value) {
+    setForm({ ...form, sizingBias: value })
+    setPendingSubmit(true)
+  }
+
   return (
     <form
       onSubmit={(e) => {
@@ -80,8 +110,8 @@ export default function SolarForm({
       {autoSizing && (
         <div className="rounded-lg border border-stone-200 bg-white px-3 py-2.5">
           <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-stone-600">
-            <span>💰 {t('form.sizingRoi')}</span>
-            <span>{t('form.sizingIndependence')} 🏡</span>
+            <span>{t('form.sizingRoi')}</span>
+            <span>{t('form.sizingIndependence')}</span>
           </div>
           <input
             type="range"
@@ -92,11 +122,34 @@ export default function SolarForm({
             onChange={(e) => setForm({ ...form, sizingBias: Number(e.target.value) })}
             onMouseUp={() => onSubmit()}
             onTouchEnd={() => onSubmit()}
-            onKeyUp={(e) => { if (e.key.startsWith('Arrow')) onSubmit() }}
+            onKeyUp={(e) => {
+              if (e.key.startsWith('Arrow')) onSubmit()
+            }}
             className="w-full accent-amber-500"
             aria-label={t('form.sizingBiasAria')}
           />
-          <p className="mt-1 text-[11px] text-stone-500">{t('form.sizingBiasHint')}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {BIAS_PRESETS.map((p) => {
+              const active = biasModeKey(form.sizingBias) === p.key
+              return (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => applyBias(p.value)}
+                  className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition ${
+                    active
+                      ? 'border-amber-500 bg-amber-50 text-amber-800'
+                      : 'border-stone-300 text-stone-600 hover:border-amber-400'
+                  }`}
+                >
+                  {t(`form.${p.key}`)}
+                </button>
+              )
+            })}
+          </div>
+          <p className="mt-1.5 text-[11px] text-stone-500">
+            {t('form.sizingModeLabel', { mode: t(`form.${biasModeKey(form.sizingBias)}`) })}
+          </p>
         </div>
       )}
 
