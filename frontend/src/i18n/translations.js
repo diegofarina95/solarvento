@@ -38,8 +38,8 @@ export const translations = {
     },
     app: {
       subtitle: 'Calcula la producción, ahorro y amortización de tu instalación solar con PVGIS y precios orientativos por país.',
-      europeNotice: 'SolVento actualmente cubre estimaciones para Europa.',
-      disclaimer: 'Actualmente SolVento ofrece estimaciones para países europeos cubiertos por PVGIS, con precios internos por país y referencias de proveedores cuando están disponibles. Los precios son orientativos y pueden variar según instalador, disponibilidad, impuestos y subvenciones locales.',
+      europeNotice: 'Por ahora SolVento solo cubre España.',
+      disclaimer: 'Fuera de España las estimaciones de producción funcionan, pero los costes de paneles e instalación aún no están verificados para el resto de Europa: tómalos como orientativos. Los precios pueden variar según instalador, disponibilidad, impuestos y subvenciones locales.',
       professionalDisclaimer: 'Estos resultados son estimaciones orientativas. No sustituyen un estudio técnico profesional ni una oferta vinculante de un instalador.',
       language: 'Idioma',
       locationSection: '1 · Ubicación',
@@ -482,8 +482,8 @@ export const translations = {
     },
     app: {
       subtitle: 'Estimate solar production, savings and payback with PVGIS and country-specific indicative prices.',
-      europeNotice: 'SolVento currently covers estimates for Europe.',
-      disclaimer: 'SolVento currently provides estimates for European countries covered by PVGIS, with internal country pricing and supplier references where available. Prices are indicative and may vary by installer, availability, taxes and local grants.',
+      europeNotice: 'For now, SolVento only covers Spain.',
+      disclaimer: 'Outside Spain the production estimates work, but panel and installation costs are not yet verified for the rest of Europe: treat them as indicative. Prices may vary by installer, availability, taxes and local grants.',
       professionalDisclaimer: 'These results are indicative estimates. They do not replace a professional technical survey or a binding installer quote.',
       language: 'Language',
       locationSection: '1 · Location',
@@ -926,8 +926,8 @@ export const translations = {
     },
     app: {
       subtitle: 'Estimez la production solaire, les économies et le retour sur investissement avec PVGIS et des prix indicatifs par pays.',
-      europeNotice: 'SolVento couvre actuellement les estimations pour l’Europe.',
-      disclaimer: 'SolVento fournit actuellement des estimations pour les pays européens couverts par PVGIS, avec des prix internes par pays et des références fournisseurs lorsque disponibles. Les prix sont indicatifs et peuvent varier selon l’installateur, la disponibilité, les taxes et les aides locales.',
+      europeNotice: 'Pour l’instant, SolVento ne couvre que l’Espagne.',
+      disclaimer: 'Hors d’Espagne, les estimations de production fonctionnent, mais les coûts des panneaux et de l’installation ne sont pas encore vérifiés pour le reste de l’Europe : considérez-les comme indicatifs. Les prix peuvent varier selon l’installateur, la disponibilité, les taxes et les aides locales.',
       professionalDisclaimer: 'Ces résultats sont des estimations indicatives. Ils ne remplacent pas une étude technique professionnelle ni une offre ferme d’un installateur.',
       language: 'Langue',
       locationSection: '1 · Emplacement',
@@ -1370,8 +1370,8 @@ export const translations = {
     },
     app: {
       subtitle: 'Stima produzione solare, risparmio e ammortamento con PVGIS e prezzi indicativi per paese.',
-      europeNotice: 'SolVento attualmente copre stime per l’Europa.',
-      disclaimer: 'SolVento attualmente fornisce stime per paesi europei coperti da PVGIS, con prezzi interni per paese e riferimenti ai fornitori quando disponibili. I prezzi sono indicativi e possono variare in base a installatore, disponibilità, imposte e incentivi locali.',
+      europeNotice: 'Per ora SolVento copre solo la Spagna.',
+      disclaimer: 'Fuori dalla Spagna le stime di produzione funzionano, ma i costi di pannelli e installazione non sono ancora verificati per il resto d’Europa: consideralo indicativo. I prezzi possono variare in base a installatore, disponibilità, imposte e incentivi locali.',
       professionalDisclaimer: 'Questi risultati sono stime indicative. Non sostituiscono uno studio tecnico professionale né un’offerta vincolante di un installatore.',
       language: 'Lingua',
       locationSection: '1 · Posizione',
