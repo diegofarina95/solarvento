@@ -321,6 +321,7 @@ def _unreadable_bill(reason: str) -> dict:
         "total_eur": None,
         "currency": None,
         "parser": "local",
+        "state": "extraction_failed",
         "needs_review": False,
         "review_reasons": [],
         "warnings": [reason],

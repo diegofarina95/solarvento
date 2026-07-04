@@ -525,6 +525,9 @@ class ParsedBill(BaseModel):
     consumption_candidates: list[ConsumptionCandidate] | None = None
     consumption_resolution: ConsumptionResolution | None = None
     existing_pv: bool = False
+    # Máquina de 3 estados: valid (calcula) | needs_review (confirmar) |
+    # extraction_failed (introducir a mano). Nunca hay un 4º que invente números.
+    state: str = "valid"
     tariff: str | None = None
     cups: str | None = None
     needs_review: bool = False

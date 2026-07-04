@@ -852,6 +852,55 @@ def test_parse_bill_malformed_model_response_is_review_not_crash(respx_mock, ope
 
 
 @respx.mock
+def test_parse_bill_schema_rejected_400_is_state_c_no_fabrication(respx_mock, openai_client):
+    # PHASE 2/5: si OpenAI rechaza el esquema (400), fila VACÍA en estado C, sin
+    # números fabricados; nunca un 500.
+    respx_mock.post("https://api.openai.com/v1/responses").mock(
+        return_value=Response(400, json={"error": {"message": "schema too large"}})
+    )
+    resp = openai_client.post(
+        "/api/parse-bill",
+        files={"file": ("factura.pdf", b"%PDF-1.4\n%%EOF", "application/pdf")},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["kwh"] is None
+    assert data["state"] == "extraction_failed"
+    assert data["total_eur"] is None and data["energy_eur"] is None
+
+
+@respx.mock
+def test_manual_entry_computes_with_extractor_disabled(respx_mock, client):
+    # PHASE 3: el suelo manual. Con el extractor DESACTIVADO (client sin clave),
+    # un usuario que teclea 2.902 kWh + importes obtiene un cálculo completo.
+    mock_pvgis(respx_mock)
+    # Entrada manual directa del consumo anual (el usuario teclea su cifra).
+    resp = client.post(
+        "/api/solar-estimate",
+        json={
+            "lat": 42.88, "lon": -8.54, "country_code": "ES", "peak_power_kwp": 3.0,
+            "annual_consumption_kwh": 2902,
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["consumption"]["annual_kwh"] == 2902
+    assert data["recommended_system"]["kwp"] > 0
+
+    # Y también por FILAS manuales (12 meses tecleados) sin extractor.
+    resp2 = client.post(
+        "/api/solar-estimate",
+        json={
+            "lat": 42.88, "lon": -8.54, "country_code": "ES", "peak_power_kwp": 3.0,
+            "bills": [{"kwh": 2902 / 12, "total_eur": 60.0, "amount_eur": 60.0,
+                       "currency": "EUR", "month": m} for m in range(1, 13)],
+        },
+    )
+    assert resp2.status_code == 200
+    assert resp2.json()["recommended_system"]["kwp"] > 0
+
+
+@respx.mock
 def test_geocode_endpoint(respx_mock, client):
     respx_mock.get("https://nominatim.openstreetmap.org/search").mock(
         return_value=Response(

@@ -319,6 +319,12 @@ def contract_to_bill(contract: dict) -> dict:
     )
     bill["needs_review"] = bool(review)
     bill["review_reasons"] = review
+    # Estado explícito (máquina de 3 estados). VALID solo si hay consumo anual
+    # resuelto Y ninguna guarda objeta.
+    if resolution["annual_kwh"] is None and not review:
+        bill["state"] = "extraction_failed"
+    else:
+        bill["state"] = "needs_review" if review else "valid"
     if review:
         warnings.extend(review)
     bill["warnings"] = _dedupe(warnings)
@@ -332,6 +338,7 @@ def _review_bill(reasons: list[str]) -> dict:
         "existing_pv": False,
         "consumption_candidates": [],
         "consumption_resolution": None,
+        "state": "extraction_failed",
         "needs_review": True,
         "review_reasons": reasons,
         "warnings": list(reasons),
