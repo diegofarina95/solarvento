@@ -1,6 +1,7 @@
 """Sprint de estabilización: máquina de 3 estados + cero números fabricados."""
 
-from app.bill_normalise import contract_to_bill
+from app.bill_normalise import _rate, contract_to_bill
+from app.schemas import SolarEstimateRequest
 
 _VALID = {
     "annual_consumption_kwh": "2.902",
@@ -63,3 +64,40 @@ class TestNoFabricatedNumbers:
         bill = contract_to_bill(None)
         assert bill["kwh"] != 312
         assert bill.get("total_eur") not in (43.06, 71.39)
+
+
+class TestVatRateNormalisation:
+    def test_percentage_becomes_fraction(self):
+        assert _rate("21") == 0.21
+        assert _rate("21%") == 0.21
+        assert _rate("0,21") == 0.21
+        assert _rate("5,5") == 0.055
+        assert _rate(None) is None
+        assert _rate("300") is None  # absurdo → se descarta, no rompe el cálculo
+
+    def test_imported_bill_passes_estimate_validation(self):
+        # Regresión: IVA "21" (porcentaje) rompía /solar-estimate con 422
+        # (iva_rate le=0.3). Ahora se normaliza a 0,21 y valida.
+        bill = contract_to_bill({
+            "annual_consumption_kwh": "4.200", "total_amount_eur": "1.150,00",
+            "energy_term_eur": "820,00", "vat_rate": "21", "currency": "EUR",
+            "country_code": "ES",
+            "billing_period": {"start": "2025-01-01", "end": "2025-12-31", "days": "365"},
+        })
+        assert bill["iva_rate"] == 0.21
+        row = {
+            "kwh": bill["kwh"], "energy_eur": bill["energy_eur"], "total_eur": bill["total_eur"],
+            "amount_eur": bill["total_eur"], "currency": "EUR", "iva_rate": bill["iva_rate"],
+        }
+        # No debe lanzar ValidationError (era el 422 "Invalid parameters").
+        SolarEstimateRequest(lat=42.6, lon=-8.5, country_code="ES", peak_power_kwp=3.0, bills=[row])
+
+    def test_absurd_rate_does_not_break_estimate(self):
+        bill = contract_to_bill({
+            "annual_consumption_kwh": "4.200", "total_amount_eur": "1.150,00",
+            "vat_rate": "2100", "currency": "EUR", "country_code": "ES",
+        })
+        assert bill["iva_rate"] is None
+        row = {"kwh": bill["kwh"], "total_eur": bill["total_eur"], "amount_eur": bill["total_eur"],
+               "currency": "EUR", "iva_rate": bill["iva_rate"]}
+        SolarEstimateRequest(lat=42.6, lon=-8.5, country_code="ES", peak_power_kwp=3.0, bills=[row])

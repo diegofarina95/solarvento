@@ -56,6 +56,20 @@ def _val(field: Any) -> float | None:
     return _norm(field)["value"]
 
 
+def _rate(field: Any) -> float | None:
+    """Tipo impositivo como FRACCIÓN. "21" o "21%" → 0,21; "0,21" → 0,21.
+
+    El modelo transcribe el IVA tal cual ("21%"), así que un valor >1 es un
+    porcentaje. Fuera de un rango sensato (0–0,5) se descarta para no romper el
+    cálculo: el backend usa los tipos normativos si falta."""
+    value = _val(field)
+    if value is None:
+        return None
+    if value > 1:
+        value = value / 100
+    return round(value, 4) if 0 <= value <= 0.5 else None
+
+
 def _text(value: Any) -> str | None:
     if value is None:
         return None
@@ -252,7 +266,7 @@ def contract_to_bill(contract: dict) -> dict:
         "amount_eur": total,
         "iee_eur": _val(contract.get("electricity_tax_eur")),
         "iva_eur": _val(contract.get("vat_eur")),
-        "iva_rate": _val(contract.get("vat_rate")),
+        "iva_rate": _rate(contract.get("vat_rate")),
         "currency": (_text(contract.get("currency")) or "").upper()[:3] or None,
         "country_code": (_text(contract.get("country_code")) or "").upper()[:2] or None,
         "language": _text(contract.get("language")),
