@@ -20,6 +20,100 @@ const TONE = {
 }
 const DOT = { good: 'bg-emerald-500', ok: 'bg-amber-500', poor: 'bg-red-500' }
 
+// Etiqueta de la batería por payback incremental frente a su vida útil:
+// holgado → recomendada; justo → recomendable pero ajustada; por encima → no rentable.
+function batteryLabel(incrementalPayback, usefulLifeYears) {
+  if (incrementalPayback == null || usefulLifeYears == null) return null
+  if (incrementalPayback <= usefulLifeYears * 0.8) return 'good'
+  if (incrementalPayback <= usefulLifeYears) return 'ok'
+  return 'poor'
+}
+
+// Solar score /100: mezcla potencial solar, amortización, autosuficiencia,
+// consumo y viabilidad de batería. Solo presentación (datos ya calculados).
+export function computeSolarScore(data) {
+  const eco = data.economics ?? {}
+  const ae = data.annual_energy ?? {}
+  const system = data.user_system ?? data.optimal ?? {}
+  const cons = data.consumption ?? {}
+  const battery = data.battery_analysis
+  const factors = []
+  let score = 0
+
+  const hsp = system.hsp_daily_avg
+  if (hsp != null) {
+    const tone = hsp >= 4.5 ? 'good' : hsp >= 3.5 ? 'ok' : 'poor'
+    score += tone === 'good' ? 25 : tone === 'ok' ? 16 : 8
+    factors.push({ key: 'potential', tone })
+  }
+  const pb = eco.payback_years
+  if (pb != null && pb > 0) {
+    const tone = pb <= 8 ? 'good' : pb <= 12 ? 'ok' : 'poor'
+    score += tone === 'good' ? 30 : tone === 'ok' ? 20 : 8
+    factors.push({ key: 'payback', tone })
+  }
+  const ss = ae.self_sufficiency_pct
+  if (ss != null) {
+    const tone = ss >= 60 ? 'good' : ss >= 35 ? 'ok' : 'poor'
+    score += tone === 'good' ? 20 : tone === 'ok' ? 13 : 6
+    factors.push({ key: 'selfSuff', tone })
+  }
+  const annual = cons.annual_kwh
+  if (annual != null) {
+    const tone = annual >= 4000 ? 'good' : annual >= 2500 ? 'ok' : 'poor'
+    score += tone === 'good' ? 15 : tone === 'ok' ? 10 : 5
+    factors.push({ key: 'consumption', tone })
+  }
+  if (battery) {
+    const rec = (battery.scenarios ?? []).find((s) => s.battery_kwh === battery.recommended_battery_kwh)
+    const tone = batteryLabel(rec?.battery_incremental_payback_years, battery.battery_useful_life_years)
+    if (battery.recommended_battery_kwh > 0 && tone) {
+      score += tone === 'good' ? 10 : tone === 'ok' ? 6 : 2
+      factors.push({ key: 'battery', tone })
+    } else {
+      score += 6
+      factors.push({ key: 'battery', tone: 'ok' })
+    }
+  }
+  return { score: Math.round(score), factors }
+}
+
+function scoreQualifier(score) {
+  if (score >= 80) return 'excellent'
+  if (score >= 60) return 'good'
+  if (score >= 40) return 'fair'
+  return 'poor'
+}
+
+function ScoreCard({ data, t }) {
+  const { score, factors } = computeSolarScore(data)
+  if (!factors.length) return null
+  const qual = scoreQualifier(score)
+  const ring = { excellent: 'text-emerald-600', good: 'text-emerald-600', fair: 'text-amber-600', poor: 'text-red-600' }
+  return (
+    <div className="card-solar px-4 py-4">
+      <div className="flex items-center gap-4">
+        <div className="flex flex-col items-center">
+          <span className={`text-3xl font-bold ${ring[qual]}`}>{score}</span>
+          <span className="text-[10px] font-medium uppercase tracking-wide text-stone-400">/ 100</span>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-stone-700">{t('basic.score.title')}</p>
+          <p className="text-sm text-stone-500">{t(`basic.score.${qual}`)}</p>
+        </div>
+      </div>
+      <ul className="mt-3 grid grid-cols-1 gap-1 sm:grid-cols-2">
+        {factors.map((f) => (
+          <li key={f.key} className="flex items-center gap-2 text-sm text-stone-700">
+            <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${DOT[f.tone]}`} />
+            {t(`basic.score.factor.${f.key}`)}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 function VerdictBanner({ verdict, subtitle, t }) {
   return (
     <div className={`rounded-xl border p-4 ${TONE[verdict]}`}>
@@ -69,32 +163,61 @@ function MonthlyChart({ production, consumption, locale, t }) {
     <div className="card-solar px-4 py-3">
       <p className="mb-2 text-sm font-medium text-stone-700">{t('basic.chartTitle')}</p>
       <div className="flex items-end gap-1">
-        {prod.map((p, i) => (
-          <div key={i} className="flex flex-1 flex-col items-center">
-            {/* Pista de altura FIJA (h-28 = 112px): los % de las barras resuelven
-                siempre, sin depender de alturas flex indefinidas. */}
-            <div className="flex h-28 w-full items-end justify-center gap-[2px]">
-              <div
-                className="w-1/2 rounded-t bg-amber-400"
-                style={{ height: `${Math.max(2, (p / max) * 100)}%` }}
-                title={`${Math.round(p)} kWh`}
-              />
-              {cons && (
-                <div
-                  className="w-1/2 rounded-t bg-teal-500"
-                  style={{ height: `${Math.max(2, (cons[i] / max) * 100)}%` }}
-                  title={`${Math.round(cons[i])} kWh`}
-                />
-              )}
+        {prod.map((p, i) => {
+          const c = cons ? cons[i] : 0
+          const auto = cons ? Math.min(p, c) : 0 // autoconsumo = lo que cubre el sol
+          const exc = cons ? Math.max(0, p - auto) : 0 // excedente vertido
+          return (
+            <div key={i} className="flex flex-1 flex-col items-center">
+              {/* Pista de altura FIJA (h-28): los % de las barras resuelven siempre. */}
+              <div className="flex h-28 w-full items-end justify-center gap-[2px]">
+                {cons ? (
+                  <div
+                    className="flex w-1/2 flex-col justify-end"
+                    style={{ height: `${Math.max(2, (p / max) * 100)}%` }}
+                    title={`${Math.round(p)} kWh`}
+                  >
+                    {exc > 0 && (
+                      <div className="rounded-t bg-orange-400" style={{ height: `${(exc / p) * 100}%` }} />
+                    )}
+                    <div className={exc > 0 ? 'bg-emerald-500' : 'rounded-t bg-emerald-500'}
+                         style={{ height: `${(auto / p) * 100}%` }} />
+                  </div>
+                ) : (
+                  <div
+                    className="w-1/2 rounded-t bg-amber-400"
+                    style={{ height: `${Math.max(2, (p / max) * 100)}%` }}
+                    title={`${Math.round(p)} kWh`}
+                  />
+                )}
+                {cons && (
+                  <div
+                    className="w-1/2 rounded-t bg-teal-500"
+                    style={{ height: `${Math.max(2, (c / max) * 100)}%` }}
+                    title={`${Math.round(c)} kWh`}
+                  />
+                )}
+              </div>
+              <span className="mt-1 text-[10px] text-stone-400">{labels[i]}</span>
             </div>
-            <span className="mt-1 text-[10px] text-stone-400">{labels[i]}</span>
-          </div>
-        ))}
+          )
+        })}
       </div>
-      <div className="mt-2 flex items-center gap-4 text-xs text-stone-500">
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-2 w-3 rounded-sm bg-amber-400" /> {t('basic.legendProduction')}
-        </span>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-500">
+        {cons ? (
+          <>
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2 w-3 rounded-sm bg-emerald-500" /> {t('basic.legendSelfUse')}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2 w-3 rounded-sm bg-orange-400" /> {t('basic.legendSurplus')}
+            </span>
+          </>
+        ) : (
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-2 w-3 rounded-sm bg-amber-400" /> {t('basic.legendProduction')}
+          </span>
+        )}
         {cons && (
           <span className="flex items-center gap-1">
             <span className="inline-block h-2 w-3 rounded-sm bg-teal-500" /> {t('basic.legendConsumption')}
@@ -156,22 +279,31 @@ function BatteryCard({ battery, fmt, t }) {
   }
   const base = scenarios.find((s) => s.battery_kwh === 0)
   const rec = scenarios.find((s) => s.battery_kwh === recKwh)
-  const delta =
-    rec && base && rec.self_sufficiency_pct != null && base.self_sufficiency_pct != null
-      ? rec.self_sufficiency_pct - base.self_sufficiency_pct
-      : null
   const payback = rec?.battery_incremental_payback_years
+  const label = batteryLabel(payback, battery.battery_useful_life_years) ?? 'good'
+  const beforeAfter =
+    rec && base && rec.self_sufficiency_pct != null && base.self_sufficiency_pct != null
+      ? { before: base.self_sufficiency_pct, after: rec.self_sufficiency_pct }
+      : null
   return (
     <div className="card-solar px-4 py-3">
-      <p className="text-sm font-semibold text-stone-700">{t('basic.battery.title')}</p>
-      <p className="mt-1 flex items-center gap-2 text-sm font-medium text-emerald-800">
-        <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-        {t('basic.battery.recommend', { kwh: fmt.nf1.format(recKwh) })}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-stone-700">
+          {t('basic.battery.title')} · {t('basic.battery.recommend', { kwh: fmt.nf1.format(recKwh) })}
+        </p>
+        <span
+          className={`flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${TONE[label]}`}
+        >
+          <span className={`inline-block h-1.5 w-1.5 rounded-full ${DOT[label]}`} />
+          {t(`basic.battery.label.${label}`)}
+        </span>
+      </div>
       <div className="mt-2 grid grid-cols-2 gap-3">
-        {delta != null && (
+        {beforeAfter && (
           <div>
-            <p className="text-lg font-bold text-stone-800">+{fmt.nf1.format(delta)}%</p>
+            <p className="text-lg font-bold text-stone-800">
+              {fmt.nf1.format(beforeAfter.before)}% → {fmt.nf1.format(beforeAfter.after)}%
+            </p>
             <p className="text-xs text-stone-500">{t('basic.battery.selfSuff')}</p>
           </div>
         )}
@@ -207,6 +339,8 @@ export default function BasicReport({ data, i18n, fmt }) {
   return (
     <div className="space-y-4">
       <VerdictBanner verdict={verdict} subtitle={subtitle} t={t} />
+
+      <ScoreCard data={data} t={t} />
 
       <div className="grid grid-cols-3 gap-3">
         <StatCard label={t('basic.savingMonth')} value={fmt.money0.format(annualSavings / 12)} />
