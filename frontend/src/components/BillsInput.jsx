@@ -53,6 +53,9 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
   const [uploading, setUploading] = useState(false)
   const [notice, setNotice] = useState(null)
   const [review, setReview] = useState(null)
+  const [detected, setDetected] = useState([])
+  const nfmt = new Intl.NumberFormat(i18n.locale, { maximumFractionDigits: 0 })
+  const pfmt = new Intl.NumberFormat(i18n.locale, { maximumFractionDigits: 3 })
 
   function update(index, key, value) {
     setBills((prev) => prev.map((b, i) => (i === index ? { ...b, [key]: value } : b)))
@@ -66,9 +69,11 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
     setUploading(true)
     setNotice(null)
     setReview(null)
+    setDetected([])
     const added = []
     const problems = []
     const reviews = []
+    const detectedList = []
     let detectedLocation = null
     // Los PDFs se parsean en paralelo: con varios archivos y un parser lento
     // la espera secuencial se multiplicaba por el número de facturas.
@@ -121,6 +126,25 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
       } else if (!detectedLocation && parsed.country_code) {
         detectedLocation = parsed
       }
+
+      // Resumen "Datos detectados" (da confianza tras importar).
+      const res = parsed.consumption_resolution ?? {}
+      const annualKwh = res.annual_kwh ?? parsed.kwh
+      const total = parsed.total_eur ?? parsed.amount_eur ?? null
+      const months = res.months_real ?? null
+      if (annualKwh != null) {
+        detectedList.push({
+          file: file.name,
+          annualKwh,
+          // El gasto anual solo es fiable si la factura cubre ~un año.
+          spendAnnual: months != null && months >= 11 && total ? total : null,
+          tariff: parsed.tariff ?? null,
+          months,
+          // Precio efectivo like-with-like: importe ÷ consumo del MISMO periodo.
+          price: total && parsed.kwh ? total / parsed.kwh : null,
+          currency: parsed.currency || '€',
+        })
+      }
     })
     // Updater funcional: si el usuario editó o añadió filas mientras se
     // parseaban los PDFs, sus cambios no se sobrescriben.
@@ -128,6 +152,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
     if (detectedLocation) onLocationDetected?.(detectedLocation)
     if (problems.length) setNotice(problems.join(' '))
     if (reviews.length) setReview(reviews)
+    if (detectedList.length) setDetected(detectedList)
     setUploading(false)
   }
 
@@ -272,6 +297,43 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
             ))}
           </ul>
           <p className="mt-1.5 text-red-700">{t('errors.billReviewHint')}</p>
+        </div>
+      )}
+      {detected.length > 0 && (
+        <div className="mt-2 space-y-2">
+          {detected.map((d, i) => (
+            <div key={i} className="rounded-md border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-emerald-900">
+              <p className="font-semibold">{t('bills.detectedTitle')}</p>
+              <dl className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5">
+                <dt className="text-emerald-700">{t('bills.detectedAnnual')}</dt>
+                <dd className="text-right font-medium">{nfmt.format(d.annualKwh)} kWh</dd>
+                {d.spendAnnual != null && (
+                  <>
+                    <dt className="text-emerald-700">{t('bills.detectedSpend')}</dt>
+                    <dd className="text-right font-medium">{nfmt.format(d.spendAnnual)} {d.currency}</dd>
+                  </>
+                )}
+                {d.tariff && (
+                  <>
+                    <dt className="text-emerald-700">{t('bills.detectedTariff')}</dt>
+                    <dd className="text-right font-medium">{d.tariff}</dd>
+                  </>
+                )}
+                {d.months != null && (
+                  <>
+                    <dt className="text-emerald-700">{t('bills.detectedPeriod')}</dt>
+                    <dd className="text-right font-medium">{t('bills.detectedMonths', { n: nfmt.format(d.months) })}</dd>
+                  </>
+                )}
+                {d.price != null && (
+                  <>
+                    <dt className="text-emerald-700">{t('bills.detectedPrice')}</dt>
+                    <dd className="text-right font-medium">{pfmt.format(d.price)} {d.currency}/kWh</dd>
+                  </>
+                )}
+              </dl>
+            </div>
+          ))}
         </div>
       )}
       {notice && <p className="mt-2 text-xs text-amber-700">{notice}</p>}
