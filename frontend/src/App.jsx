@@ -324,9 +324,18 @@ export default function App() {
         </div>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-4xl font-bold tracking-tight text-stone-900">
-              Solar<span className="text-amber-600">Vento</span>
-            </h1>
+            <div className="flex items-center gap-3">
+              <img
+                src={`${import.meta.env.BASE_URL}logo-mark.png`}
+                alt="SolarVento"
+                className="h-11 w-11 shrink-0 drop-shadow-sm"
+                width="44"
+                height="44"
+              />
+              <h1 className="font-display text-4xl font-bold tracking-tight text-stone-900">
+                Solar<span className="text-amber-600">Vento</span>
+              </h1>
+            </div>
             <p className="mt-1.5 max-w-3xl text-stone-600">{t('app.subtitle')}</p>
           </div>
           <select
