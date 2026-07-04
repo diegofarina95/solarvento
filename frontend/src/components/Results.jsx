@@ -8,6 +8,7 @@ import {
 } from './Charts'
 import AdSlot from './AdSlot'
 import PrintReport from './PrintReport'
+import BasicReport from './BasicReport'
 import { batteryRecommendation } from '../batteryRecommendation'
 
 function ReportDownload({ data, i18n, fmt }) {
@@ -557,6 +558,7 @@ function FinancialDetails({ eco, i18n, fmt }) {
 
 export default function Results({ data, i18n }) {
   const { t } = i18n
+  const [view, setView] = useState('basic')
   if (!data?.pricing) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
@@ -577,6 +579,27 @@ export default function Results({ data, i18n }) {
     <div className="space-y-6">
       <ReportDownload data={data} i18n={i18n} fmt={fmt} />
 
+      <div className="flex gap-1 rounded-lg bg-stone-100 p-1 text-sm font-medium">
+        <button
+          type="button"
+          onClick={() => setView('basic')}
+          className={`flex-1 rounded-md px-3 py-1.5 ${view === 'basic' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500'}`}
+        >
+          {t('basic.viewBasic')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setView('detailed')}
+          className={`flex-1 rounded-md px-3 py-1.5 ${view === 'detailed' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500'}`}
+        >
+          {t('basic.viewDetailed')}
+        </button>
+      </div>
+
+      {view === 'basic' && <BasicReport data={data} i18n={i18n} fmt={fmt} />}
+
+      {view === 'detailed' && (
+      <div className="space-y-6">
       <div className="card-solar px-4 py-3 text-sm text-stone-600">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span>{pricingMessage(pricing, t)}</span>
@@ -896,6 +919,8 @@ export default function Results({ data, i18n }) {
             data.elevation_m != null ? fmt.nf.format(data.elevation_m) : null,
         })}
       </p>
+      </div>
+      )}
     </div>
   )
 }
