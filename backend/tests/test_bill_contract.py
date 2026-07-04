@@ -2,6 +2,7 @@
 
 from app.bill_contract import BILL_CONTRACT_SCHEMA
 from app.bill_normalise import contract_to_bill
+from app.bills import safe_to_float
 
 
 def _nf(raw, label="x", conf=0.9, value=None):
@@ -71,6 +72,26 @@ class TestContractSchemaStrict:
     def test_numeric_fields_carry_the_envelope(self):
         env = BILL_CONTRACT_SCHEMA["properties"]["annual_consumption_kwh"]["properties"]
         assert set(env) == {"raw_text", "value", "source_label", "confidence"}
+
+
+class TestSafeToFloat:
+    # Única función de normalización española, aplicada a TODO raw_text.
+    def test_thousands_and_decimals(self):
+        assert safe_to_float("6.551") == 6551.0
+        assert safe_to_float("13.800") == 13800.0
+        assert safe_to_float("1.689,65") == 1689.65
+        assert safe_to_float("0,24") == 0.24
+        assert safe_to_float("6551.00") == 6551.0  # ya normalizado, intacto
+
+    def test_units_and_symbols_ignored(self):
+        assert safe_to_float("6.551 kWh") == 6551.0
+        assert safe_to_float("0,241000 €/kWh") == 0.241
+        assert safe_to_float("1.689,65 €") == 1689.65
+
+    def test_junk_is_none_not_crash(self):
+        assert safe_to_float(None) is None
+        assert safe_to_float("") is None
+        assert safe_to_float("n/d") is None
 
 
 class TestNormaliseAndReconcile:

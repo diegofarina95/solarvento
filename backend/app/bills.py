@@ -1183,6 +1183,18 @@ def parse_bill_pdf(pdf_bytes: bytes) -> dict:
     return parse_bill_text(extract_text(pdf_bytes))
 
 
+def extract_pdf_text_safe(pdf_bytes: bytes) -> str | None:
+    """Capa de texto del PDF como señal AUXILIAR para el extractor LLM.
+
+    No lanza: un escaneo sin capa de texto o un PDF corrupto devuelve None (las
+    páginas renderizadas son la fuente autoritativa para el modelo)."""
+    try:
+        text = extract_text(pdf_bytes)
+    except BillParseError:
+        return None
+    return text.strip() or None
+
+
 def _bill_month(bill: dict, start: date | None, end: date | None) -> int | None:
     """Mes representativo de la factura: explícito o mayor tramo del periodo."""
     if start and end:

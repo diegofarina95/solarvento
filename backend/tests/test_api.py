@@ -34,6 +34,7 @@ def openai_client(tmp_path, monkeypatch):
     monkeypatch.setenv("SOLVENTO_CACHE_DB_PATH", str(tmp_path / "cache.db"))
     monkeypatch.setenv("SOLVENTO_PRICING_CACHE_DB_PATH", str(tmp_path / "pricing.db"))
     monkeypatch.setenv("SOLVENTO_UPLOAD_RATELIMIT_DB_PATH", str(tmp_path / "ratelimit.db"))
+    monkeypatch.setenv("SOLVENTO_BILL_CACHE_DB_PATH", str(tmp_path / "bill_cache.db"))
     monkeypatch.setenv("SOLVENTO_OPENAI_API_KEY", "test-key")
     get_settings.cache_clear()
     from app.main import app
@@ -48,6 +49,7 @@ def standard_openai_client(tmp_path, monkeypatch):
     monkeypatch.setenv("SOLVENTO_CACHE_DB_PATH", str(tmp_path / "cache.db"))
     monkeypatch.setenv("SOLVENTO_PRICING_CACHE_DB_PATH", str(tmp_path / "pricing.db"))
     monkeypatch.setenv("SOLVENTO_UPLOAD_RATELIMIT_DB_PATH", str(tmp_path / "ratelimit.db"))
+    monkeypatch.setenv("SOLVENTO_BILL_CACHE_DB_PATH", str(tmp_path / "bill_cache.db"))
     monkeypatch.delenv("SOLVENTO_OPENAI_API_KEY", raising=False)
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     get_settings.cache_clear()
@@ -489,27 +491,57 @@ def test_parse_bill_rate_limited_per_ip(client, monkeypatch):
     get_settings.cache_clear()
 
 
+def _cf(raw, label="campo", conf=0.9):
+    """Un sobre numérico del contrato (raw_text verbatim; la app normaliza)."""
+    return {"raw_text": raw, "value": None, "source_label": label, "confidence": conf}
+
+
+def _contract(**over):
+    """Contrato de extracción con todos los campos en null salvo los indicados."""
+    contract = {
+        "annual_consumption_kwh": _cf(None),
+        "period_total_kwh": _cf(None),
+        "period_split": {"p1_punta": _cf(None), "p2_llano": _cf(None), "p3_valle": _cf(None)},
+        "period_split_prices": {
+            "p1_punta": _cf(None), "p2_llano": _cf(None), "p3_valle": _cf(None),
+        },
+        "monthly_history": [],
+        "contracted_power_kw": _cf(None),
+        "tariff": None,
+        "billing_period": {"start": None, "end": None},
+        "energy_term_eur": _cf(None),
+        "energy_term_eur_per_kwh": _cf(None),
+        "total_amount_eur": _cf(None),
+        "electricity_tax_eur": _cf(None),
+        "vat_eur": _cf(None),
+        "vat_rate": _cf(None),
+        "currency": None,
+        "country_code": None,
+        "language": None,
+        "supply_address": {"street": None, "cp": None, "municipio": None, "provincia": None},
+        "cups": None,
+        "warnings": [],
+    }
+    contract.update(over)
+    return contract
+
+
+def _contract_response(**over):
+    return Response(
+        200,
+        json={"status": "completed", "output_text": json.dumps(_contract(**over))},
+    )
+
+
 @respx.mock
 def test_parse_bill_accepts_image_with_openai(respx_mock, openai_client):
     respx_mock.post("https://api.openai.com/v1/responses").mock(
-        return_value=Response(
-            200,
-            json={
-                "status": "completed",
-                "output_text": json.dumps(
-                    {
-                        "kwh": 210.0,
-                        "amount_eur": 58.0,
-                        "month": 6,
-                        "start_date": "2026-06-01",
-                        "end_date": "2026-06-30",
-                        "country_code": "ES",
-                        "country_name": "España",
-                        "language": "es",
-                        "warnings": [],
-                    }
-                ),
-            },
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("210", "Consumo facturado"),
+            total_amount_eur=_cf("58", "Total"),
+            billing_period={"start": "2026-06-01", "end": "2026-06-30"},
+            country_code="ES",
+            language="es",
         )
     )
     resp = openai_client.post(
@@ -528,24 +560,12 @@ def test_parse_bill_accepts_image_with_openai(respx_mock, openai_client):
 @respx.mock
 def test_parse_bill_uses_openai_when_configured(respx_mock, openai_client):
     respx_mock.post("https://api.openai.com/v1/responses").mock(
-        return_value=Response(
-            200,
-            json={
-                "status": "completed",
-                "output_text": json.dumps(
-                    {
-                        "kwh": 245.7,
-                        "amount_eur": 83.42,
-                        "month": 5,
-                        "start_date": "2026-05-01",
-                        "end_date": "2026-05-31",
-                        "country_code": "FR",
-                        "country_name": "France",
-                        "language": "fr",
-                        "warnings": [],
-                    }
-                ),
-            },
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("245,7", "Consommation"),
+            total_amount_eur=_cf("83,42", "Total TTC"),
+            billing_period={"start": "2026-05-01", "end": "2026-05-31"},
+            country_code="FR",
+            language="fr",
         )
     )
 
@@ -557,43 +577,41 @@ def test_parse_bill_uses_openai_when_configured(respx_mock, openai_client):
     assert resp.status_code == 200
     data = resp.json()
     assert data["kwh"] == 245.7
-    assert data["amount_eur"] == 83.42
+    assert data["total_eur"] == 83.42
     assert data["country_code"] == "FR"
     assert data["language"] == "fr"
-    assert data["parser"] == "openai"
+    assert data["parser"] == "openai-contract"
 
     payload = json.loads(respx_mock.calls.last.request.content)
     assert payload["model"] == "gpt-5.5"
+    assert payload["temperature"] == 0
     content = payload["input"][1]["content"]
     assert content[0]["type"] == "input_file"
     assert content[0]["filename"] == "facture.pdf"
     assert content[0]["file_data"].startswith("data:application/pdf;base64,")
     assert payload["text"]["format"]["type"] == "json_schema"
-    assert "supply_address" in payload["text"]["format"]["schema"]["required"]
-    assert "consumption_periods" in payload["text"]["format"]["schema"]["required"]
+    assert payload["text"]["format"]["strict"] is True
+    required = payload["text"]["format"]["schema"]["required"]
+    assert "supply_address" in required
+    assert "period_split" in required
+    assert "annual_consumption_kwh" in required
 
 
 def test_parse_bill_repairs_openai_single_period_as_total(respx_mock, openai_client):
     # Bug crítico 2.0TD: OpenAI devuelve P1 (2.150) como total; con el split de
     # periodos el endpoint lo corrige a la suma real (13.800), no ~1/6 de escala.
     respx_mock.post("https://api.openai.com/v1/responses").mock(
-        return_value=Response(
-            200,
-            json={
-                "status": "completed",
-                "output_text": json.dumps(
-                    {
-                        "kwh": 2150,
-                        "amount_eur": 3027.14,
-                        "total_eur": 3027.14,
-                        "currency": "EUR",
-                        "consumption_periods": {"punta": 2150, "llano": 2820, "valle": 8830},
-                        "country_code": "ES",
-                        "language": "es",
-                        "warnings": [],
-                    }
-                ),
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("2.150", "Consumo (mal: solo P1)"),
+            period_split={
+                "p1_punta": _cf("2.150", "P1"),
+                "p2_llano": _cf("2.820", "P2"),
+                "p3_valle": _cf("8.830", "P3"),
             },
+            total_amount_eur=_cf("3.027,14", "Total"),
+            currency="EUR",
+            country_code="ES",
+            language="es",
         )
     )
     resp = openai_client.post(
@@ -611,22 +629,12 @@ def test_parse_bill_flags_review_on_implausible_effective_price(respx_mock, open
     # Sin split de periodos, el precio efectivo 3.027/2.150 = 1,41 €/kWh dispara
     # la guarda → estado 'revisar factura', no un resultado seguro y equivocado.
     respx_mock.post("https://api.openai.com/v1/responses").mock(
-        return_value=Response(
-            200,
-            json={
-                "status": "completed",
-                "output_text": json.dumps(
-                    {
-                        "kwh": 2150,
-                        "amount_eur": 3027.14,
-                        "total_eur": 3027.14,
-                        "currency": "EUR",
-                        "country_code": "ES",
-                        "language": "es",
-                        "warnings": [],
-                    }
-                ),
-            },
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("2.150", "Consumo (solo P1)"),
+            total_amount_eur=_cf("3.027,14", "Total"),
+            currency="EUR",
+            country_code="ES",
+            language="es",
         )
     )
     resp = openai_client.post(
@@ -640,62 +648,31 @@ def test_parse_bill_flags_review_on_implausible_effective_price(respx_mock, open
 
 
 @respx.mock
-def test_parse_bill_prefers_local_pdf_amounts_when_openai_is_configured(
+def test_parse_bill_contract_is_authoritative_and_uses_pdf_text_hint(
     respx_mock, openai_client, monkeypatch
 ):
+    # El parser posicional/regex está RETIRADO de la vía primaria: aunque exista,
+    # NO se usa cuando hay clave de OpenAI. La capa de texto del PDF viaja solo
+    # como señal auxiliar al modelo.
     respx_mock.post("https://api.openai.com/v1/responses").mock(
-        return_value=Response(
-            200,
-            json={
-                "status": "completed",
-                "output_text": json.dumps(
-                    {
-                        "kwh": 123.0,
-                        "amount_eur": 999.0,
-                        "energy_eur": None,
-                        "fixed_eur": None,
-                        "taxes_eur": None,
-                        "total_eur": 999.0,
-                        "currency": "EUR",
-                        "month": 1,
-                        "start_date": "2026-01-01",
-                        "end_date": "2026-01-31",
-                        "country_code": "ES",
-                        "country_name": "España",
-                        "supply_address": None,
-                        "postal_code": None,
-                        "city": None,
-                        "region": None,
-                        "language": "es",
-                        "warnings": ["remote warning"],
-                    }
-                ),
-            },
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("2.902", "Consumo facturado"),
+            energy_term_eur=_cf("497,91", "Término energía"),
+            total_amount_eur=_cf("829,17", "Total"),
+            currency="EUR",
+            country_code="ES",
+            language="es",
         )
     )
 
     from app.main import bills_mod
 
+    def _boom(_content):
+        raise AssertionError("el parser regex no debe usarse con OpenAI configurado")
+
+    monkeypatch.setattr(bills_mod, "parse_bill_pdf", _boom)
     monkeypatch.setattr(
-        bills_mod,
-        "parse_bill_pdf",
-        lambda _content: {
-            "kwh": 2902.0,
-            "amount_eur": 829.17,
-            "energy_eur": 497.91,
-            "fixed_eur": None,
-            "taxes_eur": None,
-            "total_eur": 829.17,
-            "currency": "EUR",
-            "month": 1,
-            "start_date": None,
-            "end_date": None,
-            "country_code": None,
-            "country_name": None,
-            "language": None,
-            "parser": "local",
-            "warnings": [],
-        },
+        bills_mod, "extract_pdf_text_safe", lambda _content: "CAPA DE TEXTO DEL PDF"
     )
 
     resp = openai_client.post(
@@ -708,37 +685,26 @@ def test_parse_bill_prefers_local_pdf_amounts_when_openai_is_configured(
     assert data["kwh"] == 2902.0
     assert data["energy_eur"] == 497.91
     assert data["total_eur"] == 829.17
-    assert data["amount_eur"] == 829.17
-    assert data["country_code"] == "ES"
-    assert data["language"] == "es"
-    assert data["parser"] == "local+openai"
-    assert "remote warning" in data["warnings"]
+    assert data["parser"] == "openai-contract"
+    # El texto del PDF se adjuntó como señal auxiliar en la llamada al modelo.
+    payload = json.loads(respx_mock.calls.last.request.content)
+    texts = " ".join(
+        part.get("text", "") for part in payload["input"][1]["content"]
+    )
+    assert "CAPA DE TEXTO DEL PDF" in texts
 
 
 @respx.mock
 def test_parse_bill_geocodes_openai_supply_address(respx_mock, openai_client):
     respx_mock.post("https://api.openai.com/v1/responses").mock(
-        return_value=Response(
-            200,
-            json={
-                "status": "completed",
-                "output_text": json.dumps(
-                    {
-                        "kwh": 245.7,
-                        "amount_eur": 83.42,
-                        "month": 7,
-                        "start_date": "2026-07-01",
-                        "end_date": "2026-07-31",
-                        "country_code": "FR",
-                        "country_name": "France",
-                        "supply_address": "10 Rue de Rivoli",
-                        "postal_code": "75001",
-                        "city": "Paris",
-                        "region": "Île-de-France",
-                        "language": "fr",
-                        "warnings": [],
-                    }
-                ),
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("245,7", "Consommation"),
+            total_amount_eur=_cf("83,42", "Total TTC"),
+            country_code="FR",
+            language="fr",
+            supply_address={
+                "street": "10 Rue de Rivoli", "cp": "75001",
+                "municipio": "Paris", "provincia": "Île-de-France",
             },
         )
     )
@@ -787,27 +753,14 @@ def test_parse_bill_geocodes_openai_supply_address(respx_mock, openai_client):
 @respx.mock
 def test_parse_bill_ignores_non_european_geocode_candidate(respx_mock, openai_client):
     respx_mock.post("https://api.openai.com/v1/responses").mock(
-        return_value=Response(
-            200,
-            json={
-                "status": "completed",
-                "output_text": json.dumps(
-                    {
-                        "kwh": 245.7,
-                        "amount_eur": 83.42,
-                        "month": 7,
-                        "start_date": "2026-07-01",
-                        "end_date": "2026-07-31",
-                        "country_code": "FR",
-                        "country_name": "France",
-                        "supply_address": "10 Rue de Rivoli",
-                        "postal_code": "75001",
-                        "city": "Paris",
-                        "region": "Île-de-France",
-                        "language": "fr",
-                        "warnings": [],
-                    }
-                ),
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("245,7", "Consommation"),
+            total_amount_eur=_cf("83,42", "Total TTC"),
+            country_code="FR",
+            language="fr",
+            supply_address={
+                "street": "10 Rue de Rivoli", "cp": "75001",
+                "municipio": "Paris", "provincia": "Île-de-France",
             },
         )
     )
@@ -840,24 +793,11 @@ def test_parse_bill_ignores_non_european_geocode_candidate(respx_mock, openai_cl
 @respx.mock
 def test_parse_bill_uses_standard_openai_api_key(respx_mock, standard_openai_client):
     respx_mock.post("https://api.openai.com/v1/responses").mock(
-        return_value=Response(
-            200,
-            json={
-                "status": "completed",
-                "output_text": json.dumps(
-                    {
-                        "kwh": 198.4,
-                        "amount_eur": 64.2,
-                        "month": 2,
-                        "start_date": "2026-02-01",
-                        "end_date": "2026-02-28",
-                        "country_code": "FR",
-                        "country_name": "France",
-                        "language": "fr",
-                        "warnings": [],
-                    }
-                ),
-            },
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("198,4", "Consommation"),
+            total_amount_eur=_cf("64,2", "Total TTC"),
+            country_code="FR",
+            language="fr",
         )
     )
 
@@ -867,8 +807,48 @@ def test_parse_bill_uses_standard_openai_api_key(respx_mock, standard_openai_cli
     )
 
     assert resp.status_code == 200
-    assert resp.json()["parser"] == "openai"
+    assert resp.json()["parser"] == "openai-contract"
     assert respx_mock.calls.call_count == 1
+
+
+@respx.mock
+def test_parse_bill_is_deterministic_same_file_cached(respx_mock, openai_client):
+    # Determinismo: la misma factura → mismo JSON → mismos euros, y NO se vuelve a
+    # llamar al modelo (caché por hash de fichero). Este tool cotiza euros.
+    respx_mock.post("https://api.openai.com/v1/responses").mock(
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("3.500", "Consumo"),
+            total_amount_eur=_cf("820,00", "Total"),
+            currency="EUR", country_code="ES", language="es",
+        )
+    )
+    files = {"file": ("factura.pdf", b"%PDF-1.4 misma-factura\n%%EOF", "application/pdf")}
+    first = openai_client.post("/api/parse-bill", files=files)
+    second = openai_client.post("/api/parse-bill", files=dict(files))
+    assert first.status_code == second.status_code == 200
+    assert first.json()["kwh"] == second.json()["kwh"] == 3500.0
+    assert first.json() == second.json()
+    # Segunda subida servida desde caché: una sola llamada al modelo.
+    assert respx_mock.calls.call_count == 1
+
+
+@respx.mock
+def test_parse_bill_malformed_model_response_is_review_not_crash(respx_mock, openai_client):
+    # El modelo devuelve algo que no es JSON del contrato → estado de revisión,
+    # nunca un 500 ni un resultado calculado.
+    respx_mock.post("https://api.openai.com/v1/responses").mock(
+        return_value=Response(
+            200, json={"status": "completed", "output_text": "lo siento, no es JSON"}
+        )
+    )
+    resp = openai_client.post(
+        "/api/parse-bill",
+        files={"file": ("factura.pdf", b"%PDF-1.4\n%%EOF", "application/pdf")},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["kwh"] is None
+    assert data["needs_review"] is True
 
 
 @respx.mock

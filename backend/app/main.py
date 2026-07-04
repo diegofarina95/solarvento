@@ -1,6 +1,7 @@
 """SolVento — API de cálculo solar fotovoltaico sobre PVGIS."""
 
 import asyncio
+import hashlib
 import ipaddress
 import logging
 import math
@@ -13,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 
+from . import bill_normalise
 from . import bills as bills_mod
 from . import calculations, cashflow, simulation
 from .cache import TTLCache
@@ -50,6 +52,9 @@ async def lifespan(app: FastAPI):
     pricing_cache = TTLCache(
         settings.pricing_cache_db_path,
         settings.pricing_cache_ttl_seconds,
+    )
+    app.state.bill_cache = TTLCache(
+        settings.bill_cache_db_path, settings.bill_cache_ttl_seconds
     )
     app.state.pvgis = PVGISClient(
         base_url=settings.pvgis_base_url,
@@ -109,6 +114,7 @@ async def lifespan(app: FastAPI):
     app.state.upload_limiter.close()
     app.state.invalid_upload_limiter.close()
     app.state.estimate_limiter.close()
+    app.state.bill_cache.close()
     cache.close()
 
 
@@ -248,55 +254,60 @@ async def parse_bill(request: Request, file: UploadFile, website: str | None = F
         )
         raise HTTPException(status_code=429, detail=detail)
 
-    remote = None
+    # Vía primaria: extractor LLM → contrato tipado → normalización/validación
+    # deterministas (bill_normalise). El parser posicional/regex queda RETIRADO de
+    # la vía primaria: solo se usa como degradación cuando NO hay clave de OpenAI.
     if openai_parser:
         parser_type = content_type if is_image else "application/pdf"
+        text_hint = None
+        if is_pdf:
+            text_hint = await run_in_threadpool(bills_mod.extract_pdf_text_safe, content)
         try:
-            remote = await openai_parser.parse_pdf(content, file.filename, parser_type)
-        except Exception as exc:
-            # Cualquier fallo del parser remoto (red, JSON inesperado, cuota…)
-            # degrada al extractor local en vez de romper la petición.
-            logger.warning("OpenAI bill parser failed; falling back to local parser: %s", exc)
-            remote = None
+            bill = await _extract_bill_contract(
+                openai_parser, content, file.filename, parser_type, text_hint
+            )
+        except bills_mod.BillParseError as exc:
+            # Fallo duro del modelo (red/cuota/JSON): no se cae al regex en
+            # silencio; se devuelve estado de revisión para que el usuario
+            # complete a mano (mejor revisar que un número seguro y equivocado).
+            logger.warning("LLM bill extraction failed: %s", exc)
+            bill = bill_normalise.contract_to_bill(None)
+            bill["warnings"] = [
+                "No se pudo leer la factura automáticamente; revisa e introduce los datos a mano."
+            ]
+        return await _enrich_bill_location(bill)
 
+    # Sin clave de OpenAI: degradación al extractor local (solo PDF-texto).
     if is_image:
-        # No hay extractor local para imágenes: se devuelve lo que OpenAI sacara
-        # (aunque falte el consumo) para que el usuario lo complete a mano.
-        if remote is not None:
-            return await _enrich_bill_location(remote)
         return _unreadable_bill(
-            "No se pudo leer la imagen de la factura; introduce los datos a mano."
+            "Las fotos de factura no están disponibles ahora; sube la factura en PDF."
         )
-
-    # pypdf es CPU-bound: fuera del event loop para no bloquear otras peticiones
     try:
         local = await run_in_threadpool(bills_mod.parse_bill_pdf, content)
     except bills_mod.BillParseError as exc:
-        if remote is not None:
-            return await _enrich_bill_location(remote)
-        # Contrato uniforme con y sin OpenAI: factura ilegible → 200 con avisos
-        # y campos vacíos para completar a mano (el 422 se reserva para
-        # peticiones inválidas: tipo de archivo, tamaño…).
         return _unreadable_bill(str(exc))
-
-    if remote is not None:
-        if local.get("kwh") is None and remote.get("kwh") is not None:
-            return await _enrich_bill_location(remote)
-        _merge_bill_context(local, remote)
-        # El merge puede aportar total/periodos/histórico del otro parser: se
-        # reconcilian las fuentes (corrige la que discrepe) y se re-evalúa la
-        # guarda de precio efectivo sobre el resultado combinado.
-        corrected_kwh, correction_note, review = bills_mod.reconcile_annual_consumption(local)
-        local["kwh"] = corrected_kwh
-        review = review + bills_mod.validate_bill_consumption(local)
-        local["needs_review"] = bool(review)
-        local["review_reasons"] = review
-        notes = [correction_note] if correction_note else []
-        local["warnings"] = _dedupe_strings(
-            [*local.get("warnings", []), *remote.get("warnings", []), *notes, *review]
-        )
-        local["parser"] = "local+openai"
     return await _enrich_bill_location(local)
+
+
+async def _extract_bill_contract(
+    parser: OpenAIBillParser,
+    content: bytes,
+    filename: str | None,
+    parser_type: str,
+    text_hint: str | None,
+) -> dict:
+    """Extrae el contrato (con caché por hash de fichero) y lo normaliza a factura.
+
+    La caché guarda el CONTRATO en crudo por hash: la misma factura devuelve
+    siempre el mismo JSON y, tras la normalización determinista, los mismos euros
+    (determinismo + sin repetir llamadas de pago al modelo)."""
+    cache: TTLCache = app.state.bill_cache
+    key = f"bill:{hashlib.sha256(content).hexdigest()}"
+    contract = cache.get(key)
+    if contract is None:
+        contract = await parser.extract_contract(content, filename, parser_type, text_hint)
+        cache.set(key, contract)
+    return bill_normalise.contract_to_bill(contract)
 
 
 def _unreadable_bill(reason: str) -> dict:
@@ -314,45 +325,6 @@ def _unreadable_bill(reason: str) -> dict:
         "review_reasons": [],
         "warnings": [reason],
     }
-
-
-def _merge_bill_context(target: dict, source: dict | None) -> None:
-    """Completa en target los campos que el otro parser sí extrajo."""
-    if not source:
-        return
-    for key in (
-        "amount_eur",
-        "energy_eur",
-        "fixed_eur",
-        "taxes_eur",
-        "power_eur",
-        "iee_eur",
-        "iva_eur",
-        "iva_rate",
-        "vat_base_eur",
-        "contracted_power_kw",
-        "consumption_history",
-        "consumption_periods",
-        "consumption_period_prices",
-        "total_eur",
-        "currency",
-        "month",
-        "start_date",
-        "end_date",
-        "country_code",
-        "country_name",
-        "language",
-        "supply_address",
-        "postal_code",
-        "city",
-        "region",
-        "location_label",
-        "location_confidence",
-        "lat",
-        "lon",
-    ):
-        if target.get(key) in (None, "", []) and source.get(key) not in (None, "", []):
-            target[key] = source[key]
 
 
 def _bill_location_query(parsed: dict) -> str | None:
@@ -508,16 +480,6 @@ def _is_european_geocode_result(result: dict) -> bool:
 
 def _european_geocode_results(results: list[dict]) -> list[dict]:
     return [result for result in results if _is_european_geocode_result(result)]
-
-
-def _dedupe_strings(values: list[str]) -> list[str]:
-    result = []
-    seen = set()
-    for value in values:
-        if value not in seen:
-            result.append(value)
-            seen.add(value)
-    return result
 
 
 def _profile_summary(req: SolarEstimateRequest, country_code: str) -> dict:

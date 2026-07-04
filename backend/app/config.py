@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     pricing_cache_ttl_seconds: int = 7 * 24 * 3600
     pricing_cache_db_path: str = "pricing_cache.db"
     pricing_feed_url: str | None = None
+    # Caché de extracción de facturas por hash de fichero: misma factura → mismo
+    # JSON → mismos euros (determinismo + no repetir llamadas de pago al modelo).
+    bill_cache_ttl_seconds: int = 365 * 24 * 3600
+    bill_cache_db_path: str = "bill_extraction_cache.db"
 
     # Límite de subidas de factura: por equipo (IP) y global diario
     # (cada subida es una llamada de pago a OpenAI)

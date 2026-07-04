@@ -30,6 +30,16 @@ class PeriodPrices(BaseModel):
     valle: float | None = Field(None, ge=0, le=10)
 
 
+class ConsumptionCandidate(BaseModel):
+    """Un candidato de consumo anual con su origen, para el estado de revisión."""
+
+    candidate: str
+    raw_text: str | None = None
+    value: float | None = None
+    source_label: str | None = None
+    confidence: float | None = None
+
+
 class BillInput(BaseModel):
     """Una factura de la luz: consumo y, opcionalmente, importe y periodo."""
 
@@ -503,6 +513,9 @@ class ParsedBill(BaseModel):
     consumption_history: list[BillHistoryEntry] = []
     consumption_periods: ConsumptionPeriods | None = None
     consumption_period_prices: PeriodPrices | None = None
+    consumption_candidates: list[ConsumptionCandidate] | None = None
+    tariff: str | None = None
+    cups: str | None = None
     needs_review: bool = False
     review_reasons: list[str] = []
     currency: str | None = None
