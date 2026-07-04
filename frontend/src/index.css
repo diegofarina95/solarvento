@@ -4,8 +4,8 @@
 
 :root {
   /* Tema solar */
-  --page: #faf7f0; /* papel cálido */
-  --sky-dawn: #fff3dc; /* luz de amanecer, lavado superior de la página */
+  --page: #fbfaf6; /* papel cálido, un punto más limpio */
+  --sky-dawn: #fff4de; /* luz de amanecer, lavado superior de la página */
   --sun-400: #fbbf24;
   --sun-500: #f59e0b;
   --sun-600: #d97706;
@@ -91,15 +91,24 @@ body {
   opacity: 0.5;
 }
 
-/* Cards: papel sobre papel, borde cálido, elevación suave al pasar */
+/* Cards: papel sobre papel, borde cálido fino, profundidad en capas (premium).
+   tabular-nums alinea las cifras (aire de informe financiero). */
 .card-solar {
   background: #fff;
-  border: 1px solid #eae4d6;
+  border: 1px solid #ece6d9;
   border-radius: 1rem;
-  transition: box-shadow 0.15s ease;
+  box-shadow:
+    0 1px 2px rgba(28, 25, 23, 0.04),
+    0 6px 16px -8px rgba(120, 90, 20, 0.08);
+  font-variant-numeric: tabular-nums;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 .card-solar:hover {
-  box-shadow: 0 4px 16px rgba(120, 90, 20, 0.07);
+  box-shadow:
+    0 2px 4px rgba(28, 25, 23, 0.05),
+    0 16px 32px -12px rgba(120, 90, 20, 0.14);
 }
 /* Las cards de decisión (ahorro, amortización, coste) llevan el sol encima */
 .card-hero {
@@ -145,9 +154,14 @@ body {
 [data-theme='night'] .card-solar {
   background: #171b23;
   border-color: #2a2f3a;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 6px 16px -8px rgba(0, 0, 0, 0.5);
 }
 [data-theme='night'] .card-solar:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.35),
+    0 16px 32px -12px rgba(0, 0, 0, 0.6);
 }
 
 /* Superficies y bordes claros → oscuro */

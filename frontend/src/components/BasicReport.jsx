@@ -81,7 +81,7 @@ function MonthlyChart({ production, consumption, locale, t }) {
               />
               {cons && (
                 <div
-                  className="w-1/2 rounded-t bg-stone-300"
+                  className="w-1/2 rounded-t bg-teal-500"
                   style={{ height: `${Math.max(2, (cons[i] / max) * 100)}%` }}
                   title={`${Math.round(cons[i])} kWh`}
                 />
@@ -97,7 +97,7 @@ function MonthlyChart({ production, consumption, locale, t }) {
         </span>
         {cons && (
           <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-3 rounded-sm bg-stone-300" /> {t('basic.legendConsumption')}
+            <span className="inline-block h-2 w-3 rounded-sm bg-teal-500" /> {t('basic.legendConsumption')}
           </span>
         )}
       </div>
