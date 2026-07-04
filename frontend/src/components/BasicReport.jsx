@@ -18,25 +18,25 @@ const TONE = {
   ok: 'border-amber-300 bg-amber-50 text-amber-900',
   poor: 'border-red-300 bg-red-50 text-red-900',
 }
-const VERDICT_ICON = { good: '✅', ok: '🟡', poor: '🔴' }
+const DOT = { good: 'bg-emerald-500', ok: 'bg-amber-500', poor: 'bg-red-500' }
 
 function VerdictBanner({ verdict, subtitle, t }) {
   return (
     <div className={`rounded-xl border p-4 ${TONE[verdict]}`}>
-      <p className="text-lg font-semibold">
-        {VERDICT_ICON[verdict]} {t(`basic.verdict.${verdict}`)}
+      <p className="flex items-center gap-2 text-lg font-semibold">
+        <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${DOT[verdict]}`} />
+        {t(`basic.verdict.${verdict}`)}
       </p>
-      {subtitle && <p className="mt-0.5 text-sm opacity-90">{subtitle}</p>}
+      {subtitle && <p className="mt-0.5 pl-[18px] text-sm opacity-90">{subtitle}</p>}
     </div>
   )
 }
 
-function StatCard({ icon, label, value }) {
+function StatCard({ label, value }) {
   return (
     <div className="card-solar flex flex-col items-center justify-center px-3 py-4 text-center">
-      <span className="text-2xl" aria-hidden="true">{icon}</span>
-      <span className="mt-1 text-2xl font-bold text-stone-800">{value}</span>
-      <span className="mt-0.5 text-xs font-medium text-stone-500">{label}</span>
+      <span className="text-2xl font-bold text-stone-800">{value}</span>
+      <span className="mt-1 text-xs font-medium text-stone-500">{label}</span>
     </div>
   )
 }
@@ -107,14 +107,12 @@ function MonthlyChart({ production, consumption, locale, t }) {
 
 function Notes({ notes }) {
   if (notes.length === 0) return null
-  const dot = { good: 'text-emerald-600', ok: 'text-amber-600', poor: 'text-red-600' }
-  const icon = { good: '💡', ok: '⚠️', poor: '⛔' }
   return (
     <ul className="space-y-1.5">
       {notes.map((n, i) => (
-        <li key={i} className={`flex items-start gap-2 text-sm ${dot[n.tone]}`}>
-          <span aria-hidden="true">{icon[n.tone]}</span>
-          <span className="text-stone-700">{n.text}</span>
+        <li key={i} className="flex items-start gap-2 text-sm text-stone-700">
+          <span className={`mt-[6px] inline-block h-1.5 w-1.5 shrink-0 rounded-full ${DOT[n.tone]}`} />
+          <span>{n.text}</span>
         </li>
       ))}
     </ul>
@@ -172,9 +170,9 @@ export default function BasicReport({ data, i18n, fmt }) {
       <VerdictBanner verdict={verdict} subtitle={subtitle} t={t} />
 
       <div className="grid grid-cols-3 gap-3">
-        <StatCard icon="💶" label={t('basic.savingMonth')} value={fmt.money0.format(annualSavings / 12)} />
-        <StatCard icon="📅" label={t('basic.savingYear')} value={fmt.money0.format(annualSavings)} />
-        <StatCard icon="⏳" label={t('basic.paybackLabel')} value={paybackText} />
+        <StatCard label={t('basic.savingMonth')} value={fmt.money0.format(annualSavings / 12)} />
+        <StatCard label={t('basic.savingYear')} value={fmt.money0.format(annualSavings)} />
+        <StatCard label={t('basic.paybackLabel')} value={paybackText} />
       </div>
 
       {ae.self_sufficiency_pct != null && (
@@ -182,8 +180,8 @@ export default function BasicReport({ data, i18n, fmt }) {
       )}
 
       {panels && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
-          💡 {t('basic.recommendation', {
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-900">
+          {t('basic.recommendation', {
             count: fmt.nf.format(panels.count),
             kwp: fmt.nf2.format(panels.total_kwp),
           })}
