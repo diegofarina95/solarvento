@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import AdSlot from './components/AdSlot'
-import SunArc from './components/SunArc'
+import SunArc, { celestialPosition } from './components/SunArc'
 import LocationSearch from './components/LocationSearch'
 import MapPicker from './components/MapPicker'
 import SolarForm from './components/SolarForm'
@@ -40,8 +40,21 @@ function requireLocaleNumber(value, label, t, options) {
 
 export default function App() {
   const [language, setLanguage] = useState(detectInitialLanguage)
-  // Previsualización del cielo: 'auto' (hora real) | 'day' | 'night'.
+  // Cielo/tema: 'auto' (hora real de España) | 'day' | 'night'.
   const [sunMode, setSunMode] = useState('auto')
+  // Reloj de baja frecuencia para que el tema cambie solo al anochecer/amanecer
+  // aunque la página esté abierta.
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60000)
+    return () => clearInterval(id)
+  }, [])
+  const isNight = sunMode === 'night' || (sunMode === 'auto' && !celestialPosition(now).isDay)
+  useEffect(() => {
+    const root = document.documentElement
+    if (isNight) root.setAttribute('data-theme', 'night')
+    else root.removeAttribute('data-theme')
+  }, [isNight])
   const i18n = useMemo(() => createI18n(language), [language])
   const { t } = i18n
   const [position, setPosition] = useState(INITIAL_POSITION)

@@ -120,6 +120,131 @@ body {
   font: inherit;
 }
 
+/* --- Modo noche ---
+   Se activa poniendo data-theme="night" en <html>. Voltea las variables del tema
+   (el body y las clases basadas en var cambian solas) y añade una capa de
+   overrides sobre las utilidades claras más usadas. En Tailwind v4 estas reglas
+   sin @layer ganan a las utilidades, así que el override es fiable. */
+:root[data-theme='night'] {
+  --page: #10131a;
+  --sky-dawn: #1b2436; /* resplandor de cielo nocturno en la cabecera */
+  --surface-1: #1a1e27;
+  --text-primary: #e7e5e4;
+  --text-secondary: #a8a29e;
+  --text-muted: #837f7a;
+  --gridline: #2a2f3a;
+  --baseline: #3f4655;
+  /* Series de gráficas legibles sobre fondo oscuro */
+  --series-production: #60a5fa;
+  --series-irradiation: #fbbf24;
+  --series-consumption: #34d399;
+  --series-consumption-estimated: #2f6b57;
+  --series-cost: #a78bfa;
+}
+
+[data-theme='night'] .card-solar {
+  background: #171b23;
+  border-color: #2a2f3a;
+}
+[data-theme='night'] .card-solar:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+
+/* Superficies y bordes claros → oscuro */
+[data-theme='night'] .bg-white {
+  background-color: #171b23;
+}
+[data-theme='night'] .bg-white\/70 {
+  background-color: rgba(23, 27, 35, 0.7);
+}
+[data-theme='night'] .bg-stone-50 {
+  background-color: #14171e;
+}
+[data-theme='night'] .bg-stone-100 {
+  background-color: #1e232d;
+}
+[data-theme='night'] .bg-stone-200 {
+  background-color: #2a2f3a;
+}
+[data-theme='night'] .border-stone-200 {
+  border-color: #2a2f3a;
+}
+[data-theme='night'] .border-stone-300 {
+  border-color: #363c48;
+}
+
+/* Texto gris claro → gris claro-sobre-oscuro */
+[data-theme='night'] .text-stone-900 {
+  color: #f5f5f4;
+}
+[data-theme='night'] .text-stone-800 {
+  color: #e7e5e4;
+}
+[data-theme='night'] .text-stone-700 {
+  color: #d6d3d1;
+}
+[data-theme='night'] .text-stone-600 {
+  color: #a8a29e;
+}
+[data-theme='night'] .text-stone-500 {
+  color: #8b8781;
+}
+[data-theme='night'] .text-stone-400 {
+  color: #6b6864;
+}
+
+/* Cajas de acento: mantienen el color, en versión oscura translúcida */
+[data-theme='night'] .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.12);
+}
+[data-theme='night'] .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.12);
+}
+[data-theme='night'] .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.12);
+}
+[data-theme='night'] .bg-sky-50 {
+  background-color: rgba(14, 165, 233, 0.12);
+}
+[data-theme='night'] .border-emerald-200,
+[data-theme='night'] .border-emerald-300 {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+[data-theme='night'] .border-amber-200,
+[data-theme='night'] .border-amber-300 {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+[data-theme='night'] .border-red-200,
+[data-theme='night'] .border-red-300 {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+[data-theme='night'] .border-sky-200 {
+  border-color: rgba(14, 165, 233, 0.4);
+}
+[data-theme='night'] .text-emerald-900,
+[data-theme='night'] .text-emerald-800,
+[data-theme='night'] .text-emerald-700 {
+  color: #6ee7b7;
+}
+[data-theme='night'] .text-amber-900,
+[data-theme='night'] .text-amber-800,
+[data-theme='night'] .text-amber-700 {
+  color: #fcd34d;
+}
+[data-theme='night'] .text-red-900,
+[data-theme='night'] .text-red-800,
+[data-theme='night'] .text-red-700 {
+  color: #fca5a5;
+}
+[data-theme='night'] .text-sky-900 {
+  color: #7dd3fc;
+}
+
+/* Mapa: las baldosas son claras por naturaleza; se atenúan un poco */
+[data-theme='night'] .leaflet-container {
+  filter: brightness(0.85) contrast(1.02);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn-solar,
   .card-solar {
