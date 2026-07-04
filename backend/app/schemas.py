@@ -31,13 +31,22 @@ class PeriodPrices(BaseModel):
 
 
 class ConsumptionCandidate(BaseModel):
-    """Un candidato de consumo anual con su origen, para el estado de revisión."""
+    """Un candidato de consumo con su origen, para el estado de revisión."""
 
     candidate: str
     raw_text: str | None = None
     value: float | None = None
     source_label: str | None = None
     confidence: float | None = None
+
+
+class ConsumptionResolution(BaseModel):
+    """Resultado del resolutor del consumo anual (Layer 4)."""
+
+    annual_kwh: float | None = None
+    method: str | None = None  # history | declared_annual | annualised_estimate | insufficient
+    months_real: float | None = None
+    confidence: str | None = None  # high | low | none
 
 
 class BillInput(BaseModel):
@@ -514,6 +523,8 @@ class ParsedBill(BaseModel):
     consumption_periods: ConsumptionPeriods | None = None
     consumption_period_prices: PeriodPrices | None = None
     consumption_candidates: list[ConsumptionCandidate] | None = None
+    consumption_resolution: ConsumptionResolution | None = None
+    existing_pv: bool = False
     tariff: str | None = None
     cups: str | None = None
     needs_review: bool = False
