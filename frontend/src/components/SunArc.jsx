@@ -8,9 +8,14 @@ import { useEffect, useState } from 'react'
 const P0 = [20, 88]
 const P1 = [320, -55]
 const P2 = [620, 88]
-const SUNRISE = 7 // hora local aproximada de amanecer
-const SUNSET = 21 // hora local aproximada de atardecer
-const NOON = 13 // cénit: mediodía solar aprox. en España (el sol arriba a media jornada)
+// Referencia: península ibérica (Madrid) y huso de España. El amanecer/ocaso se
+// calculan con la ecuación del sol para la fecha actual, así que son precisos
+// todo el año; el huso Europe/Madrid hace que sea correcto aunque el dispositivo
+// esté en otra zona horaria.
+const TZ = 'Europe/Madrid'
+const LAT = 40.4168
+const LON = -3.7038 // este positivo; Madrid está al oeste
+const RAD = Math.PI / 180
 
 function bezier(t) {
   const u = 1 - t
@@ -19,22 +24,60 @@ function bezier(t) {
   return [x, y]
 }
 
-// Posición del astro y si es de día, a partir de una fecha local. Pura (testable).
-// De día el mapeo es a trozos para que el MEDIODÍA quede en el cénit (t=0.5),
-// aunque amanecer/atardecer no sean simétricos respecto al mediodía.
+// Hora fraccionaria (0–24) de un instante en un huso dado, con hourCycle h23.
+function hourInTZ(date, timeZone) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(date)
+  const h = Number(parts.find((p) => p.type === 'hour').value)
+  const m = Number(parts.find((p) => p.type === 'minute').value)
+  return h + m / 60
+}
+
+function julianToDate(jd) {
+  return new Date((jd - 2440587.5) * 86400000)
+}
+
+// Ecuación del sol (Wikipedia "Sunrise equation"): amanecer, ocaso y mediodía
+// solar como HORAS de Europe/Madrid para el día del instante dado.
+export function sunTimes(date, lat = LAT, lon = LON) {
+  const jd = date.getTime() / 86400000 + 2440587.5
+  const lw = -lon // longitud oeste positiva
+  const n = Math.round(jd - 2451545.0 + 0.0008)
+  const jStar = n + lw / 360
+  const M = (357.5291 + 0.98560028 * jStar) % 360
+  const Mr = M * RAD
+  const C = 1.9148 * Math.sin(Mr) + 0.02 * Math.sin(2 * Mr) + 0.0003 * Math.sin(3 * Mr)
+  const lambda = ((M + C + 180 + 102.9372) % 360) * RAD
+  const jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(Mr) - 0.0069 * Math.sin(2 * lambda)
+  const sinDec = Math.sin(lambda) * Math.sin(23.4397 * RAD)
+  const cosDec = Math.cos(Math.asin(sinDec))
+  const cosOmega =
+    (Math.sin(-0.833 * RAD) - Math.sin(lat * RAD) * sinDec) / (Math.cos(lat * RAD) * cosDec)
+  // Sin amanecer/ocaso (latitudes extremas): no ocurre en España, pero se acota.
+  const omega = Math.acos(Math.min(1, Math.max(-1, cosOmega))) / RAD
+  return {
+    sunrise: hourInTZ(julianToDate(jTransit - omega / 360), TZ),
+    sunset: hourInTZ(julianToDate(jTransit + omega / 360), TZ),
+    noon: hourInTZ(julianToDate(jTransit), TZ),
+  }
+}
+
+// Posición del astro y si es de día. De día, mapeo a trozos para que el MEDIODÍA
+// solar quede en el cénit (t=0.5) aunque amanecer/ocaso no sean simétricos.
 export function celestialPosition(date) {
-  const hour = date.getHours() + date.getMinutes() / 60
-  const isDay = hour >= SUNRISE && hour < SUNSET
+  const { sunrise, sunset, noon } = sunTimes(date)
+  const hour = hourInTZ(date, TZ)
+  const isDay = hour >= sunrise && hour < sunset
   let t
   if (isDay) {
     t =
-      hour <= NOON
-        ? 0.5 * ((hour - SUNRISE) / (NOON - SUNRISE))
-        : 0.5 + 0.5 * ((hour - NOON) / (SUNSET - NOON))
+      hour <= noon
+        ? 0.5 * ((hour - sunrise) / (noon - sunrise))
+        : 0.5 + 0.5 * ((hour - noon) / (sunset - noon))
   } else {
-    // La noche va de SUNSET a SUNRISE del día siguiente; la luna recorre el arco.
-    const nightLength = 24 - (SUNSET - SUNRISE)
-    const sinceSunset = (hour - SUNSET + 24) % 24
+    const nightLength = 24 - sunset + sunrise
+    const sinceSunset = (hour - sunset + 24) % 24
     t = sinceSunset / nightLength
   }
   const clamped = Math.min(1, Math.max(0, t))
