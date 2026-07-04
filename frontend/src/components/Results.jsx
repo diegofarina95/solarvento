@@ -157,8 +157,8 @@ function SizingSection({ analysis, i18n, fmt }) {
   const maxSavings = byKwp.get(analysis.max_savings_kwp)
   if (!optimum || !maxSavings || optimum.power_kwp === maxSavings.power_kwp) return null
   const rows = [
-    { key: 'optimum', label: t('sizing.optimum'), s: optimum, highlight: true },
-    { key: 'maxSavings', label: t('sizing.maxSavings'), s: maxSavings, highlight: false },
+    { key: 'optimum', label: t('sizing.optimum'), badge: t('sizing.byReturn'), s: optimum, highlight: true },
+    { key: 'maxSavings', label: t('sizing.maxSavings'), badge: t('sizing.byCoverage'), s: maxSavings, highlight: false },
   ]
   return (
     <div className="card-solar p-4">
@@ -178,15 +178,17 @@ function SizingSection({ analysis, i18n, fmt }) {
             </tr>
           </thead>
           <tbody className="tabular-nums">
-            {rows.map(({ key, label, s, highlight }) => (
+            {rows.map(({ key, label, badge, s, highlight }) => (
               <tr key={key} className={`border-b border-stone-100 ${highlight ? 'bg-amber-50' : ''}`}>
                 <td className="py-2 pr-3 font-medium text-stone-800">
                   {label}
-                  {highlight && (
-                    <span className="ml-1.5 rounded bg-amber-200 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
-                      {t('sizing.recommended')}
-                    </span>
-                  )}
+                  <span
+                    className={`ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                      highlight ? 'bg-amber-200 text-amber-900' : 'bg-stone-200 text-stone-600'
+                    }`}
+                  >
+                    {badge}
+                  </span>
                 </td>
                 <td className="py-2 pr-3">
                   {fmt.nf2.format(s.power_kwp)} kWp
@@ -810,12 +812,14 @@ export default function Results({ data, i18n }) {
             )} · ${fmt.nf.format(data.optimal.annual_production_kwh)} ${t('units.kwhYear')}`}
           />
         )}
-        {eco.roi_pct != null && (
+        {eco.irr_pct != null && (
           <Card
-            title={t('results.roi')}
-            value={fmt.nf1.format(eco.roi_pct)}
+            title={t('results.irr')}
+            value={fmt.nf1.format(eco.irr_pct)}
             unit="%"
-            detail={t('results.roiDetail')}
+            detail={t('results.irrDetail', {
+              years: eco.assumptions?.headline_years ?? 25,
+            })}
           />
         )}
         {data.consumption?.annual_amount_eur != null && (
