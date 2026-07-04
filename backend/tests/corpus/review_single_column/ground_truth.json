@@ -1,5 +1,6 @@
 {
   "provider": "Caso de revisión: columna única sin corroboración",
+  "tags": "review-case, single-column",
   "expected_outcome": "review",
   "note": "2.150 kWh con total 3.027,14 € = 1,41 €/kWh (imposible) y sin periodos/histórico que corroboren: DEBE ir a revisión, nunca calcularse."
 }

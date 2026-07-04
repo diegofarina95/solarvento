@@ -1,5 +1,6 @@
 {
   "provider": "A Estrada (sintético, valle-dominante)",
+  "tags": "annual, multi-period, valle-dominant",
   "expected_outcome": "compute",
   "annual_consumption_kwh": 13800,
   "period_split": {"punta": 2150, "llano": 2820, "valle": 8830},

@@ -1,0 +1,13 @@
+{
+  "provider": "EnergyPlus / Caldas (realista)",
+  "tags": "monthly+history, existing-PV, multi-period, sub-annual",
+  "expected_outcome": "review",
+  "note": "Factura de 22 días con autoconsumo existente: se rutea a revisión (el consumo de red no es la demanda real). Aun así el anual debe salir del histórico (4646), NO de 346×365/22; el consumo del periodo es 346 (63+83+200), NUNCA la lectura 19806.",
+  "annual_consumption_kwh": 4646,
+  "period_consumption_kwh": 346,
+  "period_split": {"punta": 63, "llano": 83, "valle": 200},
+  "contracted_power_kw": 4.6,
+  "tariff": "2.0TD",
+  "existing_pv": true,
+  "supply_address": {"cp": "36650", "municipio": "Caldas de Reis", "provincia": "Pontevedra"}
+}

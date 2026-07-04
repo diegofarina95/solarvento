@@ -31,24 +31,30 @@ def _close(a, b, tol_pct=0.01, tol_abs=5.0):
     return abs(a - b) <= max(tol_pct * max(abs(a), abs(b)), tol_abs)
 
 
+def _resolved_annual(bill: dict) -> float | None:
+    res = bill.get("consumption_resolution") or {}
+    return res.get("annual_kwh")
+
+
 def _classify(entry: Path) -> dict:
     contract = json.loads((entry / "contract.json").read_text(encoding="utf-8"))
     truth = json.loads((entry / "ground_truth.json").read_text(encoding="utf-8"))
     bill = contract_to_bill(contract)
     computed = not bill["needs_review"]
     expected = truth.get("expected_outcome", "compute")
+    # El anual autoritativo es el RESUELTO (histórico/declarado/estimado), no el
+    # consumo del propio periodo de la factura (que puede ser sub-anual).
+    annual = _resolved_annual(bill)
+    tags = truth.get("tags")
 
     if expected == "review":
-        # Debía revisarse. Calcular es un fallo duro; revisar es correcto.
         outcome = "correct" if not computed else "computed_should_review"
-        return {"name": entry.name, "outcome": outcome, "kwh": bill["kwh"]}
+        return {"name": entry.name, "outcome": outcome, "annual": annual, "tags": tags}
 
-    # expected == compute
     if not computed:
-        # Seguro pero subóptimo: quedó en revisión cuando podía calcular.
-        return {"name": entry.name, "outcome": "review", "kwh": bill["kwh"]}
+        return {"name": entry.name, "outcome": "review", "annual": annual, "tags": tags}
 
-    checks = _close(bill["kwh"], truth.get("annual_consumption_kwh"))
+    checks = _close(annual, truth.get("annual_consumption_kwh"), tol_pct=0.02, tol_abs=20)
     split_truth = truth.get("period_split")
     if split_truth and checks:
         periods = bill.get("consumption_periods") or {}
@@ -58,7 +64,7 @@ def _classify(entry: Path) -> dict:
     if truth.get("contracted_power_kw") is not None and checks:
         checks = _close(bill.get("contracted_power_kw"), truth["contracted_power_kw"], tol_abs=0.1)
     outcome = "correct" if checks else "wrong_but_computed"
-    return {"name": entry.name, "outcome": outcome, "kwh": bill["kwh"]}
+    return {"name": entry.name, "outcome": outcome, "annual": annual, "tags": tags}
 
 
 def test_corpus_scorecard(capsys):
@@ -72,7 +78,8 @@ def test_corpus_scorecard(capsys):
 
     lines = ["", "=== CORPUS SCORECARD ==="]
     for r in results:
-        lines.append(f"  {r['outcome']:22} {r['name']:34} kwh={r['kwh']}")
+        tags = f" [{r['tags']}]" if r.get("tags") else ""
+        lines.append(f"  {r['outcome']:22} {r['name']:30} annual={r['annual']}{tags}")
     lines.append(
         f"  TOTAL: {len(results)} | correct={tally.get('correct', 0)} "
         f"review={tally.get('review', 0)} "

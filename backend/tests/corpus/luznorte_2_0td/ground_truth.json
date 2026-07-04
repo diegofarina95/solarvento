@@ -1,5 +1,6 @@
 {
   "provider": "LuzNorte (sintético)",
+  "tags": "annual, monthly+history, multi-period",
   "expected_outcome": "compute",
   "annual_consumption_kwh": 6551,
   "period_split": {"punta": 950, "llano": 1450, "valle": 4151},

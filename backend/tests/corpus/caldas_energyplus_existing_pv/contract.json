@@ -1,0 +1,62 @@
+{
+  "bill_type_hint": "monthly_with_history",
+  "annual_consumption_kwh": {"raw_text": "346", "value": null, "source_label": "Consumo del periodo", "confidence": 0.9},
+  "period_total_kwh": {"raw_text": "346", "value": null, "source_label": "Total periodos", "confidence": 0.9},
+  "period_split": {
+    "p1_punta": {"raw_text": "63", "value": null, "source_label": "P1 Punta", "confidence": 0.9},
+    "p2_llano": {"raw_text": "83", "value": null, "source_label": "P2 Llano", "confidence": 0.9},
+    "p3_valle": {"raw_text": "200", "value": null, "source_label": "P3 Valle", "confidence": 0.9},
+    "p4": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+    "p5": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+    "p6": {"raw_text": null, "value": null, "source_label": null, "confidence": null}
+  },
+  "period_split_prices": {
+    "p1_punta": {"raw_text": "0,20", "value": null, "source_label": "P1", "confidence": 0.8},
+    "p2_llano": {"raw_text": "0,15", "value": null, "source_label": "P2", "confidence": 0.8},
+    "p3_valle": {"raw_text": "0,10", "value": null, "source_label": "P3", "confidence": 0.8},
+    "p4": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+    "p5": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+    "p6": {"raw_text": null, "value": null, "source_label": null, "confidence": null}
+  },
+  "monthly_history": [
+    {"month": 1, "kwh": {"raw_text": "430", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 2, "kwh": {"raw_text": "410", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 3, "kwh": {"raw_text": "400", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 4, "kwh": {"raw_text": "380", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 5, "kwh": {"raw_text": "360", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 6, "kwh": {"raw_text": "350", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 7, "kwh": {"raw_text": "360", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 8, "kwh": {"raw_text": "370", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 9, "kwh": {"raw_text": "346", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 10, "kwh": {"raw_text": "390", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 11, "kwh": {"raw_text": "410", "value": null, "source_label": "Histórico", "confidence": 0.8}},
+    {"month": 12, "kwh": {"raw_text": "440", "value": null, "source_label": "Histórico", "confidence": 0.8}}
+  ],
+  "meter_readings": {
+    "initial": {"raw_text": "19460", "value": null, "source_label": "Lectura anterior", "confidence": 0.9},
+    "final": {"raw_text": "19806", "value": null, "source_label": "Lectura actual", "confidence": 0.9}
+  },
+  "self_consumption_block": {
+    "present": true,
+    "exported_kwh": {"raw_text": "180", "value": null, "source_label": "Excedentes vertidos", "confidence": 0.85},
+    "compensation_eur_per_kwh": {"raw_text": "0,10", "value": null, "source_label": "Compensación", "confidence": 0.85}
+  },
+  "contracted_power_kw": [
+    {"raw_text": "4,6", "value": null, "source_label": "Potencia P1", "confidence": 0.9},
+    {"raw_text": "4,6", "value": null, "source_label": "Potencia P2", "confidence": 0.9}
+  ],
+  "tariff": "2.0TD",
+  "billing_period": {"start": "2026-09-01", "end": "2026-09-23", "days": {"raw_text": "22", "value": null, "source_label": "Nº días", "confidence": 0.95}},
+  "energy_term_eur": {"raw_text": "70,00", "value": null, "source_label": "Término energía", "confidence": 0.85},
+  "energy_term_eur_per_kwh": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+  "total_amount_eur": {"raw_text": "95,00", "value": null, "source_label": "Total factura", "confidence": 0.9},
+  "electricity_tax_eur": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+  "vat_eur": {"raw_text": null, "value": null, "source_label": null, "confidence": null},
+  "vat_rate": {"raw_text": "0,21", "value": null, "source_label": "IVA", "confidence": 0.9},
+  "currency": "EUR",
+  "country_code": "ES",
+  "language": "es",
+  "supply_address": {"street": "Rúa do Sol 4", "cp": "36650", "municipio": "Caldas de Reis", "provincia": "Pontevedra"},
+  "cups": "ES0031000000000009XY",
+  "warnings": ["Suministro con autoconsumo (excedentes)."]
+}
