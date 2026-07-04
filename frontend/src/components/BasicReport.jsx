@@ -121,16 +121,6 @@ function Notes({ notes }) {
 
 function buildNotes(data, fmt, t) {
   const notes = []
-  const battery = data.battery_analysis
-  if (battery) {
-    if (battery.recommended_battery_kwh > 0) {
-      notes.push({ tone: 'good', text: t('basic.notes.batteryGood', {
-        kwh: fmt.nf1.format(battery.recommended_battery_kwh),
-      }) })
-    } else if ((battery.scenarios ?? []).some((s) => s.battery_kwh > 0)) {
-      notes.push({ tone: 'ok', text: t('basic.notes.batteryNone') })
-    }
-  }
   if (data.subsidies) {
     notes.push(
       data.subsidies.applicable
@@ -149,6 +139,53 @@ function buildNotes(data, fmt, t) {
   return notes
 }
 
+function BatteryCard({ battery, fmt, t }) {
+  const recKwh = battery.recommended_battery_kwh
+  const scenarios = battery.scenarios ?? []
+  if (!recKwh || recKwh <= 0) {
+    if (!scenarios.some((s) => s.battery_kwh > 0)) return null
+    return (
+      <div className="card-solar px-4 py-3">
+        <p className="text-sm font-semibold text-stone-700">{t('basic.battery.title')}</p>
+        <p className="mt-1 flex items-center gap-2 text-sm text-stone-600">
+          <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-amber-500" />
+          {t('basic.battery.none')}
+        </p>
+      </div>
+    )
+  }
+  const base = scenarios.find((s) => s.battery_kwh === 0)
+  const rec = scenarios.find((s) => s.battery_kwh === recKwh)
+  const delta =
+    rec && base && rec.self_sufficiency_pct != null && base.self_sufficiency_pct != null
+      ? rec.self_sufficiency_pct - base.self_sufficiency_pct
+      : null
+  const payback = rec?.battery_incremental_payback_years
+  return (
+    <div className="card-solar px-4 py-3">
+      <p className="text-sm font-semibold text-stone-700">{t('basic.battery.title')}</p>
+      <p className="mt-1 flex items-center gap-2 text-sm font-medium text-emerald-800">
+        <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+        {t('basic.battery.recommend', { kwh: fmt.nf1.format(recKwh) })}
+      </p>
+      <div className="mt-2 grid grid-cols-2 gap-3">
+        {delta != null && (
+          <div>
+            <p className="text-lg font-bold text-stone-800">+{fmt.nf1.format(delta)}%</p>
+            <p className="text-xs text-stone-500">{t('basic.battery.selfSuff')}</p>
+          </div>
+        )}
+        {payback != null && (
+          <div>
+            <p className="text-lg font-bold text-stone-800">{t('basic.years', { value: fmt.nf1.format(payback) })}</p>
+            <p className="text-xs text-stone-500">{t('basic.battery.paybackLabel')}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function BasicReport({ data, i18n, fmt }) {
   const { t } = i18n
   const eco = data.economics ?? {}
@@ -164,6 +201,8 @@ export default function BasicReport({ data, i18n, fmt }) {
       : t('basic.paybackNever')
   const subtitle = t('basic.verdictSub', { year: fmt.money0.format(annualSavings) })
   const system = data.user_system ?? data.optimal
+  const selfSuff = ae.self_sufficiency_pct
+  const production = system?.annual_production_kwh
 
   return (
     <div className="space-y-4">
@@ -175,16 +214,38 @@ export default function BasicReport({ data, i18n, fmt }) {
         <StatCard label={t('basic.paybackLabel')} value={paybackText} />
       </div>
 
-      {ae.self_sufficiency_pct != null && (
-        <SelfSufficiencyBar pct={ae.self_sufficiency_pct} t={t} />
+      {/* Una frase que resume toda la página */}
+      {selfSuff != null && (
+        <p className="text-sm leading-relaxed text-stone-700">
+          {t('basic.summary', {
+            selfSuff: fmt.nf.format(selfSuff),
+            savings: fmt.money0.format(annualSavings),
+          })}
+        </p>
       )}
 
+      {selfSuff != null && <SelfSufficiencyBar pct={selfSuff} t={t} />}
+
       {panels && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-900">
-          {t('basic.recommendation', {
-            count: fmt.nf.format(panels.count),
-            kwp: fmt.nf2.format(panels.total_kwp),
-          })}
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm text-emerald-900">
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+            {t('basic.recommendationTitle')}
+          </p>
+          <p className="mt-1 font-medium">
+            {t('basic.recommendationBody', {
+              count: fmt.nf.format(panels.count),
+              kwp: fmt.nf2.format(panels.total_kwp),
+              area: fmt.nf.format(panels.roof_area_m2),
+            })}
+          </p>
+          {production != null && (
+            <p className="mt-1 text-emerald-800">
+              {t('basic.estimatedProduction')}:{' '}
+              <span className="font-semibold">
+                {t('basic.production', { value: fmt.nf.format(production) })}
+              </span>
+            </p>
+          )}
         </div>
       )}
 
@@ -194,6 +255,8 @@ export default function BasicReport({ data, i18n, fmt }) {
         locale={i18n.locale}
         t={t}
       />
+
+      {data.battery_analysis && <BatteryCard battery={data.battery_analysis} fmt={fmt} t={t} />}
 
       <Notes notes={buildNotes(data, fmt, t)} />
     </div>
