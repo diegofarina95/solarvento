@@ -50,41 +50,33 @@ class OpenAIBillParser:
         content_type: str = "application/pdf",
         text_hint: str | None = None,
     ) -> dict[str, Any]:
-        """Extrae el CONTRATO tipado (bill_contract) de cualquier factura.
+        """Extrae el CONTRATO tipado (bill_contract) de cualquier factura, blindado.
 
-        Se envía el fichero a un modelo con visión (la API renderiza las páginas
-        del PDF), con el texto del PDF como señal auxiliar cuando existe. Structured
-        outputs STRICT, temperature 0. Devuelve el contrato en crudo (raw_text por
-        campo); la normalización y la reconciliación son deterministas en Layer 3."""
-        encoded = base64.b64encode(content).decode("utf-8")
-        if content_type.startswith("image/"):
-            file_content: dict[str, Any] = {
-                "type": "input_image",
-                "image_url": f"data:{content_type};base64,{encoded}",
-            }
-        else:
-            file_content = {
-                "type": "input_file",
-                "filename": _safe_pdf_filename(filename),
-                "file_data": f"data:application/pdf;base64,{encoded}",
-            }
+        Estrategia robusta:
+          1) PDF con capa de texto → se analiza el TEXTO PLANO (más fiable y barato
+             que subir el fichero; lo que pidió el usuario);
+          2) imagen/escaneo, o PDF sin texto, o si el texto falla → VISIÓN (el
+             fichero/imagen al modelo).
+        Structured outputs STRICT. Determinismo por caché de fichero (no por
+        temperature: los modelos de razonamiento no aceptan ese parámetro)."""
+        is_image = content_type.startswith("image/")
+        has_text = bool(text_hint and text_hint.strip())
 
-        user_content: list[dict[str, Any]] = [
-            file_content,
-            {"type": "input_text", "text": "Extract the electricity bill contract for SolVento."},
-        ]
-        if text_hint and text_hint.strip():
-            user_content.append({
-                "type": "input_text",
-                "text": (
-                    "Auxiliary PDF text layer (may be noisy; the rendered pages are "
-                    f"authoritative):\n{text_hint[:12000]}"
-                ),
-            })
+        # 1) Vía texto plano (PDF con capa de texto).
+        if not is_image and has_text:
+            try:
+                return await self._request(_text_user_content(text_hint), why="text")
+            except BillParseError as exc:
+                logger.warning("bill extraction: text path failed (%s); trying vision", exc)
 
+        # 2) Vía visión (imagen, escaneo, o PDF sin texto / con texto fallido).
+        return await self._request(
+            _file_user_content(content, filename, content_type, text_hint), why="vision"
+        )
+
+    async def _request(self, user_content: list[dict[str, Any]], *, why: str) -> dict[str, Any]:
         payload = {
             "model": self.model,
-            "temperature": 0,
             "input": [
                 {"role": "system", "content": EXTRACTION_SYSTEM_PROMPT},
                 {"role": "user", "content": user_content},
@@ -98,33 +90,68 @@ class OpenAIBillParser:
                 }
             },
         }
-
-        logger.info("bill extraction: POST /responses model=%s bytes=%d", self.model, len(content))
+        logger.info("bill extraction: POST /responses model=%s via=%s", self.model, why)
         try:
             response = await self._client.post("/responses", json=payload)
         except httpx.HTTPError as exc:
-            logger.warning("bill extraction: transport error: %s", exc)
+            logger.warning("bill extraction: transport error (%s): %s", why, exc)
             raise BillParseError("OpenAI no pudo analizar la factura") from exc
 
         if response.status_code >= 400:
-            # Instrumentación: un 400 aquí suele ser el esquema rechazado (p. ej.
-            # demasiadas propiedades). Se registra el cuerpo para diagnóstico.
             logger.warning(
-                "bill extraction: HTTP %s body=%s",
-                response.status_code, response.text[:800],
+                "bill extraction: HTTP %s (%s) body=%s", response.status_code, why, response.text[:800]
             )
             raise BillParseError("OpenAI no pudo analizar la factura")
 
         data = response.json()
-        logger.info("bill extraction: HTTP %s status=%s", response.status_code, data.get("status"))
+        logger.info("bill extraction: HTTP %s (%s) status=%s", response.status_code, why, data.get("status"))
         if data.get("status") == "incomplete":
             raise BillParseError("OpenAI devolvió un análisis incompleto de la factura")
         text = _extract_output_text(data)
         try:
             return json.loads(text)
         except json.JSONDecodeError as exc:
-            logger.warning("bill extraction: non-JSON output: %s", text[:400])
+            logger.warning("bill extraction: non-JSON output (%s): %s", why, text[:400])
             raise BillParseError("OpenAI devolvió una respuesta no válida") from exc
+
+
+def _text_user_content(text_hint: str) -> list[dict[str, Any]]:
+    return [
+        {
+            "type": "input_text",
+            "text": (
+                "Extract the electricity bill contract for SolVento from the following "
+                "plain-text layer of the bill PDF:\n\n" + text_hint[:20000]
+            ),
+        }
+    ]
+
+
+def _file_user_content(
+    content: bytes, filename: str | None, content_type: str, text_hint: str | None
+) -> list[dict[str, Any]]:
+    encoded = base64.b64encode(content).decode("utf-8")
+    if content_type.startswith("image/"):
+        file_content: dict[str, Any] = {
+            "type": "input_image",
+            "image_url": f"data:{content_type};base64,{encoded}",
+        }
+    else:
+        file_content = {
+            "type": "input_file",
+            "filename": _safe_pdf_filename(filename),
+            "file_data": f"data:application/pdf;base64,{encoded}",
+        }
+    parts: list[dict[str, Any]] = [
+        file_content,
+        {"type": "input_text", "text": "Extract the electricity bill contract for SolVento."},
+    ]
+    if text_hint and text_hint.strip():
+        parts.append({
+            "type": "input_text",
+            "text": f"Auxiliary text layer (rendered pages are authoritative):\n{text_hint[:12000]}",
+        })
+    return parts
 
 
 def _extract_output_text(response: dict[str, Any]) -> str:

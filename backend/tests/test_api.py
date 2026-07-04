@@ -584,7 +584,8 @@ def test_parse_bill_uses_openai_when_configured(respx_mock, openai_client):
 
     payload = json.loads(respx_mock.calls.last.request.content)
     assert payload["model"] == "gpt-5.5"
-    assert payload["temperature"] == 0
+    # 'temperature' NO se envía: los modelos de razonamiento lo rechazan con 400.
+    assert "temperature" not in payload
     content = payload["input"][1]["content"]
     assert content[0]["type"] == "input_file"
     assert content[0]["filename"] == "facture.pdf"
@@ -849,6 +850,55 @@ def test_parse_bill_malformed_model_response_is_review_not_crash(respx_mock, ope
     data = resp.json()
     assert data["kwh"] is None
     assert data["needs_review"] is True
+
+
+@respx.mock
+def test_parse_bill_uses_plain_text_path_for_text_pdf(respx_mock, openai_client, monkeypatch):
+    # Blindado: un PDF con capa de texto se analiza como TEXTO PLANO (sin subir el
+    # fichero), que es lo más fiable y barato.
+    from app.main import bills_mod
+    monkeypatch.setattr(
+        bills_mod, "extract_pdf_text_safe", lambda _c: "FACTURA DE ELECTRICIDAD 2.902 kWh"
+    )
+    respx_mock.post("https://api.openai.com/v1/responses").mock(
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("2.902", "Consumo"),
+            total_amount_eur=_cf("725,50", "Total"), currency="EUR", country_code="ES",
+        )
+    )
+    resp = openai_client.post(
+        "/api/parse-bill",
+        files={"file": ("factura.pdf", b"%PDF-1.4\n%%EOF", "application/pdf")},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["kwh"] == 2902.0
+    payload = json.loads(respx_mock.calls.last.request.content)
+    content = payload["input"][1]["content"]
+    # Vía texto: NO se sube fichero; el texto plano va en la petición.
+    assert all(part["type"] == "input_text" for part in content)
+    assert any("2.902 kWh" in part["text"] for part in content)
+
+
+@respx.mock
+def test_parse_bill_vision_fallback_when_text_path_fails(respx_mock, openai_client, monkeypatch):
+    # Si la vía texto falla (400), se reintenta con VISIÓN (fichero). Blindaje.
+    from app.main import bills_mod
+    monkeypatch.setattr(bills_mod, "extract_pdf_text_safe", lambda _c: "texto de la factura")
+    route = respx_mock.post("https://api.openai.com/v1/responses")
+    route.side_effect = [
+        Response(400, json={"error": {"message": "text path boom"}}),
+        _contract_response(annual_consumption_kwh=_cf("2.902", "Consumo"),
+                           total_amount_eur=_cf("725,50", "Total"), currency="EUR"),
+    ]
+    resp = openai_client.post(
+        "/api/parse-bill",
+        files={"file": ("factura.pdf", b"%PDF-1.4\n%%EOF", "application/pdf")},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["kwh"] == 2902.0
+    assert respx_mock.calls.call_count == 2  # texto (falla) + visión (ok)
+    last = json.loads(respx_mock.calls.last.request.content)
+    assert last["input"][1]["content"][0]["type"] == "input_file"
 
 
 @respx.mock
