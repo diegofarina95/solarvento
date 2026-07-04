@@ -153,7 +153,7 @@ _EUROPE_MAINLAND_MIN_LAT = 34.4  # Chipre/Creta/Malta quedan dentro; Israel/Egip
 
 
 def ensure_european_location(lat: float, lon: float) -> bool:
-    """Return whether the coordinates are inside SolVento's current coverage."""
+    """Return whether the coordinates are inside SolarVento's current coverage."""
 
     if not _in_bounds(lat, lon, EUROPE_BOUNDS):
         return False

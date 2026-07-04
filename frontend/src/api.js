@@ -1,4 +1,4 @@
-// Cliente de la API del backend SolVento.
+// Cliente de la API del backend SolarVento.
 
 // La app puede servirse bajo un prefijo (/solvento en producción). Las llamadas
 // se hacen relativas a esa base; el funnel elimina el prefijo antes de llegar al

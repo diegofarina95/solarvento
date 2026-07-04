@@ -49,7 +49,7 @@ function estimateResponse() {
       vat_note: null,
       source_type: 'market_average',
       fallback_used: true,
-      provider_names: ['SolVento defaults'],
+      provider_names: ['SolarVento defaults'],
       updated_at: '2026-01-01',
       cache_ttl_days: 7,
       turnkey_cost_per_kwp: { low: 1000, medium: 1100, high: 1240 },

@@ -48,14 +48,14 @@ class Settings(BaseSettings):
 
     pvgis_base_url: str = "https://re.jrc.ec.europa.eu/api/v5_2"
     nominatim_base_url: str = "https://nominatim.openstreetmap.org"
-    http_user_agent: str = "SolVento/0.1 (solar calculator; diego.farina@gimo.co.uk)"
+    http_user_agent: str = "SolarVento/0.1 (solar calculator; diego.farina@gimo.co.uk)"
     http_timeout_seconds: float = 30.0
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     trusted_proxy_hosts: str = "127.0.0.1,::1"
 
     @property
     def resolved_openai_api_key(self) -> str | None:
-        """Accept SolVento-specific config and the standard OpenAI env var."""
+        """Accept SolarVento-specific config and the standard OpenAI env var."""
         if self.openai_api_key and self.openai_api_key.strip():
             return self.openai_api_key.strip()
         if self.standard_openai_api_key and self.standard_openai_api_key.strip():

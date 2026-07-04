@@ -26,7 +26,7 @@ function brandHeader(doc, subtitle, i18n, fmt) {
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(22)
   doc.setTextColor(...INK)
-  doc.text('SolVento', MARGIN, 52)
+  doc.text('SolarVento', MARGIN, 52)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(11)
   doc.setTextColor(...MUTED)

@@ -96,7 +96,7 @@ export default function App() {
   // pronuncian el texto con la fonética del lang declarado.
   useEffect(() => {
     document.documentElement.lang = language
-    document.title = `SolVento — ${t('app.subtitle')}`
+    document.title = `SolarVento — ${t('app.subtitle')}`
   }, [language, t])
 
   // En el layout apilado (<lg) los resultados quedan bajo el formulario:
@@ -325,7 +325,7 @@ export default function App() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-4xl font-bold tracking-tight text-stone-900">
-              Sol<span className="text-amber-600">Vento</span>
+              Solar<span className="text-amber-600">Vento</span>
             </h1>
             <p className="mt-1.5 max-w-3xl text-stone-600">{t('app.subtitle')}</p>
           </div>

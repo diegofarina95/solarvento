@@ -187,7 +187,7 @@ BILL_CONTRACT_SCHEMA: dict[str, Any] = {
 
 # Prompt de disciplina de extracción: el modelo TRANSCRIBE, no razona.
 EXTRACTION_SYSTEM_PROMPT = """\
-You extract data from residential electricity bills (any Spanish provider) for SolVento.
+You extract data from residential electricity bills (any Spanish provider) for SolarVento.
 Return ONLY the given JSON schema. You TRANSCRIBE; the app computes and validates.
 
 HARD RULES:

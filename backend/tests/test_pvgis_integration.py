@@ -12,7 +12,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 LAT, LON = 42.88, -8.54
 PVGIS_URL = "https://re.jrc.ec.europa.eu/api/v5_2"
-UA = "SolVento/0.1 (integration test; diego.farina@gimo.co.uk)"
+UA = "SolarVento/0.1 (integration test; diego.farina@gimo.co.uk)"
 
 
 @pytest.fixture

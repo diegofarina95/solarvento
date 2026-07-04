@@ -45,7 +45,7 @@ export default function PrintReport({ data, i18n, fmt, variant }) {
       <header className="pr-header">
         <div>
           <h1>
-            Sol<span>Vento</span>
+            Solar<span>Vento</span>
           </h1>
           <p className="pr-subtitle">
             {isInstaller ? t('report.installerTitle') : t('report.informativeTitle')}

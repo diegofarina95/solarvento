@@ -1,4 +1,4 @@
-// Firma visual de SolVento: el arco diario del astro sobre el horizonte. El sol
+// Firma visual de SolarVento: el arco diario del astro sobre el horizonte. El sol
 // recorre el arco según la hora local (amanecer→izquierda, mediodía→cénit,
 // atardecer→derecha); de noche sale la luna recorriendo el arco nocturno. Puro
 // SVG; se refresca cada minuto. Sin dependencias ni cambios en el resto de la web.

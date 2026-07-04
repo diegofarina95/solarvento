@@ -1,4 +1,4 @@
-"""SolVento — API de cálculo solar fotovoltaico sobre PVGIS."""
+"""SolarVento — API de cálculo solar fotovoltaico sobre PVGIS."""
 
 import asyncio
 import hashlib
@@ -118,7 +118,7 @@ async def lifespan(app: FastAPI):
     cache.close()
 
 
-app = FastAPI(title="SolVento", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="SolarVento", version="0.1.0", lifespan=lifespan)
 
 # En desarrollo el frontend corre en el puerto de Vite; en producción se sirve
 # desde este mismo proceso y CORS no interviene.
@@ -153,7 +153,7 @@ async def optimal_angles(
         raise HTTPException(
             status_code=422,
             detail=(
-                "Actualmente SolVento solo ofrece estimaciones para ubicaciones "
+                "Actualmente SolarVento solo ofrece estimaciones para ubicaciones "
                 "europeas cubiertas por PVGIS."
             ),
         )
@@ -1013,7 +1013,7 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         raise HTTPException(
             status_code=422,
             detail=(
-                "Actualmente SolVento solo ofrece estimaciones para ubicaciones "
+                "Actualmente SolarVento solo ofrece estimaciones para ubicaciones "
                 "europeas cubiertas por PVGIS."
             ),
         )

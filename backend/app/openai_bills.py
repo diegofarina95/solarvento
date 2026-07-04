@@ -120,7 +120,7 @@ def _text_user_content(text_hint: str) -> list[dict[str, Any]]:
         {
             "type": "input_text",
             "text": (
-                "Extract the electricity bill contract for SolVento from the following "
+                "Extract the electricity bill contract for SolarVento from the following "
                 "plain-text layer of the bill PDF:\n\n" + text_hint[:20000]
             ),
         }
@@ -144,7 +144,7 @@ def _file_user_content(
         }
     parts: list[dict[str, Any]] = [
         file_content,
-        {"type": "input_text", "text": "Extract the electricity bill contract for SolVento."},
+        {"type": "input_text", "text": "Extract the electricity bill contract for SolarVento."},
     ]
     if text_hint and text_hint.strip():
         parts.append({

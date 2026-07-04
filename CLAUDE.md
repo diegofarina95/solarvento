@@ -1,4 +1,4 @@
-# SolVento
+# SolarVento
 
 Este proyecto se gestiona desde **Taller** (panel en el servidor de Diego).
 

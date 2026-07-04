@@ -1,4 +1,4 @@
-# ☀️ SolVento
+# ☀️ SolarVento
 
 Calculadora web de autoconsumo solar fotovoltaico. Introduce una ubicación (buscador o clic en el mapa) y los parámetros de tu instalación, y obtén:
 
