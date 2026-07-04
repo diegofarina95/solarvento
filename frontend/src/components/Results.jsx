@@ -7,40 +7,43 @@ import {
   CashflowChart,
 } from './Charts'
 import AdSlot from './AdSlot'
-import PrintReport from './PrintReport'
 import BasicReport from './BasicReport'
 import { batteryRecommendation } from '../batteryRecommendation'
 
 function ReportDownload({ data, i18n, fmt }) {
   const { t } = i18n
-  const [variant, setVariant] = useState('informative')
+  const [busy, setBusy] = useState(null)
 
-  function download() {
-    // El componente ya está montado con la variante elegida; el diálogo de
-    // impresión del navegador permite "Guardar como PDF".
-    window.print()
+  async function download(kind) {
+    setBusy(kind)
+    try {
+      // Carga diferida: jsPDF solo se descarga al pulsar (no engorda el bundle).
+      const { downloadReport } = await import('../reportPdf')
+      await downloadReport(kind, data, i18n, fmt)
+    } finally {
+      setBusy(null)
+    }
   }
 
   return (
-    <div className="card-solar flex flex-wrap items-center gap-2 px-4 py-3 print:hidden">
+    <div className="card-solar flex flex-wrap items-center gap-2 px-4 py-3">
       <span className="text-sm font-medium text-stone-700">{t('report.download')}:</span>
-      <select
-        value={variant}
-        onChange={(e) => setVariant(e.target.value)}
-        className="rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-sm"
-        aria-label={t('report.download')}
-      >
-        <option value="informative">{t('report.forInformative')}</option>
-        <option value="installer">{t('report.forInstaller')}</option>
-      </select>
       <button
         type="button"
-        onClick={download}
-        className="rounded-lg bg-stone-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-stone-700"
+        onClick={() => download('user')}
+        disabled={busy != null}
+        className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:border-amber-500 disabled:opacity-50"
       >
-        {t('report.download')}
+        {busy === 'user' ? t('report.generating') : t('report.userTitle')}
       </button>
-      <PrintReport data={data} i18n={i18n} fmt={fmt} variant={variant} />
+      <button
+        type="button"
+        onClick={() => download('technical')}
+        disabled={busy != null}
+        className="rounded-lg bg-stone-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-stone-700 disabled:opacity-50"
+      >
+        {busy === 'technical' ? t('report.generating') : t('report.techTitle')}
+      </button>
     </div>
   )
 }

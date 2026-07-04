@@ -274,16 +274,8 @@ body {
 }
 
 @media print {
-  #app-shell {
-    display: none !important;
-  }
-  .print-report {
-    display: block !important;
-    padding: 0;
-    color: #000;
-    font-size: 11px;
-    line-height: 1.4;
-  }
+  /* Los informes ahora se descargan como PDF (jsPDF). Al imprimir con el
+     navegador se imprime la página normal; no se oculta la app. */
   @page {
     margin: 16mm 14mm;
   }
