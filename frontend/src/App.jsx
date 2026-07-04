@@ -40,6 +40,8 @@ function requireLocaleNumber(value, label, t, options) {
 
 export default function App() {
   const [language, setLanguage] = useState(detectInitialLanguage)
+  // Previsualización del cielo: 'auto' (hora real) | 'day' | 'night'.
+  const [sunMode, setSunMode] = useState('auto')
   const i18n = useMemo(() => createI18n(language), [language])
   const { t } = i18n
   const [position, setPosition] = useState(INITIAL_POSITION)
@@ -295,7 +297,18 @@ export default function App() {
   return (
     <div id="app-shell" className="mx-auto max-w-6xl px-4 py-8">
       <header className="mb-8">
-        <SunArc />
+        <div className="relative">
+          <SunArc force={sunMode === 'auto' ? undefined : sunMode} />
+          <button
+            type="button"
+            onClick={() =>
+              setSunMode((m) => (m === 'auto' ? 'day' : m === 'day' ? 'night' : 'auto'))
+            }
+            className="absolute right-0 top-0 rounded-md border border-stone-300 bg-white/70 px-2 py-1 text-xs font-medium text-stone-600 backdrop-blur-sm hover:border-amber-500"
+          >
+            {t('basic.sky')}: {t(`basic.skyMode.${sunMode}`)}
+          </button>
+        </div>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-4xl font-bold tracking-tight text-stone-900">

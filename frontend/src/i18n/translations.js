@@ -342,6 +342,8 @@ export const translations = {
     basic: {
       viewBasic: 'Básico',
       viewDetailed: 'Detallado',
+      sky: 'Cielo',
+      skyMode: { auto: 'Auto', day: 'Día', night: 'Noche' },
       verdict: {
         good: 'Instalación recomendable',
         ok: 'Instalación aceptable',
@@ -784,6 +786,8 @@ export const translations = {
     basic: {
       viewBasic: 'Basic',
       viewDetailed: 'Detailed',
+      sky: 'Sky',
+      skyMode: { auto: 'Auto', day: 'Day', night: 'Night' },
       verdict: {
         good: 'Recommended installation',
         ok: 'Acceptable installation',
@@ -1226,6 +1230,8 @@ export const translations = {
     basic: {
       viewBasic: 'Simple',
       viewDetailed: 'Détaillé',
+      sky: 'Ciel',
+      skyMode: { auto: 'Auto', day: 'Jour', night: 'Nuit' },
       verdict: {
         good: 'Installation recommandée',
         ok: 'Installation acceptable',
@@ -1668,6 +1674,8 @@ export const translations = {
     basic: {
       viewBasic: 'Base',
       viewDetailed: 'Dettagliato',
+      sky: 'Cielo',
+      skyMode: { auto: 'Auto', day: 'Giorno', night: 'Notte' },
       verdict: {
         good: 'Installazione consigliata',
         ok: 'Installazione accettabile',

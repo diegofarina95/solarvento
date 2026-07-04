@@ -65,12 +65,17 @@ export function sunTimes(date, lat = LAT, lon = LON) {
 
 // Posición del astro y si es de día. De día, mapeo a trozos para que el MEDIODÍA
 // solar quede en el cénit (t=0.5) aunque amanecer/ocaso no sean simétricos.
-export function celestialPosition(date) {
+// `force` ('day'|'night') fuerza el modo para previsualizar; si no coincide con
+// la realidad, el astro se coloca en el cénit para verlo bien.
+export function celestialPosition(date, force) {
   const { sunrise, sunset, noon } = sunTimes(date)
   const hour = hourInTZ(date, TZ)
-  const isDay = hour >= sunrise && hour < sunset
+  const realIsDay = hour >= sunrise && hour < sunset
+  const isDay = force === 'day' ? true : force === 'night' ? false : realIsDay
   let t
-  if (isDay) {
+  if (force && (force === 'day') !== realIsDay) {
+    t = 0.5 // modo forzado distinto de la realidad → cénit, para previsualizar
+  } else if (isDay) {
     t =
       hour <= noon
         ? 0.5 * ((hour - sunrise) / (noon - sunrise))
@@ -89,13 +94,13 @@ const STARS = [
   [80, 30], [150, 55], [250, 22], [400, 40], [500, 30], [560, 58], [320, 12],
 ]
 
-export default function SunArc() {
+export default function SunArc({ force }) {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60000)
     return () => clearInterval(id)
   }, [])
-  const { x, y, isDay } = celestialPosition(now)
+  const { x, y, isDay } = celestialPosition(now, force)
 
   return (
     <svg
