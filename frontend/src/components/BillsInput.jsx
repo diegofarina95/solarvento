@@ -105,6 +105,16 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         return
       }
       const parsed = result.value
+      // Factura de otro país (lanzamiento solo-España): se bloquea con aviso, sin
+      // crear fila ni intentar calcular nada.
+      if (parsed.state === 'unsupported_country') {
+        if (parsed.warning_notes?.length) {
+          advisories.push({ file: file.name, notes: parsed.warning_notes })
+        } else {
+          problems.push({ kind: 'billCountryBlocked', file: file.name })
+        }
+        return
+      }
       if (parsed.kwh == null) {
         problems.push({ kind: 'billNoConsumption', file: file.name })
       }

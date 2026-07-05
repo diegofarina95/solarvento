@@ -268,6 +268,18 @@ class TestPerPeriodMeterReadings:
         bill = contract_to_bill(self._contract_with_period_meters())
         assert bill["consumption_periods"] == {"punta": 8491.0, "llano": 9758.0, "valle": 6267.0}
 
+    def test_meter_diff_rounded_no_float_noise(self):
+        # 1353.3 - 1000.0 da 353.2999999… en float; debe redondearse a 353.3.
+        c = self._contract_with_period_meters()
+        c["meter_readings"] = {
+            "initial": _nf(None), "final": _nf(None),
+            "p1_initial": _nf("1.000,0"), "p1_final": _nf("1.353,3"),
+            "p2_initial": _nf(None), "p2_final": _nf(None),
+            "p3_initial": _nf(None), "p3_final": _nf(None),
+        }
+        bill = contract_to_bill(c)
+        assert bill["consumption_periods"]["punta"] == 353.3
+
     def test_period_meter_sum_is_a_candidate_and_reconciles(self):
         bill = contract_to_bill(self._contract_with_period_meters())
         by = {c["candidate"]: c for c in bill["consumption_candidates"]}

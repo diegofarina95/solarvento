@@ -72,6 +72,11 @@ _TEMPLATES: dict[str, Any] = {
     "images_unavailable": lambda p: (
         "Las fotos de factura no están disponibles ahora; sube la factura en PDF."
     ),
+    "country_not_supported": lambda p: (
+        "De momento solo procesamos facturas de España. Esta factura parece de otro país"
+        + (f" ({p['country']})" if p.get("country") else "")
+        + "; no se ha calculado nada."
+    ),
 }
 
 

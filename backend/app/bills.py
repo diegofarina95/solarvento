@@ -1559,6 +1559,26 @@ def _twelve_months_from_history(
     return monthly, estimated
 
 
+def _dedupe_bills(bills: list[dict]) -> list[dict]:
+    """Quita facturas/tramos duplicados por (inicio, fin, kWh redondeado).
+
+    Subir dos veces el mismo tramo, o un lote donde el mismo periodo aparece
+    repetido, no debe contar doble contra el resto. Los que no tienen fechas se
+    conservan tal cual (no se puede saber si son el mismo periodo)."""
+    seen: set[tuple] = set()
+    out: list[dict] = []
+    for bill in bills:
+        start, end = bill.get("start_date"), bill.get("end_date")
+        kwh = bill.get("kwh")
+        if start and end and isinstance(kwh, (int, float)):
+            key = (str(start), str(end), round(float(kwh), 1))
+            if key in seen:
+                continue
+            seen.add(key)
+        out.append(bill)
+    return out
+
+
 def aggregate_bills(
     bills: list[dict],
     default_currency: str | None = None,
@@ -1589,8 +1609,14 @@ def aggregate_bills(
     tax_factor_kwh = 0.0
     tax_sources: set[str] = set()
 
+    bills = _dedupe_bills(bills)
+
     for bill in bills:
         raw_kwh = bill.get("kwh")
+        # Consumo negativo = reverso/corrección de lectura, no una factura:
+        # se descarta (nunca "-107 kWh" como si fuera un mes).
+        if isinstance(raw_kwh, (int, float)) and raw_kwh < 0:
+            continue
         bill_history = bill.get("consumption_history") or []
         if raw_kwh in (None, "") and bill_history:
             # Factura con histórico pero sin consumo de periodo legible (p. ej.

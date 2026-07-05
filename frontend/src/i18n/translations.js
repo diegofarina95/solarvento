@@ -85,6 +85,7 @@ export const translations = {
       extractor_invalid: () => 'El extractor no devolvió un contrato válido.',
       extraction_failed: () => 'No se pudo leer la factura automáticamente; revisa e introduce los datos a mano.',
       images_unavailable: () => 'Las fotos de factura no están disponibles ahora; sube la factura en PDF.',
+      country_not_supported: ({ country }) => `De momento solo procesamos facturas de España. Esta factura parece de otro país${country ? ` (${country})` : ''}; no se ha calculado nada.`,
     },
     confidence: {
       high: 'Alta confianza',
@@ -617,6 +618,7 @@ export const translations = {
       extractor_invalid: () => 'The extractor did not return a valid contract.',
       extraction_failed: () => 'The bill could not be read automatically; review and enter the data manually.',
       images_unavailable: () => 'Bill photos are unavailable right now; upload the bill as a PDF.',
+      country_not_supported: ({ country }) => `We currently only process Spanish bills. This bill looks like it is from another country${country ? ` (${country})` : ''}; nothing was calculated.`,
     },
     confidence: {
       high: 'High confidence',
@@ -1149,6 +1151,7 @@ export const translations = {
       extractor_invalid: () => 'L’extracteur n’a pas renvoyé de contrat valide.',
       extraction_failed: () => 'La facture n’a pas pu être lue automatiquement ; vérifiez et saisissez les données à la main.',
       images_unavailable: () => 'Les photos de facture ne sont pas disponibles pour le moment ; envoyez la facture en PDF.',
+      country_not_supported: ({ country }) => `Pour l’instant, nous ne traitons que les factures espagnoles. Cette facture semble provenir d’un autre pays${country ? ` (${country})` : ''} ; rien n’a été calculé.`,
     },
     confidence: {
       high: 'Confiance élevée',
@@ -1681,6 +1684,7 @@ export const translations = {
       extractor_invalid: () => 'L\'estrattore non ha restituito un contratto valido.',
       extraction_failed: () => 'Impossibile leggere la bolletta automaticamente; verifica e inserisci i dati a mano.',
       images_unavailable: () => 'Le foto della bolletta non sono disponibili ora; carica la bolletta in PDF.',
+      country_not_supported: ({ country }) => `Per ora elaboriamo solo bollette spagnole. Questa bolletta sembra di un altro paese${country ? ` (${country})` : ''}; non è stato calcolato nulla.`,
     },
     confidence: {
       high: 'Alta affidabilità',
@@ -2216,6 +2220,7 @@ export const translations = {
       extractor_invalid: () => 'O extrator não devolveu um contrato válido.',
       extraction_failed: () => 'Não foi possível ler a fatura automaticamente; verifique e introduza os dados manualmente.',
       images_unavailable: () => 'As fotos de fatura não estão disponíveis agora; carregue a fatura em PDF.',
+      country_not_supported: ({ country }) => `De momento só processamos faturas de Espanha. Esta fatura parece ser de outro país${country ? ` (${country})` : ''}; não foi calculado nada.`,
     },
     confidence: {
       high: 'Fiabilidade alta',

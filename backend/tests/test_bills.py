@@ -380,6 +380,24 @@ class TestAggregateBills:
         assert result["distinct_cups"] == 1
         assert not any("suministro" in r.lower() for r in result["review_reasons"])
 
+    def test_negative_kwh_segment_discarded(self):
+        # Un tramo con kWh negativo (reverso/corrección) no cuenta como factura.
+        bills = [
+            {"month": 1, "kwh": 300, "days": 30},
+            {"month": 2, "kwh": -107, "days": 30},  # reverso
+        ]
+        result = aggregate_bills(bills)
+        # El anual descansa solo en el tramo positivo (~300/mes), no restado.
+        assert result["annual_kwh"] > 300
+
+    def test_duplicate_period_not_double_counted(self):
+        # El MISMO tramo subido dos veces no se cuenta doble.
+        one = {"kwh": 300, "start_date": date(2026, 1, 1), "end_date": date(2026, 1, 31), "amount_eur": 80}
+        result_single = aggregate_bills([one])
+        result_double = aggregate_bills([one, dict(one)])
+        assert result_double["annual_kwh"] == result_single["annual_kwh"]
+        assert result_double["bill_count"] == 1
+
     def test_rolling_annual_overrides_valle_months(self):
         # Solo meses valle subidos (bajos) + anual impreso alto: se usa el anual
         # impreso, no la extrapolación a la baja.

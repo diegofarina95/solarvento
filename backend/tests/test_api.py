@@ -613,25 +613,25 @@ def test_parse_bill_accepts_image_with_openai(respx_mock, openai_client):
 def test_parse_bill_uses_openai_when_configured(respx_mock, openai_client):
     respx_mock.post("https://api.openai.com/v1/responses").mock(
         return_value=_contract_response(
-            annual_consumption_kwh=_cf("245,7", "Consommation"),
-            total_amount_eur=_cf("83,42", "Total TTC"),
+            annual_consumption_kwh=_cf("245,7", "Consumo"),
+            total_amount_eur=_cf("83,42", "Total"),
             billing_period={"start": "2026-05-01", "end": "2026-05-31"},
-            country_code="FR",
-            language="fr",
+            country_code="ES",
+            language="es",
         )
     )
 
     resp = openai_client.post(
         "/api/parse-bill",
-        files={"file": ("facture.pdf", b"%PDF-1.4\n%%EOF", "application/pdf")},
+        files={"file": ("factura.pdf", b"%PDF-1.4\n%%EOF", "application/pdf")},
     )
 
     assert resp.status_code == 200
     data = resp.json()
     assert data["kwh"] == 245.7
     assert data["total_eur"] == 83.42
-    assert data["country_code"] == "FR"
-    assert data["language"] == "fr"
+    assert data["country_code"] == "ES"
+    assert data["language"] == "es"
     assert data["parser"] == "openai-contract"
 
     payload = json.loads(respx_mock.calls.last.request.content)
@@ -640,7 +640,7 @@ def test_parse_bill_uses_openai_when_configured(respx_mock, openai_client):
     assert "temperature" not in payload
     content = payload["input"][1]["content"]
     assert content[0]["type"] == "input_file"
-    assert content[0]["filename"] == "facture.pdf"
+    assert content[0]["filename"] == "factura.pdf"
     assert content[0]["file_data"].startswith("data:application/pdf;base64,")
     assert payload["text"]["format"]["type"] == "json_schema"
     assert payload["text"]["format"]["strict"] is True
@@ -648,6 +648,38 @@ def test_parse_bill_uses_openai_when_configured(respx_mock, openai_client):
     assert "supply_address" in required
     assert "period_split" in required
     assert "annual_consumption_kwh" in required
+
+
+def test_parse_bill_blocks_uk_octopus(respx_mock, openai_client):
+    # Solo-España: una factura UK (GBP) se bloquea sin calcular nada.
+    respx_mock.post("https://api.openai.com/v1/responses").mock(
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("3855", "Annual usage"),
+            total_amount_eur=_cf("86,00", "Total"),
+            currency="GBP",
+            country_code="GB",
+            language="en",
+        )
+    )
+    resp = openai_client.post(
+        "/api/parse-bill",
+        files={"file": ("octopus.pdf", b"%PDF-1.4\n%%EOF", "application/pdf")},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["state"] == "unsupported_country"
+    assert data["kwh"] is None  # no se calcula nada
+    assert any(n["code"] == "country_not_supported" for n in data["warning_notes"])
+
+
+def test_estimate_rejects_non_eur_bill(client):
+    # Defensa en el cálculo: una factura en GBP no se procesa (422).
+    resp = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 3.0,
+        "bills": [{"kwh": 300, "days": 30, "currency": "GBP"}],
+    })
+    assert resp.status_code == 422
+    assert "España" in resp.json()["detail"]
 
 
 def test_parse_bill_repairs_openai_single_period_as_total(respx_mock, openai_client):
@@ -751,13 +783,13 @@ def test_parse_bill_contract_is_authoritative_and_uses_pdf_text_hint(
 def test_parse_bill_geocodes_openai_supply_address(respx_mock, openai_client):
     respx_mock.post("https://api.openai.com/v1/responses").mock(
         return_value=_contract_response(
-            annual_consumption_kwh=_cf("245,7", "Consommation"),
-            total_amount_eur=_cf("83,42", "Total TTC"),
-            country_code="FR",
-            language="fr",
+            annual_consumption_kwh=_cf("245,7", "Consumo"),
+            total_amount_eur=_cf("83,42", "Total"),
+            country_code="ES",
+            language="es",
             supply_address={
-                "street": "10 Rue de Rivoli", "cp": "75001",
-                "municipio": "Paris", "provincia": "Île-de-France",
+                "street": "Gran Vía 1", "cp": "28013",
+                "municipio": "Madrid", "provincia": "Madrid",
             },
         )
     )
@@ -766,16 +798,10 @@ def test_parse_bill_geocodes_openai_supply_address(respx_mock, openai_client):
             200,
             json=[
                 {
-                    "display_name": "Rue Royale, Bruxelles, Belgique",
-                    "lat": "50.85034",
-                    "lon": "4.35171",
-                    "address": {"country_code": "be"},
-                },
-                {
-                    "display_name": "10 Rue de Rivoli, Paris, France",
-                    "lat": "48.856613",
-                    "lon": "2.352222",
-                    "address": {"country_code": "fr"},
+                    "display_name": "Gran Vía, Madrid, España",
+                    "lat": "40.420100",
+                    "lon": "-3.705800",
+                    "address": {"country_code": "es", "postcode": "28013"},
                 },
             ],
         )
@@ -783,24 +809,24 @@ def test_parse_bill_geocodes_openai_supply_address(respx_mock, openai_client):
 
     resp = openai_client.post(
         "/api/parse-bill",
-        files={"file": ("facture.pdf", b"%PDF-1.4\n%%EOF", "application/pdf")},
+        files={"file": ("factura.pdf", b"%PDF-1.4\n%%EOF", "application/pdf")},
     )
 
     assert resp.status_code == 200
     data = resp.json()
-    assert data["supply_address"] == "10 Rue de Rivoli"
-    assert data["postal_code"] == "75001"
-    assert data["city"] == "Paris"
-    assert data["lat"] == pytest.approx(48.856613)
-    assert data["lon"] == pytest.approx(2.352222)
-    assert data["location_label"] == "10 Rue de Rivoli, Paris, France"
+    assert data["supply_address"] == "Gran Vía 1"
+    assert data["postal_code"] == "28013"
+    assert data["city"] == "Madrid"
+    assert data["lat"] == pytest.approx(40.420100)
+    assert data["lon"] == pytest.approx(-3.705800)
+    assert data["location_label"] == "Gran Vía, Madrid, España"
 
     geocode_call = [
         call for call in respx_mock.calls if call.request.url.path.endswith("/search")
     ][0]
     # Primaria: búsqueda ESTRUCTURADA anclada en el CP (no texto libre `q`).
     params = geocode_call.request.url.params
-    assert params["postalcode"] == "75001"
+    assert params["postalcode"] == "28013"
     assert "q" not in params
 
 

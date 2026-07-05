@@ -81,14 +81,17 @@ def _text(value: Any) -> str | None:
 
 
 def _all_periods(split: Any) -> dict[str, float]:
-    """Todos los periodos presentes (P1..P6) normalizados, ceros/nulos ignorados."""
+    """Todos los periodos presentes (P1..P6) normalizados, ceros/nulos ignorados.
+
+    Los negativos (reversos/correcciones de lectura) se descartan: nunca son un
+    consumo de periodo. Se redondea para no arrastrar ruido de coma flotante."""
     if not isinstance(split, dict):
         return {}
     out: dict[str, float] = {}
     for key, canonical in _PERIOD_MAP.items():
         value = _val(split.get(key))
         if value is not None and 0 < value <= bills.MAX_BILL_KWH:
-            out[canonical] = value
+            out[canonical] = round(value, 1)
     return out
 
 
@@ -137,7 +140,7 @@ def _meter_diff(readings: Any) -> float | None:
     initial, final = _val(readings.get("initial")), _val(readings.get("final"))
     if initial is None or final is None:
         return None
-    diff = final - initial
+    diff = round(final - initial, 1)
     return diff if 0 < diff <= bills.MAX_BILL_KWH else None
 
 
@@ -280,12 +283,16 @@ def contract_to_bill(contract: dict) -> dict:
 
     # (Layer 5) Reconciliación like-with-like del consumo de ESTA factura.
     period_sources: dict[str, float] = {}
+    # Solo cifras POSITIVAS: un consumo negativo es un reverso/corrección de
+    # lectura, nunca el consumo de la factura.
     headline = _val(contract.get("annual_consumption_kwh"))
-    if headline:
-        period_sources["headline"] = headline
+    if headline and headline > 0:
+        period_sources["headline"] = round(headline, 1)
     printed_total = _val(contract.get("period_total_kwh"))
-    if printed_total:
-        period_sources["period_total_printed"] = printed_total
+    if printed_total and printed_total > 0:
+        period_sources["period_total_printed"] = round(printed_total, 1)
+    else:
+        printed_total = None
     if period_sum:
         period_sources["period_sum"] = period_sum
     if meter_period_sum:
@@ -309,7 +316,7 @@ def contract_to_bill(contract: dict) -> dict:
     bono_social = bool(contract.get("bono_social"))
 
     bill: dict[str, Any] = {
-        "kwh": bill_period_kwh,
+        "kwh": round(bill_period_kwh, 1) if bill_period_kwh is not None else None,
         "period_total_kwh": printed_total,
         "consumption_periods": profile_periods or None,
         "consumption_period_prices": _period_prices(contract.get("period_split_prices")) or None,

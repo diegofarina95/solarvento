@@ -279,6 +279,9 @@ async def parse_bill(request: Request, file: UploadFile, website: str | None = F
             bill["warning_notes"] = [failed]
             bill["review_reasons"] = [bill_messages.text_es("extraction_failed")]
             bill["review_notes"] = [failed]
+        blocked = _non_spanish_bill_block(bill, text_hint)
+        if blocked is not None:
+            return blocked
         return await _enrich_bill_location(bill)
 
     # Sin clave de OpenAI: degradación al extractor local (solo PDF-texto).
@@ -288,6 +291,9 @@ async def parse_bill(request: Request, file: UploadFile, website: str | None = F
         local = await run_in_threadpool(bills_mod.parse_bill_pdf, content)
     except bills_mod.BillParseError as exc:
         return _unreadable_bill(bill_messages.note("raw", text=str(exc)))
+    blocked = _non_spanish_bill_block(local, None)
+    if blocked is not None:
+        return blocked
     return await _enrich_bill_location(local)
 
 
@@ -334,6 +340,55 @@ def _unreadable_bill(note: dict) -> dict:
         "review_reasons": [],
         "review_notes": [],
         "warnings": [reason],
+        "warning_notes": [note],
+    }
+
+
+# Señales de factura NO española (lanzamiento solo-España): moneda distinta de
+# EUR, país declarado ≠ ES, o marcas típicas de factura UK (Octopus).
+_NON_ES_TEXT_SIGNALS = re.compile(
+    r"£|estimated\s+annual\s+usage|\bp\s*/\s*kwh|pence\s+per\s+kwh|\bMPAN\b|standing\s+charge",
+    re.IGNORECASE,
+)
+
+
+def _non_spanish_bill_country(bill: dict, text: str | None) -> str | None:
+    """Devuelve una etiqueta del país si la factura NO es española, o None.
+
+    Solo bloquea con evidencia POSITIVA de otro país (no por ausencia de datos):
+    moneda ≠ EUR, código de país ≠ ES, o marcas inequívocas de factura UK.
+    """
+    currency = (bill.get("currency") or "").upper()
+    if currency and currency != "EUR":
+        return currency  # p. ej. GBP
+    code = (bill.get("country_code") or "").upper()
+    if code and code != "ES":
+        return code
+    if text and _NON_ES_TEXT_SIGNALS.search(text):
+        return "UK"
+    return None
+
+
+def _non_spanish_bill_block(bill: dict, text: str | None) -> dict | None:
+    """Si la factura no es de España, respuesta 200 bloqueada sin cálculo."""
+    country = _non_spanish_bill_country(bill, text)
+    if country is None:
+        return None
+    logger.info("Bill blocked: país no soportado (%s) — solo-España", country)
+    note = bill_messages.note("country_not_supported", country=country)
+    return {
+        "kwh": None,
+        "amount_eur": None,
+        "energy_eur": None,
+        "total_eur": None,
+        "currency": bill.get("currency"),
+        "country_code": bill.get("country_code"),
+        "parser": bill.get("parser", "openai-contract"),
+        "state": "unsupported_country",
+        "needs_review": False,
+        "review_reasons": [],
+        "review_notes": [],
+        "warnings": [bill_messages.text_es(note["code"], **note["params"])],
         "warning_notes": [note],
     }
 
@@ -622,6 +677,17 @@ def _resolve_consumption(
 ) -> tuple[dict | None, float | None]:
     """Consumo anual y resumen: de las facturas si las hay, si no del campo manual."""
     if req.bills:
+        # Defensa (solo-España): una factura con moneda ≠ EUR no se procesa.
+        foreign = next(
+            (b for b in req.bills if b.currency and b.currency.upper() != "EUR"), None
+        )
+        if foreign is not None:
+            raise HTTPException(
+                status_code=422,
+                detail=bill_messages.text_es(
+                    "country_not_supported", country=foreign.currency.upper()
+                ),
+            )
         try:
             agg = bills_mod.aggregate_bills(
                 [b.model_dump() for b in req.bills],
