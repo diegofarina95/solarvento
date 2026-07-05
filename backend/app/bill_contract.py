@@ -88,8 +88,15 @@ _METER_READINGS = _object(
     {
         "initial": _num("Initial meter reading (lectura anterior) — an INDEX, not consumption"),
         "final": _num("Final meter reading (lectura actual) — an INDEX, not consumption"),
+        "p1_initial": _num("P1 (punta) initial meter reading index, if the meter is per-period"),
+        "p1_final": _num("P1 (punta) final meter reading index, if the meter is per-period"),
+        "p2_initial": _num("P2 (llano) initial meter reading index, if the meter is per-period"),
+        "p2_final": _num("P2 (llano) final meter reading index, if the meter is per-period"),
+        "p3_initial": _num("P3 (valle) initial meter reading index, if the meter is per-period"),
+        "p3_final": _num("P3 (valle) final meter reading index, if the meter is per-period"),
     },
-    "Accumulated meter index readings. NEVER use these as period consumption.",
+    "Accumulated meter index readings (global and/or per tariff period). NEVER use these "
+    "indexes as consumption; the app derives consumption as final − initial.",
 )
 
 _SELF_CONSUMPTION = _object(
@@ -174,7 +181,12 @@ BILL_CONTRACT_SCHEMA: dict[str, Any] = {
         "warnings": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "Short notes on uncertain/absent values, mixed utilities, or non-electricity invoices.",
+            "description": (
+                "ONLY genuine data problems the app cannot detect on its own: a mixed/"
+                "non-electricity invoice, or the whole document being illegible. NOT your "
+                "transcription reasoning. NEVER explain schema limitations, why a field is null, "
+                "or how you formatted a number — leave those unsaid. Empty array is the norm."
+            ),
         },
     },
     "required": [
@@ -242,4 +254,9 @@ HARD RULES:
   (e.g. 'A Estrada'), NOT the province in parentheses (e.g. 'Pontevedra'), and NOT the parish
   between dashes. Put the province in provincia, the municipality in municipio.
 - A messy/partial bill must STILL return the schema with nulls where unsure — never refuse.
+- `warnings` is NOT a scratchpad. Do NOT narrate your reasoning, schema limitations, why a
+  field is null, or how you formatted a value. Keep it empty unless the invoice is genuinely
+  unusable (mixed/non-electricity, fully illegible). The user sees nothing you write here as prose.
+- meter_readings supports per-period indexes: put each period's own 'lectura anterior/actual'
+  in p1/p2/p3 initial/final; the global initial/final only if a single meter is shown.
 """

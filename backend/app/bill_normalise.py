@@ -13,9 +13,12 @@ El resolutor UNIFICA: el resto de la app consume annual_kwh + splits.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from . import bill_messages, bill_resolver, bills
+
+logger = logging.getLogger(__name__)
 
 _LOW_CONFIDENCE = 0.4
 # 2.0TD residencial: P1 punta / P2 llano / P3 valle.
@@ -138,6 +141,26 @@ def _meter_diff(readings: Any) -> float | None:
     return diff if 0 < diff <= bills.MAX_BILL_KWH else None
 
 
+def _period_meter_diffs(readings: Any) -> dict[str, float]:
+    """Reparto punta/llano/valle por DIFERENCIA de lecturas por periodo.
+
+    Si el contador es por periodo (P1/P2/P3 con su propia lectura anterior/actual),
+    el consumo de cada periodo = final − inicial. Es una fuente dura del reparto,
+    no una estimación."""
+    if not isinstance(readings, dict):
+        return {}
+    out: dict[str, float] = {}
+    for prefix, canonical in (("p1", "punta"), ("p2", "llano"), ("p3", "valle")):
+        initial = _val(readings.get(f"{prefix}_initial"))
+        final = _val(readings.get(f"{prefix}_final"))
+        if initial is None or final is None:
+            continue
+        diff = final - initial
+        if 0 < diff <= bills.MAX_BILL_KWH:
+            out[canonical] = round(diff, 1)
+    return out
+
+
 def _reconcile_period(sources: dict[str, float], profile_periods: dict) -> tuple[float | None, str | None, list[str]]:
     """Reconciliación LIKE-WITH-LIKE del consumo de ESTA factura.
 
@@ -182,7 +205,7 @@ def _reconcile_period(sources: dict[str, float], profile_periods: dict) -> tuple
 
 
 def _consumption_candidates(contract: dict, period_sum: float | None, meter_diff: float | None,
-                            history: list) -> list[dict[str, Any]]:
+                            history: list, meter_period_sum: float | None = None) -> list[dict[str, Any]]:
     candidates: list[dict[str, Any]] = []
 
     def add(label, field):
@@ -198,6 +221,11 @@ def _consumption_candidates(contract: dict, period_sum: float | None, meter_diff
     if period_sum:
         candidates.append({"candidate": "period_sum", "raw_text": None, "value": period_sum,
                            "source_label": "suma de columnas de periodo", "confidence": None})
+    if meter_period_sum:
+        candidates.append({"candidate": "period_meter_sum", "raw_text": None,
+                           "value": meter_period_sum,
+                           "source_label": "suma de diferencias de lectura por periodo",
+                           "confidence": None})
     if meter_diff:
         candidates.append({"candidate": "meter_diff", "raw_text": None, "value": meter_diff,
                            "source_label": "lectura final - inicial", "confidence": None})
@@ -222,20 +250,29 @@ def contract_to_bill(contract: dict) -> dict:
     if not isinstance(contract, dict):
         return _review_bill([bill_messages.note("extractor_invalid")])
 
-    # Avisos del MODELO (texto libre) → sobre "raw" para que el frontend los
-    # muestre tal cual. El resto de avisos son códigos i18n del catálogo.
-    warning_notes: list[dict] = [
-        bill_messages.note("raw", text=str(w))
-        for w in (contract.get("warnings") or [])
-        if str(w).strip()
-    ]
+    # Avisos del MODELO (texto libre): son RAZONAMIENTO interno del extractor
+    # ("the schema has single meter fields, so...", "el IVA se transcribe sin el
+    # símbolo"...). NUNCA se muestran al usuario; solo se registran para depurar.
+    # A la UI solo llegan avisos tipados (códigos del catálogo, traducidos).
+    model_notes = [str(w) for w in (contract.get("warnings") or []) if str(w).strip()]
+    if model_notes:
+        logger.info("Extractor notes (not shown to user): %s", " | ".join(model_notes))
+    warning_notes: list[dict] = []
     review_notes: list[dict] = []
     address = contract.get("supply_address") or {}
     billing = contract.get("billing_period") or {}
 
     all_periods = _all_periods(contract.get("period_split"))
-    profile_periods = {k: v for k, v in all_periods.items() if k in _PROFILE_PERIODS}
+    # Reparto por diferencia de lecturas por periodo (fuente dura, no estimada).
+    # Si faltan columnas de periodo, se rellena con estas; el split impreso manda.
+    meter_periods = _period_meter_diffs(contract.get("meter_readings"))
+    merged_periods = {**meter_periods, **all_periods}
+    profile_periods = {k: v for k, v in merged_periods.items() if k in _PROFILE_PERIODS}
     period_sum = round(sum(all_periods.values()), 1) if all_periods else None
+    # Total por suma de lecturas por periodo (solo si están los 3 periodos).
+    meter_period_sum = (
+        round(sum(meter_periods.values()), 1) if len(meter_periods) >= 3 else None
+    )
     meter_diff = _meter_diff(contract.get("meter_readings"))
     history = _history(contract.get("monthly_history"))
     total = _val(contract.get("total_amount_eur"))
@@ -251,6 +288,8 @@ def contract_to_bill(contract: dict) -> dict:
         period_sources["period_total_printed"] = printed_total
     if period_sum:
         period_sources["period_sum"] = period_sum
+    if meter_period_sum:
+        period_sources["period_meter_sum"] = meter_period_sum
     if meter_diff:
         period_sources["meter_diff"] = meter_diff
     bill_period_kwh, recon_note, recon_review = _reconcile_period(period_sources, profile_periods)
@@ -356,7 +395,7 @@ def contract_to_bill(contract: dict) -> dict:
         warning_notes.append(bill_messages.note("bono_social_savings"))
 
     bill["consumption_candidates"] = _consumption_candidates(
-        contract, period_sum, meter_diff, history
+        contract, period_sum, meter_diff, history, meter_period_sum
     )
     review = [bill_messages.text_es(n["code"], **n["params"]) for n in review_notes]
     bill["needs_review"] = bool(review_notes)

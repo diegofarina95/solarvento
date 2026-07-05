@@ -230,6 +230,52 @@ class TestAugmentFromText:
         assert "effective_price_out_of_range" not in codes
 
 
+class TestNoModelReasoningLeak:
+    def test_model_warnings_not_shown_to_user(self):
+        # El razonamiento libre del modelo NO llega a la UI (ni notas ni texto).
+        c = _regulated_no_pv_contract()
+        c["warnings"] = [
+            "the schema has single initial/final meter reading fields, so they were not transcribed",
+            "El tipo de IVA aparece impreso como 21%; se transcribe sin el símbolo",
+        ]
+        bill = contract_to_bill(c)
+        # Ninguna nota "raw" con el texto del modelo.
+        assert all(n.get("code") != "raw" for n in bill["warning_notes"])
+        joined = " ".join(bill["warnings"]).lower()
+        assert "schema" not in joined
+        assert "transcribe" not in joined
+        # Los avisos tipados (single_month) sí siguen presentes.
+        assert any(n["code"] == "single_month" for n in bill["warning_notes"])
+
+
+class TestPerPeriodMeterReadings:
+    def _contract_with_period_meters(self):
+        c = _regulated_no_pv_contract()
+        # Sin columnas de periodo: el reparto se deriva de las lecturas por periodo.
+        c["period_split"] = {"p1_punta": _nf(None), "p2_llano": _nf(None), "p3_valle": _nf(None)}
+        c["period_total_kwh"] = _nf(None)
+        c["annual_consumption_kwh"] = _nf(None)
+        c["total_amount_eur"] = _nf(None)  # evita ruido del guardián de precio
+        c["meter_readings"] = {
+            "initial": _nf(None), "final": _nf(None),
+            "p1_initial": _nf("0"), "p1_final": _nf("8.491"),
+            "p2_initial": _nf("0"), "p2_final": _nf("9.758"),
+            "p3_initial": _nf("0"), "p3_final": _nf("6.267"),
+        }
+        return c
+
+    def test_split_derived_from_period_meter_diffs(self):
+        bill = contract_to_bill(self._contract_with_period_meters())
+        assert bill["consumption_periods"] == {"punta": 8491.0, "llano": 9758.0, "valle": 6267.0}
+
+    def test_period_meter_sum_is_a_candidate_and_reconciles(self):
+        bill = contract_to_bill(self._contract_with_period_meters())
+        by = {c["candidate"]: c for c in bill["consumption_candidates"]}
+        assert "period_meter_sum" in by
+        assert by["period_meter_sum"]["value"] == 24516.0
+        assert bill["kwh"] == 24516.0  # 8491+9758+6267
+
+
 class TestNotesAreCoded:
     def test_review_and_warning_notes_have_codes(self):
         bill = contract_to_bill(_regulated_no_pv_contract())
