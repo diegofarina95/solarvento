@@ -236,11 +236,15 @@ export const translations = {
       datesNote: 'Si no pones fechas se usa el mes elegido como factura mensual completa.',
       detectedTitle: 'Datos detectados de la factura',
       detectedAnnual: 'Consumo anual',
+      detectedMonthly: 'Consumo mensual',
       detectedSpend: 'Gasto anual',
       detectedTariff: 'Tarifa',
       detectedPeriod: 'Periodo',
       detectedMonths: ({ n }) => `${n} meses`,
       detectedPrice: 'Precio energía estimado',
+      detectedBonoSocial: 'bono social',
+      singleMonthWarning:
+        'Es el consumo de un solo mes. Una factura no basta para dimensionar con fiabilidad por la estacionalidad; sube el histórico anual (gráfico de 12 meses) o varias facturas del año.',
     },
     financial: {
       title: 'Supuestos y detalle financiero',
@@ -396,6 +400,18 @@ export const translations = {
         poor: 'Poco rentable con estos datos',
       },
       verdictSub: ({ year }) => `Ahorrarías ${year} al año`,
+      lowSuitability: {
+        lowConsumption: ({ kwh }) =>
+          `Con ~${kwh} kWh/año el consumo es bajo: la instalación probablemente no compensa. Revisa los datos antes de invertir.`,
+        slowPayback: ({ years }) =>
+          `La amortización (~${years} años) es larga: con estos datos la instalación probablemente no compensa.`,
+        both: ({ kwh, years }) =>
+          `Consumo bajo (~${kwh} kWh/año) y amortización larga (~${years} años): la instalación probablemente no compensa.`,
+      },
+      singleMonthCaveat:
+        'Este cálculo parte de una sola factura mensual. La estacionalidad hace que un mes no represente el año: súbela con histórico anual o varias facturas para una estimación fiable.',
+      mixedSupply: ({ n }) =>
+        `Has subido facturas de ${n} puntos de suministro distintos (CUPS diferentes). El cálculo las mezcla; sube solo las de un mismo suministro para dimensionar bien.`,
       savingMonth: 'Ahorro al mes',
       savingYear: 'Ahorro al año',
       paybackLabel: 'Se amortiza en',
@@ -729,11 +745,15 @@ export const translations = {
       datesNote: 'If dates are omitted, the selected month is treated as a full monthly bill.',
       detectedTitle: 'Detected from the bill',
       detectedAnnual: 'Annual consumption',
+      detectedMonthly: 'Monthly consumption',
       detectedSpend: 'Annual spend',
       detectedTariff: 'Tariff',
       detectedPeriod: 'Period',
       detectedMonths: ({ n }) => `${n} months`,
       detectedPrice: 'Estimated energy price',
+      detectedBonoSocial: 'social discount',
+      singleMonthWarning:
+        'This is a single month of consumption. One bill is not enough to size reliably because of seasonality; upload the 12-month history chart or several bills across the year.',
     },
     financial: {
       title: 'Assumptions and financial detail',
@@ -889,6 +909,18 @@ export const translations = {
         poor: 'Low return with this data',
       },
       verdictSub: ({ year }) => `You'd save ${year} per year`,
+      lowSuitability: {
+        lowConsumption: ({ kwh }) =>
+          `At ~${kwh} kWh/year consumption is low: the system probably isn't worth it. Check the data before investing.`,
+        slowPayback: ({ years }) =>
+          `The payback (~${years} years) is long: with this data the system probably isn't worth it.`,
+        both: ({ kwh, years }) =>
+          `Low consumption (~${kwh} kWh/year) and long payback (~${years} years): the system probably isn't worth it.`,
+      },
+      singleMonthCaveat:
+        'This estimate is based on a single monthly bill. Seasonality means one month does not represent the year: upload a 12-month history or several bills for a reliable estimate.',
+      mixedSupply: ({ n }) =>
+        `You uploaded bills from ${n} different supply points (different CUPS). The calculation mixes them; upload only bills from the same supply to size correctly.`,
       savingMonth: 'Monthly saving',
       savingYear: 'Yearly saving',
       paybackLabel: 'Pays off in',
@@ -1222,11 +1254,15 @@ export const translations = {
       datesNote: 'Sans dates, le mois choisi est considéré comme une facture mensuelle complète.',
       detectedTitle: 'Données détectées de la facture',
       detectedAnnual: 'Consommation annuelle',
+      detectedMonthly: 'Consommation mensuelle',
       detectedSpend: 'Dépense annuelle',
       detectedTariff: 'Tarif',
       detectedPeriod: 'Période',
       detectedMonths: ({ n }) => `${n} mois`,
       detectedPrice: 'Prix énergie estimé',
+      detectedBonoSocial: 'tarif social',
+      singleMonthWarning:
+        "C'est la consommation d'un seul mois. Une facture ne suffit pas pour dimensionner de façon fiable à cause de la saisonnalité ; ajoutez l'historique de 12 mois ou plusieurs factures de l'année.",
     },
     financial: {
       title: 'Hypothèses et détail financier',
@@ -1382,6 +1418,18 @@ export const translations = {
         poor: 'Peu rentable avec ces données',
       },
       verdictSub: ({ year }) => `Vous économiseriez ${year} par an`,
+      lowSuitability: {
+        lowConsumption: ({ kwh }) =>
+          `Avec ~${kwh} kWh/an la consommation est faible : l'installation n'est probablement pas rentable. Vérifiez les données avant d'investir.`,
+        slowPayback: ({ years }) =>
+          `Le retour sur investissement (~${years} ans) est long : avec ces données l'installation n'est probablement pas rentable.`,
+        both: ({ kwh, years }) =>
+          `Faible consommation (~${kwh} kWh/an) et amortissement long (~${years} ans) : l'installation n'est probablement pas rentable.`,
+      },
+      singleMonthCaveat:
+        "Cette estimation part d'une seule facture mensuelle. La saisonnalité fait qu'un mois ne représente pas l'année : ajoutez un historique de 12 mois ou plusieurs factures pour une estimation fiable.",
+      mixedSupply: ({ n }) =>
+        `Vous avez ajouté des factures de ${n} points de fourniture différents (CUPS différents). Le calcul les mélange ; n'ajoutez que celles d'un même point pour bien dimensionner.`,
       savingMonth: 'Économie par mois',
       savingYear: 'Économie par an',
       paybackLabel: 'Rentabilisé en',
@@ -1715,11 +1763,15 @@ export const translations = {
       datesNote: 'Senza date, il mese scelto viene considerato come bolletta mensile completa.',
       detectedTitle: 'Dati rilevati dalla bolletta',
       detectedAnnual: 'Consumo annuo',
+      detectedMonthly: 'Consumo mensile',
       detectedSpend: 'Spesa annua',
       detectedTariff: 'Tariffa',
       detectedPeriod: 'Periodo',
       detectedMonths: ({ n }) => `${n} mesi`,
       detectedPrice: 'Prezzo energia stimato',
+      detectedBonoSocial: 'bonus sociale',
+      singleMonthWarning:
+        "È il consumo di un solo mese. Una bolletta non basta per dimensionare in modo affidabile a causa della stagionalità; carica lo storico di 12 mesi o più bollette dell'anno.",
     },
     financial: {
       title: 'Ipotesi e dettaglio finanziario',
@@ -1875,6 +1927,18 @@ export const translations = {
         poor: 'Poco redditizia con questi dati',
       },
       verdictSub: ({ year }) => `Risparmieresti ${year} all'anno`,
+      lowSuitability: {
+        lowConsumption: ({ kwh }) =>
+          `Con ~${kwh} kWh/anno il consumo è basso: l'impianto probabilmente non conviene. Controlla i dati prima di investire.`,
+        slowPayback: ({ years }) =>
+          `Il ritorno (~${years} anni) è lungo: con questi dati l'impianto probabilmente non conviene.`,
+        both: ({ kwh, years }) =>
+          `Consumo basso (~${kwh} kWh/anno) e ammortamento lungo (~${years} anni): l'impianto probabilmente non conviene.`,
+      },
+      singleMonthCaveat:
+        "Questa stima parte da una sola bolletta mensile. La stagionalità fa sì che un mese non rappresenti l'anno: carica uno storico di 12 mesi o più bollette per una stima affidabile.",
+      mixedSupply: ({ n }) =>
+        `Hai caricato bollette di ${n} punti di fornitura diversi (CUPS diversi). Il calcolo le mescola; carica solo quelle di una stessa fornitura per dimensionare bene.`,
       savingMonth: 'Risparmio al mese',
       savingYear: 'Risparmio all’anno',
       paybackLabel: 'Si ripaga in',

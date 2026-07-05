@@ -13,8 +13,13 @@ const OK = [180, 83, 9]
 const POOR = [185, 28, 28]
 const MARGIN = 40
 
-function verdict(payback) {
-  if (payback == null || payback <= 0) return 'poor'
+const LOW_SUITABILITY_KWH = 3000
+const LOW_SUITABILITY_PAYBACK_YEARS = 8
+
+function verdict(payback, annualKwh) {
+  const lowConsumption = annualKwh != null && annualKwh < LOW_SUITABILITY_KWH
+  const slowPayback = payback == null || payback <= 0 || payback > LOW_SUITABILITY_PAYBACK_YEARS
+  if (lowConsumption || slowPayback) return 'poor'
   if (payback <= 10) return 'good'
   if (payback <= 15) return 'ok'
   return 'poor'
@@ -69,7 +74,7 @@ export function buildUserReport(data, i18n, fmt) {
   let y = brandHeader(doc, t('report.informativeTitle'), i18n, fmt)
 
   // Veredicto
-  const v = verdict(eco.payback_years)
+  const v = verdict(eco.payback_years, data.consumption?.annual_kwh)
   doc.setFillColor(...VERDICT_COLOR[v])
   doc.circle(MARGIN + 5, y - 4, 4, 'F')
   doc.setFont('helvetica', 'bold')

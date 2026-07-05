@@ -5,8 +5,23 @@
 // Umbrales del veredicto por años de amortización (ajustables).
 const VERDICT_GOOD_MAX_YEARS = 10
 const VERDICT_OK_MAX_YEARS = 15
+// Baja idoneidad: consumo pequeño o amortización larga → la instalación
+// probablemente no compensa; mejor decirlo que dar un informe optimista.
+export const LOW_SUITABILITY_KWH = 3000
+export const LOW_SUITABILITY_PAYBACK_YEARS = 8
 
-export function computeVerdict(paybackYears) {
+export function lowSuitabilityReason(paybackYears, annualKwh) {
+  const lowConsumption = annualKwh != null && annualKwh < LOW_SUITABILITY_KWH
+  const slowPayback =
+    paybackYears == null || paybackYears <= 0 || paybackYears > LOW_SUITABILITY_PAYBACK_YEARS
+  if (lowConsumption && slowPayback) return 'both'
+  if (lowConsumption) return 'lowConsumption'
+  if (slowPayback) return 'slowPayback'
+  return null
+}
+
+export function computeVerdict(paybackYears, annualKwh) {
+  if (lowSuitabilityReason(paybackYears, annualKwh)) return 'poor'
   if (paybackYears == null || paybackYears <= 0) return 'poor'
   if (paybackYears <= VERDICT_GOOD_MAX_YEARS) return 'good'
   if (paybackYears <= VERDICT_OK_MAX_YEARS) return 'ok'
@@ -322,16 +337,25 @@ export default function BasicReport({ data, i18n, fmt }) {
   const { t } = i18n
   const eco = data.economics ?? {}
   const ae = data.annual_energy ?? {}
+  const cons = data.consumption ?? {}
   const panels = data.panels
   const annualSavings = eco.annual_savings_eur ?? 0
   const payback = eco.payback_years
-  const verdict = computeVerdict(payback)
+  const annualKwh = cons.annual_kwh
+  const verdict = computeVerdict(payback, annualKwh)
+  const lowReason = lowSuitabilityReason(payback, annualKwh)
+  const singleMonth = !!cons.single_month || cons.consumption_reliability === 'low'
 
   const paybackText =
     payback != null && payback > 0
       ? t('basic.years', { value: fmt.nf1.format(payback) })
       : t('basic.paybackNever')
-  const subtitle = t('basic.verdictSub', { year: fmt.money0.format(annualSavings) })
+  const subtitle = lowReason
+    ? t(`basic.lowSuitability.${lowReason}`, {
+        kwh: fmt.nf.format(annualKwh ?? 0),
+        years: payback != null && payback > 0 ? fmt.nf1.format(payback) : '—',
+      })
+    : t('basic.verdictSub', { year: fmt.money0.format(annualSavings) })
   const system = data.user_system ?? data.optimal
   const selfSuff = ae.self_sufficiency_pct
   const production = system?.annual_production_kwh
@@ -339,6 +363,18 @@ export default function BasicReport({ data, i18n, fmt }) {
   return (
     <div className="space-y-4">
       <VerdictBanner verdict={verdict} subtitle={subtitle} t={t} />
+
+      {singleMonth && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          {t('basic.singleMonthCaveat')}
+        </div>
+      )}
+
+      {cons.distinct_cups > 1 && (
+        <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-900">
+          {t('basic.mixedSupply', { n: cons.distinct_cups })}
+        </div>
+      )}
 
       <ScoreCard data={data} t={t} />
 

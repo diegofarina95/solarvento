@@ -44,9 +44,11 @@ class ConsumptionResolution(BaseModel):
     """Resultado del resolutor del consumo anual (Layer 4)."""
 
     annual_kwh: float | None = None
-    method: str | None = None  # history | declared_annual | annualised_estimate | insufficient
+    method: str | None = None  # history | declared_annual | annualised_estimate | single_month_estimate | insufficient
     months_real: float | None = None
     confidence: str | None = None  # high | low | none
+    single_month: bool = False  # el dato es de UN mes; no dimensionar sin salvedad
+    monthly_kwh: float | None = None  # consumo mensual cuando single_month
 
 
 class BillInput(BaseModel):
@@ -113,6 +115,12 @@ class BillInput(BaseModel):
     start_date: date | None = None
     end_date: date | None = None
     days: float | None = Field(None, gt=0, le=370, description="Días del periodo si no hay fechas")
+    cups: str | None = Field(
+        None, max_length=32, description="CUPS del punto de suministro (para consolidar facturas)."
+    )
+    bono_social: bool | None = Field(
+        None, description="La factura aplica bono social (baja legítimamente el precio efectivo)."
+    )
 
     @model_validator(mode="after")
     def _check_period(self) -> "BillInput":
@@ -304,6 +312,14 @@ class ConsumptionSummary(BaseModel):
     estimated_months: list[int] = Field(default_factory=list)
     contracted_power_kw: float | None = None
     seasonality_source: str | None = None
+    # Fiabilidad del anual (Layer 3/4): 'low' cuando descansa sobre ~1 mes sin
+    # histórico → el frontend avisa y modera el veredicto.
+    consumption_reliability: str | None = None  # 'low' | 'normal'
+    single_month: bool = False
+    months_covered: float | None = None
+    distinct_cups: int | None = None
+    needs_review: bool = False
+    review_reasons: list[str] = Field(default_factory=list)
     profile: dict | None = None
 
 
@@ -535,6 +551,7 @@ class ParsedBill(BaseModel):
     consumption_candidates: list[ConsumptionCandidate] | None = None
     consumption_resolution: ConsumptionResolution | None = None
     existing_pv: bool = False
+    bono_social: bool = False
     # Máquina de 3 estados: valid (calcula) | needs_review (confirmar) |
     # extraction_failed (introducir a mano). Nunca hay un 4º que invente números.
     state: str = "valid"

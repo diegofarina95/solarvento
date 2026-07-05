@@ -96,10 +96,19 @@ _SELF_CONSUMPTION = _object(
     {
         "present": {
             "type": ["boolean", "null"],
-            "description": "true if the bill shows a self-consumption/surplus block (autoconsumo/excedentes).",
+            "description": (
+                "true ONLY if the bill shows ACTUAL self-consumption/surplus with a NON-ZERO "
+                "value (exported kWh > 0 or a compensation amount > 0). The boilerplate line "
+                "'Compensación de excedentes 0,00 €' printed on ordinary regulated bills WITHOUT "
+                "PV must be treated as false."
+            ),
         },
-        "exported_kwh": _num("Total exported/surplus kWh (energía excedentaria)"),
-        "compensation_eur_per_kwh": _num("Surplus compensation price (€/kWh)"),
+        "exported_kwh": _num("Exported/surplus energy in kWh (energía excedentaria/vertida), 0 if none"),
+        "compensated_eur": _num(
+            "Surplus COMPENSATION AMOUNT in currency from the 'Compensación de excedentes' line "
+            "(the € figure, often 0,00 on bills without PV), 0 if none"
+        ),
+        "compensation_eur_per_kwh": _num("Surplus compensation UNIT price (€/kWh), if printed"),
     },
     "Existing photovoltaic self-consumption block, if the supply already has PV.",
 )
@@ -138,6 +147,14 @@ BILL_CONTRACT_SCHEMA: dict[str, Any] = {
             "items": _num("A contracted power value in kW"),
         },
         "tariff": _nullable_string("Access tariff: 2.0TD, 3.0TD, etc."),
+        "bono_social": {
+            "type": ["boolean", "null"],
+            "description": (
+                "true if the bill applies the Spanish social discount: any of 'PVPC con bono "
+                "social', 'Descuento por Bono Social', 'Bono Social de Electricidad'. With it the "
+                "effective €/kWh is legitimately much lower."
+            ),
+        },
         "billing_period": _BILLING_PERIOD,
         "energy_term_eur": _num("Variable energy charge (término de energía), amount"),
         "energy_term_eur_per_kwh": _num("Energy unit price (currency/kWh) if printed"),
@@ -167,6 +184,7 @@ BILL_CONTRACT_SCHEMA: dict[str, Any] = {
         "self_consumption_block",
         "contracted_power_kw",
         "tariff",
+        "bono_social",
         "billing_period",
         "energy_term_eur",
         "energy_term_eur_per_kwh",
@@ -204,7 +222,11 @@ HARD RULES:
 - NEVER treat an accumulated meter reading as consumption: "lectura actual 19806" is a
   METER INDEX (meter_readings), NOT a ~63 kWh period consumption.
 - The embedded 12-month "Histórico de consumo" is often a FULL YEAR in one bill — capture it.
-- self_consumption_block.present = true if there is an autoconsumo/excedentes section.
+- self_consumption_block: set present=true ONLY with REAL surplus (exported_kwh > 0 or a
+  compensation amount > 0). 'Compensación de excedentes 0,00 €' on an ordinary bill = false.
+  Always transcribe exported_kwh and compensated_eur (use "0" / "0,00" if the line shows zero).
+- bono_social = true if the bill mentions the social discount (PVPC con bono social / Descuento
+  por Bono Social); it legitimately lowers the €/kWh.
 - Use the SUPPLY-POINT address, never the supplier office or fiscal/billing address.
 - A messy/partial bill must STILL return the schema with nulls where unsure — never refuse.
 """

@@ -115,6 +115,9 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         consumptionHistory: parsed.consumption_history ?? null,
         consumptionPeriods: parsed.consumption_periods ?? null,
         consumptionPeriodPrices: parsed.consumption_period_prices ?? null,
+        // CUPS y bono social: consolidación por suministro y banda de precio.
+        cups: parsed.cups ?? null,
+        bonoSocial: parsed.bono_social ?? false,
       }))
       if (parsed.needs_review && parsed.review_reasons?.length) {
         // Guarda de reconciliación/precio efectivo: el consumo detectado es
@@ -140,10 +143,14 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         detectedList.push({
           file: file.name,
           annualKwh,
+          // Una sola factura mensual: se muestra el consumo MENSUAL, no el anual.
+          singleMonth: !!res.single_month,
+          monthlyKwh: res.monthly_kwh ?? parsed.kwh,
           // El gasto anual solo es fiable si la factura cubre ~un año.
           spendAnnual: months != null && months >= 11 && total ? total : null,
           tariff: parsed.tariff ?? null,
           months,
+          bonoSocial: !!parsed.bono_social,
           // Precio efectivo like-with-like: importe ÷ consumo del MISMO periodo.
           price: total && parsed.kwh ? total / parsed.kwh : null,
           currency: parsed.currency || '€',
@@ -309,8 +316,17 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
             <div key={i} className="rounded-md border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-emerald-900">
               <p className="font-semibold">{t('bills.detectedTitle')}</p>
               <dl className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5">
-                <dt className="text-emerald-700">{t('bills.detectedAnnual')}</dt>
-                <dd className="text-right font-medium">{nfmt.format(d.annualKwh)} kWh</dd>
+                {d.singleMonth ? (
+                  <>
+                    <dt className="text-emerald-700">{t('bills.detectedMonthly')}</dt>
+                    <dd className="text-right font-medium">{nfmt.format(d.monthlyKwh)} kWh</dd>
+                  </>
+                ) : (
+                  <>
+                    <dt className="text-emerald-700">{t('bills.detectedAnnual')}</dt>
+                    <dd className="text-right font-medium">{nfmt.format(d.annualKwh)} kWh</dd>
+                  </>
+                )}
                 {d.spendAnnual != null && (
                   <>
                     <dt className="text-emerald-700">{t('bills.detectedSpend')}</dt>
@@ -332,10 +348,16 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
                 {d.price != null && (
                   <>
                     <dt className="text-emerald-700">{t('bills.detectedPrice')}</dt>
-                    <dd className="text-right font-medium">{pfmt.format(d.price)} {d.currency}/kWh</dd>
+                    <dd className="text-right font-medium">
+                      {pfmt.format(d.price)} {d.currency}/kWh
+                      {d.bonoSocial ? ` · ${t('bills.detectedBonoSocial')}` : ''}
+                    </dd>
                   </>
                 )}
               </dl>
+              {d.singleMonth && (
+                <p className="mt-1.5 text-amber-700">{t('bills.singleMonthWarning')}</p>
+              )}
             </div>
           ))}
         </div>

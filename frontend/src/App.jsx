@@ -235,6 +235,10 @@ export default function App() {
           // valoración de la batería al precio de valle que desplaza.
           consumption_periods: b.consumptionPeriods ?? null,
           consumption_period_prices: b.consumptionPeriodPrices ?? null,
+          // CUPS: consolidar facturas del mismo suministro. Bono social: banda
+          // de precio efectivo más baja.
+          cups: b.cups ?? null,
+          bono_social: b.bonoSocial ?? null,
         }))
       }
       if (advanced) {

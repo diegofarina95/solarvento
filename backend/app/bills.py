@@ -162,6 +162,11 @@ EFFECTIVE_PRICE_BOUNDS_BY_CURRENCY = {
     "GBP": (0.10, 0.60),
     "CHF": (0.10, 0.60),
 }
+# Con bono social (descuento sobre el PVPC) el precio efectivo baja mucho y es
+# legítimo: p. ej. 0,057 €/kWh. Se rebaja el suelo para no marcar esos casos como
+# error, manteniendo un mínimo que aún atrapa una lectura acumulada o una columna
+# suelta tomadas por el total.
+BONO_SOCIAL_MIN_PRICE_EUR_KWH = 0.03
 
 _ENERGY_CHARGE_LABELS = [
     r"energ[ií]a\s+(?:consumida|facturada|activa)",
@@ -425,14 +430,23 @@ def _parse_period_table(text: str) -> dict | None:
     return {"periods": periods, "total_kwh": round(raw_total, 1), "prices": prices or None}
 
 
-def _effective_price_bounds(currency: str | None) -> tuple[float, float]:
-    """Banda del precio efectivo (importe total / consumo) por moneda."""
+def _effective_price_bounds(
+    currency: str | None, bono_social: bool = False
+) -> tuple[float, float]:
+    """Banda del precio efectivo (importe total / consumo) por moneda.
+
+    Con bono social el suelo se rebaja (BONO_SOCIAL_MIN_PRICE_EUR_KWH): un precio
+    efectivo bajo es legítimo, no un consumo mal detectado."""
     cur = (currency or DEFAULT_CURRENCY).upper()
     if cur in EFFECTIVE_PRICE_BOUNDS_BY_CURRENCY:
-        return EFFECTIVE_PRICE_BOUNDS_BY_CURRENCY[cur]
-    # Sin banda específica: se reutiliza la del término de energía como red de
-    # seguridad (más laxa, pero mejor que no comprobar nada).
-    return _price_bounds(cur)
+        low, high = EFFECTIVE_PRICE_BOUNDS_BY_CURRENCY[cur]
+    else:
+        # Sin banda específica: se reutiliza la del término de energía como red de
+        # seguridad (más laxa, pero mejor que no comprobar nada).
+        low, high = _price_bounds(cur)
+    if bono_social:
+        low = min(low, BONO_SOCIAL_MIN_PRICE_EUR_KWH)
+    return low, high
 
 
 def safe_to_float(raw: object) -> float | None:
@@ -569,7 +583,7 @@ def validate_bill_consumption(bill: dict) -> list[str]:
     total = bill.get("total_eur") or bill.get("amount_eur")
     if total:
         effective = total / kwh
-        low, high = _effective_price_bounds(currency)
+        low, high = _effective_price_bounds(currency, bool(bill.get("bono_social")))
         if effective < low or effective > high:
             reasons.append(
                 f"El precio efectivo detectado ({effective:.2f} {currency or 'EUR'}/kWh) queda "
@@ -1705,19 +1719,46 @@ def aggregate_bills(
     # Si el importe/precio implica un consumo muy distinto, algo se detectó mal.
     currency_out = currencies[0] if currencies else (default_currency or DEFAULT_CURRENCY)
     agg_review: list[str] = []
+    any_bono_social = any(bill.get("bono_social") for bill in bills)
+
+    # (Consolidación por CUPS) Varias facturas del MISMO CUPS son meses de un
+    # único suministro (ya se combinan en la curva anual de arriba). Si aparecen
+    # CUPS DISTINTOS, son puntos de suministro diferentes y no deberían sumarse
+    # como si fueran una sola casa: se avisa.
+    distinct_cups = sorted({
+        c.strip().upper()
+        for bill in bills
+        if (c := bill.get("cups")) and str(c).strip()
+    })
+    if len(distinct_cups) > 1:
+        agg_review.append(
+            "Las facturas parecen de puntos de suministro distintos (CUPS diferentes: "
+            f"{len(distinct_cups)}); sube solo las de un mismo suministro para dimensionar bien."
+        )
     if annual_amount and annual_kwh > 0:
         effective = annual_amount / annual_kwh
-        low, high = _effective_price_bounds(currency_out)
+        low, high = _effective_price_bounds(currency_out, any_bono_social)
         if effective < low or effective > high:
             agg_review.append(
                 f"El precio efectivo anual ({effective:.2f} {currency_out}/kWh) queda fuera de "
                 f"lo razonable ({low:.2f}–{high:.2f}); revisa el consumo detectado."
             )
 
+    # Fiabilidad del anual: si descansa sobre ~1 mes sin histórico ni factura
+    # anual, la estacionalidad lo hace poco fiable para dimensionar (se avisa,
+    # no se bloquea: el usuario puede seguir con la salvedad).
+    months_covered = total_days / 30.4 if total_days else 0.0
+    single_month = not history and not annual_only and months_covered < 2
+    consumption_reliability = "low" if single_month else "normal"
+
     return {
         "annual_kwh": round(annual_kwh, 1),
         "needs_review": bool(agg_review),
         "review_reasons": agg_review,
+        "consumption_reliability": consumption_reliability,
+        "single_month": single_month,
+        "months_covered": round(months_covered, 1),
+        "distinct_cups": len(distinct_cups),
         "valle_price_eur_kwh": valle_price_eur_kwh,
         "avg_price_eur_kwh": price,
         "avg_price_kwh": price,

@@ -124,6 +124,80 @@ class TestCaldasHardCases:
         assert not any("precio efectivo" in r.lower() for r in bill["review_reasons"])
 
 
+def _regulated_no_pv_contract():
+    """Factura regulada SIN placas: la línea 'Compensación de excedentes 0,00 €'
+    y excedentes 0 kWh aparecen igualmente. NO es autoconsumo."""
+    return {
+        "bill_type_hint": "monthly",
+        "annual_consumption_kwh": _nf("250", "Consumo"),
+        "period_total_kwh": _nf("250", "Total"),
+        "period_split": {"p1_punta": _nf("80"), "p2_llano": _nf("70"), "p3_valle": _nf("100")},
+        "period_split_prices": {"p1_punta": _nf(None), "p2_llano": _nf(None), "p3_valle": _nf(None)},
+        "monthly_history": [],
+        "meter_readings": {"initial": _nf(None), "final": _nf(None)},
+        "self_consumption_block": {
+            "present": True,  # el modelo ve la línea de plantilla…
+            "exported_kwh": _nf("0"),  # …pero no hay excedentes…
+            "compensated_eur": _nf("0,00"),  # …ni compensación.
+            "compensation_eur_per_kwh": _nf(None),
+        },
+        "contracted_power_kw": [_nf("3,45")],
+        "tariff": "2.0TD", "bono_social": False,
+        "billing_period": {"start": "2026-03-01", "end": "2026-03-31", "days": _nf("30")},
+        "energy_term_eur": _nf("40,00"), "energy_term_eur_per_kwh": _nf(None),
+        "total_amount_eur": _nf("62,00"), "electricity_tax_eur": _nf(None),
+        "vat_eur": _nf(None), "vat_rate": _nf("0,21"),
+        "currency": "EUR", "country_code": "ES", "language": "es",
+        "supply_address": {"street": None, "cp": "36600", "municipio": "Vilagarcía", "provincia": "Pontevedra"},
+        "cups": "ES0031ABC", "warnings": [],
+    }
+
+
+class TestAutoconsumoFalsePositive:
+    def test_boilerplate_compensation_line_is_not_pv(self):
+        # present=True pero 0 kWh y 0 € → NO autoconsumo (issue #1).
+        bill = contract_to_bill(_regulated_no_pv_contract())
+        assert bill["existing_pv"] is False
+        assert not any("autoconsumo" in r.lower() for r in bill["review_reasons"])
+
+    def test_real_surplus_is_pv(self):
+        c = _regulated_no_pv_contract()
+        c["self_consumption_block"]["exported_kwh"] = _nf("120")
+        assert contract_to_bill(c)["existing_pv"] is True
+
+    def test_compensation_amount_is_pv(self):
+        c = _regulated_no_pv_contract()
+        c["self_consumption_block"]["compensated_eur"] = _nf("7,20")
+        assert contract_to_bill(c)["existing_pv"] is True
+
+
+class TestBonoSocial:
+    def test_low_effective_price_flagged_without_bono(self):
+        # 62 € / 250 kWh mensual ≈ 0,25 → en banda. Bajamos el total para forzar
+        # un efectivo muy bajo (0,057) SIN bono → fuera de banda, revisión.
+        c = _regulated_no_pv_contract()
+        c["total_amount_eur"] = _nf("14,25")  # 14,25/250 = 0,057
+        bill = contract_to_bill(c)
+        assert any("precio efectivo" in r.lower() for r in bill["review_reasons"])
+
+    def test_bono_social_allows_low_effective_price(self):
+        c = _regulated_no_pv_contract()
+        c["total_amount_eur"] = _nf("14,25")  # 0,057 €/kWh, legítimo con bono
+        c["bono_social"] = True
+        bill = contract_to_bill(c)
+        assert bill["bono_social"] is True
+        assert not any("precio efectivo" in r.lower() for r in bill["review_reasons"])
+
+
+class TestSingleMonthResolution:
+    def test_monthly_bill_flagged_single_month(self):
+        bill = contract_to_bill(_regulated_no_pv_contract())
+        res = bill["consumption_resolution"]
+        assert res["single_month"] is True
+        assert res["monthly_kwh"] == 250.0
+        assert any("un mes" in w.lower() or "mensual" in w.lower() for w in bill["warnings"])
+
+
 def _assert_strict(schema):
     """Todo objeto: additionalProperties=False y required == todas las propiedades."""
     if isinstance(schema, dict):

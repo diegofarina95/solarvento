@@ -27,15 +27,37 @@ class TestResolver:
         assert r["confidence"] == "high"
 
     def test_short_period_seasonal_not_flat(self):
-        # 22 días de septiembre, sin histórico → estimación estacional, NO plano.
+        # 22 días de septiembre, sin histórico → un solo mes: estimación estacional
+        # (NO plano ×365) pero marcada single_month para avisar de estacionalidad.
         r = resolve_annual_consumption(
             bill_period_kwh=346, history=[], start="2026-09-01", end="2026-09-23", days=22,
         )
-        assert r["method"] == "annualised_estimate"
+        assert r["method"] == "single_month_estimate"
+        assert r["single_month"] is True
         assert r["confidence"] == "low"  # <10 meses reales
         assert r["months_real"] < 10
         flat = 346 / 22 * 365.25
         assert abs(r["annual_kwh"] - flat) > 50  # estacional ≠ plano
+
+    def test_single_month_history_flagged(self):
+        # Un solo mes de histórico → single_month (no anualizar como fiable).
+        r = resolve_annual_consumption(
+            bill_period_kwh=None, history=[{"month": 7, "kwh": 300}],
+        )
+        assert r["method"] == "single_month_estimate"
+        assert r["single_month"] is True
+        assert r["confidence"] == "low"
+
+    def test_monthly_hint_no_dates_not_confident_annual(self):
+        # Sin fechas ni histórico pero el modelo dice 'monthly': se estima ×12
+        # marcado single_month, NO se toma como anual fiable.
+        r = resolve_annual_consumption(
+            bill_period_kwh=250, history=[], bill_type_hint="monthly",
+        )
+        assert r["method"] == "single_month_estimate"
+        assert r["single_month"] is True
+        assert r["annual_kwh"] == 3000
+        assert r["confidence"] == "low"
 
     def test_partial_history_low_confidence(self):
         r = resolve_annual_consumption(

@@ -104,6 +104,7 @@ def resolve_annual_consumption(
             "months_real": len(real_months),
             "method": "history",
             "confidence": "high",
+            "single_month": False,
         }
 
     hint = (bill_type_hint or "").lower()
@@ -115,45 +116,65 @@ def resolve_annual_consumption(
             "months_real": 12,
             "method": "declared_annual",
             "confidence": "high",
+            "single_month": False,
         }
 
     # Histórico parcial (algunos meses) → súmalo y anualiza por media mensual.
+    # Un SOLO mes de histórico no basta para un anual fiable (estacionalidad):
+    # se marca single_month para que la app lo presente como consumo mensual.
     if real_months:
         monthly_map = _history_monthly_map(history)
         observed = sum(monthly_map)
         if observed > 0:
             annual = round(observed / len(real_months) * 12, 1)
+            single = len(real_months) <= 1
             return {
                 "annual_kwh": annual,
                 "monthly_map": monthly_map,
                 "months_real": len(real_months),
-                "method": "annualised_estimate",
+                "method": "single_month_estimate" if single else "annualised_estimate",
                 "confidence": "high" if len(real_months) >= HIGH_CONFIDENCE_MONTHS else "low",
+                "single_month": single,
             }
 
     # 4) Periodo corto con fechas → estimación estacional (no plano ×365/días).
     if bill_period_kwh and days and days < 330 and start_d and end_d:
         annual, months_real = _seasonal_annualise(bill_period_kwh, start_d, end_d, days)
         if annual:
+            single = months_real <= 1.5
             confidence = "high" if months_real >= HIGH_CONFIDENCE_MONTHS else "low"
             return {
                 "annual_kwh": annual,
                 "monthly_map": None,
                 "months_real": months_real,
-                "method": "annualised_estimate",
+                "method": "single_month_estimate" if single else "annualised_estimate",
                 "confidence": confidence,
+                "single_month": single,
             }
 
-    # Sin fechas ni histórico no se puede detectar sub-anual: se asume que la cifra
-    # de la factura es la de referencia (el caso común de subida única). El precio
-    # efectivo es la guarda que atrapa un consumo implausible.
+    # Sin fechas ni histórico: es ambiguo si la cifra es mensual o anual. El
+    # bill_type_hint del modelo decide. Si parece una factura mensual/de periodo
+    # corto NO se anualiza con confianza: se estima ×12 pero marcado single_month
+    # (una sola factura no dimensiona con fiabilidad). Solo se toma como anual
+    # cuando el modelo lo sugiere (o no hay ninguna pista, caso de subida única).
     if bill_period_kwh:
+        looks_monthly = any(tag in hint for tag in ("month", "sub_period", "sub-period"))
+        if looks_monthly:
+            return {
+                "annual_kwh": round(bill_period_kwh * 12, 1),
+                "monthly_map": None,
+                "months_real": 1,
+                "method": "single_month_estimate",
+                "confidence": "low",
+                "single_month": True,
+            }
         return {
             "annual_kwh": round(bill_period_kwh, 1),
             "monthly_map": None,
             "months_real": 12,
             "method": "declared_annual",
             "confidence": "high",
+            "single_month": False,
         }
 
     return {
@@ -162,4 +183,5 @@ def resolve_annual_consumption(
         "months_real": 0,
         "method": "insufficient",
         "confidence": "none",
+        "single_month": False,
     }

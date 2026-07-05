@@ -530,6 +530,12 @@ def _resolve_consumption(
             "estimated_months": agg["estimated_months"],
             "contracted_power_kw": agg["contracted_power_kw"],
             "seasonality_source": agg["seasonality_source"],
+            "consumption_reliability": agg.get("consumption_reliability"),
+            "single_month": agg.get("single_month", False),
+            "months_covered": agg.get("months_covered"),
+            "distinct_cups": agg.get("distinct_cups"),
+            "needs_review": agg.get("needs_review", False),
+            "review_reasons": agg.get("review_reasons", []),
             "profile": _profile_summary(req, country_code),
         }
         return summary, agg["annual_kwh"]

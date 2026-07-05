@@ -235,6 +235,12 @@ def test_solar_estimate_advanced_mode(respx_mock, client):
         "estimated_months": [],
         "contracted_power_kw": None,
         "seasonality_source": "manual_annual",
+        "consumption_reliability": None,
+        "single_month": False,
+        "months_covered": None,
+        "distinct_cups": None,
+        "needs_review": False,
+        "review_reasons": [],
         "profile": {
             "country_code": "ES",
             "occupancy_profile": "standard",

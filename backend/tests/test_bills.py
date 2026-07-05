@@ -359,6 +359,37 @@ class TestAggregateBills:
         with pytest.raises(BillParseError):
             aggregate_bills([{"kwh": 0, "days": 30}])
 
+    def test_single_month_low_reliability(self):
+        # Una sola factura mensual, sin histórico → fiabilidad baja (issue #3).
+        result = aggregate_bills([{"kwh": 300, "days": 30}])
+        assert result["single_month"] is True
+        assert result["consumption_reliability"] == "low"
+
+    def test_full_year_bills_normal_reliability(self):
+        bills = [{"month": m, "kwh": 300, "days": 30} for m in range(1, 13)]
+        result = aggregate_bills(bills)
+        assert result["single_month"] is False
+        assert result["consumption_reliability"] == "normal"
+
+    def test_same_cups_not_flagged(self):
+        bills = [
+            {"month": 1, "kwh": 300, "days": 30, "cups": "ES0031ABC"},
+            {"month": 2, "kwh": 280, "days": 30, "cups": "ES0031ABC"},
+        ]
+        result = aggregate_bills(bills)
+        assert result["distinct_cups"] == 1
+        assert not any("suministro" in r.lower() for r in result["review_reasons"])
+
+    def test_distinct_cups_flagged(self):
+        bills = [
+            {"month": 1, "kwh": 300, "days": 30, "cups": "ES0031ABC"},
+            {"month": 1, "kwh": 900, "days": 30, "cups": "ES0099XYZ"},
+        ]
+        result = aggregate_bills(bills)
+        assert result["distinct_cups"] == 2
+        assert result["needs_review"] is True
+        assert any("suministro" in r.lower() for r in result["review_reasons"])
+
 
 class TestMultiLanguageTotals:
     """El total debe extraerse con etiquetas y monedas de toda Europa."""

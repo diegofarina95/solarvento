@@ -251,8 +251,16 @@ def contract_to_bill(contract: dict) -> dict:
     if note:
         warnings.append(note)
 
+    # (Layer 6) Autoconsumo REAL, no la línea de plantilla. "Compensación de
+    # excedentes 0,00 €" sale en TODAS las facturas reguladas sin placas; solo
+    # hay autoconsumo si hay excedente vertido (>0 kWh) o compensación (>0 €).
     sc_block = contract.get("self_consumption_block") or {}
-    existing_pv = bool(sc_block.get("present"))
+    sc_exported = _val(sc_block.get("exported_kwh"))
+    sc_compensated = _val(sc_block.get("compensated_eur"))
+    existing_pv = bool((sc_exported and sc_exported > 0) or (sc_compensated and sc_compensated > 0))
+
+    # (Layer 5) Bono social: el precio efectivo puede ser legítimamente muy bajo.
+    bono_social = bool(contract.get("bono_social"))
 
     bill: dict[str, Any] = {
         "kwh": bill_period_kwh,
@@ -279,6 +287,7 @@ def contract_to_bill(contract: dict) -> dict:
         "start_date": _text(billing.get("start")),
         "end_date": _text(billing.get("end")),
         "existing_pv": existing_pv,
+        "bono_social": bono_social,
         "parser": "openai-contract",
     }
 
@@ -296,6 +305,8 @@ def contract_to_bill(contract: dict) -> dict:
         "method": resolution["method"],
         "months_real": resolution["months_real"],
         "confidence": resolution["confidence"],
+        "single_month": resolution.get("single_month", False),
+        "monthly_kwh": bill_period_kwh if resolution.get("single_month") else None,
     }
 
     # (Layer 5) Precio efectivo LIKE-WITH-LIKE: importe de la factura ÷ consumo de
@@ -305,6 +316,14 @@ def contract_to_bill(contract: dict) -> dict:
     # (Layer 4) Sin consumo anual resoluble → revisión.
     if resolution["annual_kwh"] is None:
         review.append("No se pudo resolver el consumo anual; envía una factura con histórico o anual.")
+    elif resolution.get("single_month"):
+        # Una sola factura mensual NO permite dimensionar con fiabilidad: la
+        # estacionalidad (calefacción/AA) hace que un mes no represente el año.
+        warnings.append(
+            "Esto es el consumo de UN mes, no el anual. Una sola factura mensual no permite "
+            "dimensionar con fiabilidad por la estacionalidad; sube el histórico anual (gráfico "
+            "de 12 meses) o varias facturas repartidas por el año."
+        )
     elif resolution["confidence"] == "low":
         warnings.append(
             f"Estimación: solo ~{resolution['months_real']:g} meses de dato real. "
