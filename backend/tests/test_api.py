@@ -1677,6 +1677,56 @@ def test_bill_location_query_uses_cp_and_municipio_not_province():
     assert "15896" in q and "Santiago de Compostela" in q and "España" in q
 
 
+class _RealisticNominatim:
+    """Imita Nominatim real para A Estrada: el CP 36687 NO está indexado (0
+    resultados con postalcode), pero el municipio 'A Estrada' sí resuelve."""
+    def __init__(self):
+        self.queries = []
+
+    async def search_structured(self, *, postalcode=None, city=None, country=None, limit=5):
+        self.queries.append({"postalcode": postalcode, "city": city, "country": country})
+        # Cualquier query con postalcode 36687 → sin resultados (CP no indexado).
+        if postalcode == "36687":
+            return []
+        # Municipio 'A Estrada' (limpio) resuelve; 'A Estrada Quintas' NO.
+        if city and city.strip().lower() == "a estrada":
+            return [{"display_name": "A Estrada, Pontevedra, Galicia, España",
+                     "lat": 42.6899, "lon": -8.4894, "country_code": "ES", "postcode": "36680"}]
+        return []
+
+    async def search(self, query, limit=5):
+        self.queries.append({"q": query})
+        if "estrada" in query.lower():
+            return [{"display_name": "A Estrada, Pontevedra, Galicia, España",
+                     "lat": 42.6899, "lon": -8.4894, "country_code": "ES", "postcode": "36680"}]
+        return []
+
+    async def close(self):
+        pass
+
+
+@respx.mock
+def test_a_estrada_bill_geolocates_in_a_estrada(respx_mock, client):
+    """Prueba de aceptación: la factura de A Estrada (CP 36687, municipio pegado a
+    localidad) debe geolocalizar en A Estrada (~42.69,-8.49), NO en Pontevedra."""
+    import asyncio
+    from app.main import app, _enrich_bill_location, _haversine_km
+    app.state.nominatim = _RealisticNominatim()
+    # Como lo daría el parser: municipio con la localidad pegada y la provincia.
+    parsed = {"postal_code": "36687", "city": "A Estrada Quintas",
+              "region": "Pontevedra", "country_code": "ES",
+              "supply_address": "LUG QUINTAS 0027"}
+    out = asyncio.run(_enrich_bill_location(dict(parsed)))
+    assert out.get("lat") is not None, "no debe caer al centroide provincial"
+    assert _haversine_km(out["lat"], out["lon"], 42.69, -8.49) < 15  # A Estrada
+    assert _haversine_km(out["lat"], out["lon"], 42.43, -8.64) > 25  # NO Pontevedra capital
+    assert out["location_confidence"] == "high"
+    # La provincia NUNCA fue término principal de búsqueda.
+    assert all(
+        (q.get("city") or "").strip().lower() != "pontevedra" for q in app.state.nominatim.queries
+    )
+
+
 @respx.mock
 def test_geocode_resolves_municipio_not_province(respx_mock, client):
     import asyncio

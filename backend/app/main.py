@@ -425,6 +425,9 @@ def _clean_municipio(raw: str | None, cp: str | None = None) -> str | None:
         return None
     province = province_from_postal_code(cp)
     if province and text.strip().lower() == province[0].strip().lower():
+        # Era la provincia colada como municipio: se descarta como término
+        # principal (se avisa en el log para diagnosticar fallos de extracción).
+        logger.info("Geocode: descartado municipio='%s' por coincidir con la provincia del CP %s", text, cp)
         return None
     return text
 
@@ -452,33 +455,72 @@ async def _enrich_bill_location(parsed: dict) -> dict:
     parsed.pop("lon", None)
 
     cp = str(parsed.get("postal_code") or "").strip()
-    municipio = _clean_municipio(parsed.get("city"), cp)
+    raw_city = parsed.get("city")
+    municipio = _clean_municipio(raw_city, cp)
     parsed["city"] = municipio or parsed.get("city")
     country_name = "España" if _is_spanish(parsed) else (
         str(parsed.get("country_name") or parsed.get("country_code") or "").strip() or None
     )
     country_code = parsed.get("country_code")
     normalized_country = normalize_country_code(country_code) if country_code else None
+    # Diagnóstico: qué extrajo el parser (municipio limpio vs. bruto) y el CP.
+    logger.info(
+        "Geocode INPUT: municipio='%s' (bruto='%s') cp='%s' provincia='%s' pais='%s'",
+        municipio, raw_city, cp, parsed.get("region"), country_name,
+    )
 
     nominatim = app.state.nominatim
+
+    async def _try(label: str, **kw) -> list[dict]:
+        """Ejecuta una búsqueda en Nominatim registrando la query EXACTA y su top."""
+        params = {k: v for k, v in kw.items() if v}
+        if label == "free_text":
+            res = await nominatim.search(kw["query"], limit=5)
+            sent = {"q": kw["query"]}
+        else:
+            if not params:
+                return []
+            res = await nominatim.search_structured(limit=5, **params)
+            sent = params
+        top = res[0] if res else None
+        logger.info(
+            "Geocode QUERY [%s] %s -> %d resultados%s",
+            label, sent, len(res),
+            f" | top='{top['display_name'][:60]}' pc={top.get('postcode')}" if top else "",
+        )
+        return res
+
+    # Variantes del municipio: el nombre limpio y, si trae una localidad pegada
+    # ("A Estrada Quintas"), el mismo sin el último token ("A Estrada"), que es lo
+    # que Nominatim reconoce. Nunca se prueba solo la provincia.
+    muni_variants: list[str] = []
+    if municipio:
+        muni_variants.append(municipio)
+        toks = municipio.split()
+        if len(toks) > 2:
+            muni_variants.append(" ".join(toks[:-1]))
+    muni_variants = list(dict.fromkeys(muni_variants))
+
     candidates: list[dict] = []
     try:
-        # 1) Ancla primaria: CP estructurado (postalcode + país). Evita que la
-        # provincia arrastre el resultado al centroide provincial.
-        if cp:
-            candidates = await nominatim.search_structured(
-                postalcode=cp, country=country_name, limit=5
-            )
-        # 2) Sin CP o sin resultados: municipio estructurado.
-        if not candidates and municipio:
-            candidates = await nominatim.search_structured(
-                city=municipio, country=country_name, limit=5
-            )
-        # 3) Último recurso: texto libre (CP + municipio).
+        # 1) ESTRUCTURADA precisa: municipio + CP + país en la MISMA query.
+        if municipio and cp:
+            candidates = await _try("municipio+cp+pais", city=municipio, postalcode=cp, country=country_name)
+        # 2) Municipio + país (el CP rural a veces no está indexado en OSM), por
+        #    variantes de municipio hasta obtener resultados.
+        if not candidates:
+            for variant in muni_variants:
+                candidates = await _try("municipio+pais", city=variant, country=country_name)
+                if candidates:
+                    break
+        # 3) CP + país (sin municipio fiable).
+        if not candidates and cp:
+            candidates = await _try("cp+pais", postalcode=cp, country=country_name)
+        # 4) Último recurso: texto libre (CP + municipio; nunca solo provincia).
         if not candidates:
             query = _bill_location_query(parsed)
             if query:
-                candidates = await nominatim.search(query, limit=5)
+                candidates = await _try("free_text", query=query)
     except GeocodeError as exc:
         logger.warning("Bill address geocoding failed: %s", exc)
         return _apply_postal_fallback(parsed)
@@ -491,6 +533,7 @@ async def _enrich_bill_location(parsed: dict) -> dict:
             if normalize_country_code(c.get("country_code")) == normalized_country
         ]
     if not candidates:
+        logger.info("Geocode: 0 candidatos válidos → centroide del CP (baja confianza)")
         return _apply_postal_fallback(parsed)
 
     # Preferir el candidato cuyo CP coincide con el de la factura; si no, el que
@@ -503,6 +546,11 @@ async def _enrich_bill_location(parsed: dict) -> dict:
         else None
     )
     selected = cp_match or named or candidates[0]
+    logger.info(
+        "Geocode SELECT: '%s' (pc=%s) por %s",
+        str(selected.get("display_name"))[:60], selected.get("postcode"),
+        "coincidencia de CP" if cp_match else ("nombre de municipio" if named else "primer resultado"),
+    )
 
     lat, lon = round(float(selected["lat"]), 6), round(float(selected["lon"]), 6)
 
@@ -517,10 +565,16 @@ async def _enrich_bill_location(parsed: dict) -> dict:
         and not _cp_matches(selected.get("postcode"), cp)
         and _haversine_km(lat, lon, province[1], province[2]) > _MAX_REGION_DISTANCE_KM
     ):
+        logger.info(
+            "Geocode: CP del resultado (%s) ≠ CP factura (%s) y a >%.0f km del centroide "
+            "provincial → ubicación no fiable, centroide del CP + aviso",
+            selected.get("postcode"), cp, _MAX_REGION_DISTANCE_KM,
+        )
         fallback = _apply_postal_fallback(parsed)
         _attach_note(fallback, "warning", "location_approx")
         return fallback
 
+    logger.info("Geocode RESULT: lat=%s lon=%s (alta confianza)", lat, lon)
     parsed["lat"] = lat
     parsed["lon"] = lon
     parsed["location_label"] = selected.get("display_name")
