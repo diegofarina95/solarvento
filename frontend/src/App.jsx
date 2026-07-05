@@ -4,6 +4,7 @@ import SunArc, { celestialPosition } from './components/SunArc'
 import LocationSearch from './components/LocationSearch'
 import MapPicker from './components/MapPicker'
 import SolarForm from './components/SolarForm'
+import PrecheckModal from './components/PrecheckModal'
 import { ApiError, apiErrorMessage, solarEstimate } from './api'
 import { parseLocaleNumber } from './numberParsing'
 
@@ -57,6 +58,15 @@ export default function App() {
   }, [isNight])
   const i18n = useMemo(() => createI18n(language), [language])
   const { t } = i18n
+  // Formateadores para el pop-up del cortafuegos (números clave).
+  const precheckFmt = useMemo(
+    () => ({
+      nf: new Intl.NumberFormat(i18n.locale, { maximumFractionDigits: 0 }),
+      nf1: new Intl.NumberFormat(i18n.locale, { maximumFractionDigits: 1 }),
+      nf3: new Intl.NumberFormat(i18n.locale, { maximumFractionDigits: 3 }),
+    }),
+    [i18n.locale],
+  )
   const [position, setPosition] = useState(INITIAL_POSITION)
   const [locationLabel, setLocationLabel] = useState(null)
   const [countryCode, setCountryCode] = useState('ES')
@@ -90,7 +100,11 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [results, setResults] = useState(null)
+  // Resultado ya calculado pero pendiente de confirmación (cortafuegos): con
+  // confianza media/baja se muestra el pop-up antes de revelar los resultados.
+  const [pending, setPending] = useState(null)
   const resultsRef = useRef(null)
+  const formSectionRef = useRef(null)
 
   // El idioma del documento debe seguir al selector: los lectores de pantalla
   // pronuncian el texto con la fonética del lang declarado.
@@ -302,13 +316,34 @@ export default function App() {
         params.has_ev = Boolean(form.hasEv)
         params.has_pool = Boolean(form.hasPool)
       }
-      setResults(await solarEstimate(params))
+      const data = await solarEstimate(params)
+      // Cortafuegos: con facturas y confianza media/baja, se confirma con el
+      // usuario mostrando los números concretos antes de revelar resultados. Con
+      // confianza alta (o consumo a mano) se muestra directamente.
+      const level = data.precheck?.level
+      if (params.bills && (level === 'medium' || level === 'low')) {
+        setPending(data)
+        setResults(null)
+      } else {
+        setResults(data)
+      }
     } catch (err) {
       setError(err instanceof ApiError ? apiErrorMessage(err, t) : err.message || t('errors.generic'))
       setResults(null)
     } finally {
       setLoading(false)
     }
+  }
+
+  function confirmPending() {
+    setResults(pending)
+    setPending(null)
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function editBeforeCalc() {
+    setPending(null)
+    formSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
@@ -363,7 +398,7 @@ export default function App() {
       </header>
 
       <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
-        <section className="space-y-4">
+        <section ref={formSectionRef} className="space-y-4">
           <div className="card-solar p-4">
             <h2 className="section-eyebrow mb-3">
               {t('app.locationSection')}
@@ -485,6 +520,12 @@ export default function App() {
             </div>
           )}
 
+          {!loading && results && results.precheck?.level === 'high' && results.consumption?.source === 'bills' && (
+            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+              {t('precheck.softNotice')}
+            </div>
+          )}
+
           {!loading && results && (
             <Suspense
               fallback={
@@ -507,6 +548,16 @@ export default function App() {
           <AdSlot placement="footer" />
         </section>
       </div>
+
+      {pending && (
+        <PrecheckModal
+          precheck={pending.precheck}
+          i18n={i18n}
+          fmt={precheckFmt}
+          onConfirm={confirmPending}
+          onEdit={editBeforeCalc}
+        />
+      )}
     </div>
   )
 }

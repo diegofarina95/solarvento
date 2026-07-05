@@ -241,6 +241,7 @@ def test_solar_estimate_advanced_mode(respx_mock, client):
         "distinct_cups": None,
         "bono_social": False,
         "annual_from_printed": False,
+        "annual_sum_mismatch": False,
         "needs_review": False,
         "review_reasons": [],
         "review_notes": [],
@@ -1667,6 +1668,54 @@ class _FakeNominatim:
 
     async def close(self):
         pass
+
+
+class TestPrecheck:
+    def _run(self, summary, price=0.25, kwp=4.0):
+        from app.main import _precheck
+        return _precheck(summary, {"effective_price_eur_kwh": price}, {"kwp": kwp})
+
+    def test_high_when_printed_annual_and_valid(self):
+        r = self._run({"source": "bills", "annual_kwh": 3500, "annual_from_printed": True,
+                       "consumption_reliability": "normal", "months_covered": 12})
+        assert r["level"] == "high"
+        assert all(c["passed"] for c in r["checks"])
+        assert r["key_numbers"]["annual_kwh"] == 3500
+
+    def test_high_when_manual_input(self):
+        r = self._run({"source": "input", "annual_kwh": 4000})
+        assert r["level"] == "high"
+
+    def test_medium_when_reconstructed(self):
+        r = self._run({"source": "bills", "annual_kwh": 3500, "annual_from_printed": False,
+                       "consumption_reliability": "normal", "months_covered": 6})
+        assert r["level"] == "medium"
+
+    def test_medium_when_single_month(self):
+        r = self._run({"source": "bills", "annual_kwh": 3500, "annual_from_printed": False,
+                       "single_month": True, "consumption_reliability": "low", "months_covered": 1})
+        assert r["level"] == "medium"
+
+    def test_low_when_price_out_of_range(self):
+        r = self._run({"source": "bills", "annual_kwh": 3500, "annual_from_printed": True}, price=0.9)
+        assert r["level"] == "low"
+        assert any(c["code"] == "effective_price_range" and not c["passed"] for c in r["checks"])
+
+    def test_bono_social_allows_low_price(self):
+        r = self._run({"source": "bills", "annual_kwh": 3500, "annual_from_printed": True,
+                       "bono_social": True, "consumption_reliability": "normal"}, price=0.015)
+        assert r["level"] == "high"
+
+    def test_low_when_annual_out_of_range(self):
+        r = self._run({"source": "bills", "annual_kwh": 120, "annual_from_printed": True})
+        assert r["level"] == "low"
+        assert any(c["code"] == "annual_range" and not c["passed"] for c in r["checks"])
+
+    def test_low_when_sum_mismatch_or_mixed_cups(self):
+        r = self._run({"source": "bills", "annual_kwh": 3500, "annual_sum_mismatch": True})
+        assert r["level"] == "low"
+        r2 = self._run({"source": "bills", "annual_kwh": 3500, "distinct_cups": 2})
+        assert r2["level"] == "low"
 
 
 def test_clean_municipio_galician_pattern():

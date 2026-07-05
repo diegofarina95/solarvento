@@ -1868,9 +1868,15 @@ def aggregate_bills(
         not use_rolling and not history and not annual_only and months_covered < 2
     )
     consumption_reliability = "low" if single_month else "normal"
+    # Coherencia: si hay anual impreso Y suma independiente del histórico, deben
+    # cuadrar (±5%); si no, algo se detectó mal (doble conteo, tramo suelto…).
+    annual_sum_mismatch = bool(
+        rolling_annual and history_sum and abs(history_sum - rolling_annual) > 0.05 * rolling_annual
+    )
 
     return {
         "annual_kwh": round(annual_kwh, 1),
+        "annual_sum_mismatch": annual_sum_mismatch,
         "needs_review": bool(agg_review),
         "review_reasons": agg_review,
         "review_notes": agg_review_notes,

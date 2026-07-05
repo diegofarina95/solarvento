@@ -726,6 +726,7 @@ def _resolve_consumption(
             "distinct_cups": agg.get("distinct_cups"),
             "bono_social": agg.get("bono_social", False),
             "annual_from_printed": agg.get("annual_from_printed", False),
+            "annual_sum_mismatch": agg.get("annual_sum_mismatch", False),
             "needs_review": agg.get("needs_review", False),
             "review_reasons": agg.get("review_reasons", []),
             "review_notes": agg.get("review_notes", []),
@@ -1033,6 +1034,67 @@ def _resolve_electricity_price(
             consumption_summary.get("priced_bill_count", 0),
         )
     return default_price, "default", 0
+
+
+def _precheck(
+    consumption_summary: dict | None,
+    economics: dict | None,
+    recommended_system: dict | None,
+) -> dict:
+    """Cortafuegos de sanidad + nivel de confianza para el pop-up de confirmación.
+
+    ALTA: anual leído de un campo impreso y todas las validaciones pasan (o el
+    usuario introdujo el consumo a mano). MEDIA: anual reconstruido/estimado pero
+    las validaciones pasan. BAJA: alguna validación falla o falta un dato clave.
+    """
+    checks: list[dict] = []
+
+    def chk(code: str, passed: bool, **params) -> None:
+        checks.append({"code": code, "passed": bool(passed), "params": params})
+
+    if not consumption_summary:
+        chk("annual_present", False)
+        return {"level": "low", "source": None, "checks": checks, "key_numbers": {}}
+
+    source = consumption_summary.get("source")
+    annual = consumption_summary.get("annual_kwh")
+    price = (economics or {}).get("effective_price_eur_kwh")
+    kwp = (recommended_system or {}).get("kwp")
+    bono = bool(consumption_summary.get("bono_social"))
+
+    chk("annual_present", annual is not None and annual > 0)
+    chk("annual_range", annual is not None and 500 <= annual <= 30000, annual=annual)
+    price_min = 0.01 if bono else 0.02
+    chk(
+        "effective_price_range",
+        price is not None and price_min <= price <= 0.50,
+        price=price, low=price_min, high=0.50,
+    )
+    chk("annual_sum_matches", not consumption_summary.get("annual_sum_mismatch"))
+    months_covered = consumption_summary.get("months_covered")
+    chk("period_coherent", months_covered is None or months_covered > 0)
+    chk("single_supply", (consumption_summary.get("distinct_cups") or 0) <= 1,
+        n=consumption_summary.get("distinct_cups"))
+
+    failed = [c for c in checks if not c["passed"]]
+    key_numbers = {
+        "annual_kwh": round(annual) if annual else None,
+        "price_eur_kwh": round(price, 3) if price is not None else None,
+        "kwp": kwp,
+    }
+    if failed:
+        level = "low"
+    elif source == "input":
+        level = "high"  # el usuario introdujo el consumo
+    elif (
+        consumption_summary.get("annual_from_printed")
+        and not consumption_summary.get("single_month")
+        and consumption_summary.get("consumption_reliability") != "low"
+    ):
+        level = "high"
+    else:
+        level = "medium"
+    return {"level": level, "source": source, "checks": checks, "key_numbers": key_numbers}
 
 
 def _confidence_summary(
@@ -1732,6 +1794,7 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         grid_limits=grid_limits,
         typical_day=typical_day,
         confidence=_confidence_summary(consumption_summary, price_source, price_quote),
+        precheck=_precheck(consumption_summary, economics, recommended_system),
     )
 
 

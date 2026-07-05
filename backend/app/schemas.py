@@ -324,6 +324,7 @@ class ConsumptionSummary(BaseModel):
     distinct_cups: int | None = None
     bono_social: bool = False
     annual_from_printed: bool = False  # anual tomado de "consumo acumulado del último año"
+    annual_sum_mismatch: bool = False  # suma de tramos ≠ anual impreso (±5%)
     needs_review: bool = False
     review_reasons: list[str] = Field(default_factory=list)
     review_notes: list[dict] = Field(default_factory=list)
@@ -513,6 +514,16 @@ class CalculationConfidence(BaseModel):
     improvement_hints: list[str] = Field(default_factory=list)
 
 
+class PrecheckResult(BaseModel):
+    """Cortafuegos de sanidad: nivel + validaciones + números clave para el
+    pop-up de confirmación antes de dar por buenos los resultados."""
+
+    level: str  # 'high' | 'medium' | 'low'
+    source: str | None = None  # 'bills' | 'input'
+    checks: list[dict] = Field(default_factory=list)  # [{code, passed, params}]
+    key_numbers: dict = Field(default_factory=dict)  # {annual_kwh, price_eur_kwh, kwp}
+
+
 class SolarEstimateResponse(BaseModel):
     lat: float
     lon: float
@@ -537,6 +548,7 @@ class SolarEstimateResponse(BaseModel):
     grid_limits: GridLimits | None = None
     typical_day: TypicalDay | None = None
     confidence: CalculationConfidence
+    precheck: PrecheckResult | None = None
 
 
 class ParsedBill(BaseModel):
