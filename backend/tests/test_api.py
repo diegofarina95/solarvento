@@ -243,6 +243,7 @@ def test_solar_estimate_advanced_mode(respx_mock, client):
         "annual_from_printed": False,
         "needs_review": False,
         "review_reasons": [],
+        "review_notes": [],
         "profile": {
             "country_code": "ES",
             "occupancy_profile": "standard",
@@ -797,9 +798,10 @@ def test_parse_bill_geocodes_openai_supply_address(respx_mock, openai_client):
     geocode_call = [
         call for call in respx_mock.calls if call.request.url.path.endswith("/search")
     ][0]
-    # Primaria: CP + municipio (la calle ya no se envía en la query)
-    assert "75001" in geocode_call.request.url.params["q"]
-    assert "Paris" in geocode_call.request.url.params["q"]
+    # Primaria: búsqueda ESTRUCTURADA anclada en el CP (no texto libre `q`).
+    params = geocode_call.request.url.params
+    assert params["postalcode"] == "75001"
+    assert "q" not in params
 
 
 @respx.mock
@@ -1631,8 +1633,38 @@ class _FakeNominatim:
         self.last_query = query
         return self.results
 
+    async def search_structured(self, *, postalcode=None, city=None, country=None, limit=5):
+        self.last_query = " ".join(
+            str(p) for p in (postalcode, city, country) if p
+        )
+        return self.results
+
     async def close(self):
         pass
+
+
+def test_clean_municipio_galician_pattern():
+    from app.main import _clean_municipio
+    # "MUNICIPIO -PARROQUIA- (PROVINCIA)" → municipio, no la provincia ni parroquia
+    assert _clean_municipio("A ESTRADA QUINTAS -CEREIXO- (PONTEVEDRA)", "36687").startswith(
+        "A ESTRADA"
+    )
+    assert "PONTEVEDRA" not in _clean_municipio("A ESTRADA -CEREIXO- (PONTEVEDRA)", "36687")
+    assert "CEREIXO" not in _clean_municipio("A ESTRADA -CEREIXO- (PONTEVEDRA)", "36687")
+
+
+def test_clean_municipio_rejects_province_name():
+    from app.main import _clean_municipio
+    # Si el "municipio" ES el nombre de la provincia del CP, se descarta.
+    assert _clean_municipio("Pontevedra", "36001") is None
+
+
+def test_cp_matches():
+    from app.main import _cp_matches
+    assert _cp_matches("36687", "36687") is True
+    assert _cp_matches("36687, Pontevedra", "36687") is True
+    assert _cp_matches("28001", "36687") is False
+    assert _cp_matches(None, "36687") is False
 
 
 def test_bill_location_query_uses_cp_and_municipio_not_province():

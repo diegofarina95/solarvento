@@ -53,7 +53,17 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
   const [uploading, setUploading] = useState(false)
   const [notice, setNotice] = useState(null)
   const [review, setReview] = useState(null)
+  const [advisory, setAdvisory] = useState(null)
   const [detected, setDetected] = useState([])
+
+  // Traduce un aviso {code, params} del backend; cae a `text` si el código no
+  // existe en el catálogo (avisos "raw" del modelo).
+  function noteText(note) {
+    if (!note?.code) return note?.text ?? ''
+    const key = `billNotices.${note.code}`
+    const out = t(key, note.params ?? {})
+    return out === key ? (note.params?.text ?? '') : out
+  }
   const nfmt = new Intl.NumberFormat(i18n.locale, { maximumFractionDigits: 0 })
   const pfmt = new Intl.NumberFormat(i18n.locale, { maximumFractionDigits: 3 })
 
@@ -69,10 +79,12 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
     setUploading(true)
     setNotice(null)
     setReview(null)
+    setAdvisory(null)
     setDetected([])
     const added = []
     const problems = []
     const reviews = []
+    const advisories = []
     const detectedList = []
     let detectedLocation = null
     // Los PDFs se parsean en paralelo: con varios archivos y un parser lento
@@ -119,14 +131,22 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         cups: parsed.cups ?? null,
         bonoSocial: parsed.bono_social ?? false,
       }))
-      if (parsed.needs_review && parsed.review_reasons?.length) {
+      if (parsed.needs_review && (parsed.review_notes?.length || parsed.review_reasons?.length)) {
         // Guarda de reconciliación/precio efectivo: el consumo detectado es
-        // sospechoso. Se marca en rojo y con el motivo concreto para que el
-        // usuario confirme el kWh antes de calcular (mejor revisar que un
-        // número seguro y equivocado).
-        reviews.push({ file: file.name, reasons: parsed.review_reasons })
+        // sospechoso. Se marca en rojo con el motivo concreto (traducido desde
+        // el código i18n; se cae al texto del backend si falta el código).
+        reviews.push({
+          file: file.name,
+          notes: parsed.review_notes ?? [],
+          reasons: parsed.review_reasons ?? [],
+        })
       } else if (parsed.warnings?.length) {
         problems.push({ kind: 'billNeedsReview', file: file.name })
+      }
+      // Avisos informativos (bono social, un solo mes, ubicación aproximada…):
+      // se muestran traducidos, no bloquean el cálculo.
+      if (parsed.warning_notes?.length) {
+        advisories.push({ file: file.name, notes: parsed.warning_notes })
       }
       if (parsed.lat != null && parsed.lon != null) {
         detectedLocation = parsed
@@ -163,6 +183,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
     if (detectedLocation) onLocationDetected?.(detectedLocation)
     if (problems.length) setNotice(problems)
     if (reviews.length) setReview(reviews)
+    if (advisories.length) setAdvisory(advisories)
     if (detectedList.length) setDetected(detectedList)
     setUploading(false)
   }
@@ -303,11 +324,24 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
           <ul className="mt-1 list-disc space-y-0.5 pl-4">
             {review.map((item, i) => (
               <li key={i}>
-                <span className="font-medium">{item.file}:</span> {item.reasons.join(' ')}
+                <span className="font-medium">{item.file}:</span>{' '}
+                {(item.notes?.length
+                  ? item.notes.map(noteText)
+                  : item.reasons
+                ).join(' ')}
               </li>
             ))}
           </ul>
           <p className="mt-1.5 text-red-700">{t('errors.billReviewHint')}</p>
+        </div>
+      )}
+      {advisory && (
+        <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800">
+          <ul className="list-disc space-y-0.5 pl-4">
+            {advisory.map((item, i) =>
+              item.notes.map((n, j) => <li key={`${i}-${j}`}>{noteText(n)}</li>),
+            )}
+          </ul>
         </div>
       )}
       {detected.length > 0 && (

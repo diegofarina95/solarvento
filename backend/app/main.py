@@ -5,6 +5,7 @@ import hashlib
 import ipaddress
 import logging
 import math
+import re
 from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
@@ -14,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 
+from . import bill_messages
 from . import bill_normalise
 from . import bills as bills_mod
 from . import calculations, cashflow, simulation
@@ -272,20 +274,20 @@ async def parse_bill(request: Request, file: UploadFile, website: str | None = F
             # complete a mano (mejor revisar que un número seguro y equivocado).
             logger.warning("LLM bill extraction failed: %s", exc)
             bill = bill_normalise.contract_to_bill(None)
-            bill["warnings"] = [
-                "No se pudo leer la factura automáticamente; revisa e introduce los datos a mano."
-            ]
+            failed = bill_messages.note("extraction_failed")
+            bill["warnings"] = [bill_messages.text_es("extraction_failed")]
+            bill["warning_notes"] = [failed]
+            bill["review_reasons"] = [bill_messages.text_es("extraction_failed")]
+            bill["review_notes"] = [failed]
         return await _enrich_bill_location(bill)
 
     # Sin clave de OpenAI: degradación al extractor local (solo PDF-texto).
     if is_image:
-        return _unreadable_bill(
-            "Las fotos de factura no están disponibles ahora; sube la factura en PDF."
-        )
+        return _unreadable_bill(bill_messages.note("images_unavailable"))
     try:
         local = await run_in_threadpool(bills_mod.parse_bill_pdf, content)
     except bills_mod.BillParseError as exc:
-        return _unreadable_bill(str(exc))
+        return _unreadable_bill(bill_messages.note("raw", text=str(exc)))
     return await _enrich_bill_location(local)
 
 
@@ -315,8 +317,9 @@ async def _extract_bill_contract(
     return bill_normalise.contract_to_bill(contract)
 
 
-def _unreadable_bill(reason: str) -> dict:
-    """Respuesta 200 para facturas ilegibles: fila vacía + aviso."""
+def _unreadable_bill(note: dict) -> dict:
+    """Respuesta 200 para facturas ilegibles: fila vacía + aviso (código i18n)."""
+    reason = bill_messages.text_es(note["code"], **note["params"])
     return {
         "kwh": None,
         "amount_eur": None,
@@ -329,7 +332,9 @@ def _unreadable_bill(reason: str) -> dict:
         "state": "extraction_failed",
         "needs_review": False,
         "review_reasons": [],
+        "review_notes": [],
         "warnings": [reason],
+        "warning_notes": [note],
     }
 
 
@@ -399,11 +404,46 @@ def _apply_postal_fallback(parsed: dict) -> dict:
     return parsed
 
 
+_PROVINCE_SUFFIX = re.compile(r"\(.*?\)")  # "(PONTEVEDRA)"
+_PARROQUIA_SEGMENT = re.compile(r"-[^-]*-")  # "-CEREIXO-"
+
+
+def _clean_municipio(raw: str | None, cp: str | None = None) -> str | None:
+    """Municipio real del patrón gallego 'MUNICIPIO -PARROQUIA- (PROVINCIA)'.
+
+    Quita la provincia entre paréntesis y la parroquia entre guiones. Si lo que
+    queda ES el nombre de la provincia del CP, se descarta (era la provincia, no
+    el municipio) para no anclar el geocoder en la capital de provincia.
+    """
+    if not raw:
+        return None
+    text = _PROVINCE_SUFFIX.sub(" ", str(raw))
+    text = _PARROQUIA_SEGMENT.sub(" ", text)
+    text = re.sub(r"\d+", " ", text)  # portal/número de calle
+    text = " ".join(text.split()).strip(" ,.-")
+    if not text:
+        return None
+    province = province_from_postal_code(cp)
+    if province and text.strip().lower() == province[0].strip().lower():
+        return None
+    return text
+
+
+def _cp_matches(returned: str | None, bill_cp: str | None) -> bool:
+    """El CP geocodificado coincide con el de la factura (5 dígitos)."""
+    if not returned or not bill_cp:
+        return False
+    a = re.sub(r"\D", "", str(returned))[:5]
+    b = re.sub(r"\D", "", str(bill_cp))[:5]
+    return bool(a) and a == b
+
+
 async def _enrich_bill_location(parsed: dict) -> dict:
     """Attach coordinates to parsed bills when the invoice contains an address.
 
-    Prefers a precise geocode of the supply address; if that fails but a Spanish
-    postal code parsed, biases the map to the province centroid (low confidence).
+    Ancla en el CÓDIGO POSTAL (búsqueda estructurada), valida que el CP del
+    resultado coincida con el de la factura y, si no, cae al centroide del CP con
+    baja confianza y aviso (nunca planta el pin en la capital de provincia).
     """
     if _is_european_geocode_result(parsed):
         parsed.setdefault("location_confidence", "high")
@@ -411,62 +451,75 @@ async def _enrich_bill_location(parsed: dict) -> dict:
     parsed.pop("lat", None)
     parsed.pop("lon", None)
 
-    query = _bill_location_query(parsed)
-    if not query:
-        return _apply_postal_fallback(parsed)
+    cp = str(parsed.get("postal_code") or "").strip()
+    municipio = _clean_municipio(parsed.get("city"), cp)
+    parsed["city"] = municipio or parsed.get("city")
+    country_name = "España" if _is_spanish(parsed) else (
+        str(parsed.get("country_name") or parsed.get("country_code") or "").strip() or None
+    )
+    country_code = parsed.get("country_code")
+    normalized_country = normalize_country_code(country_code) if country_code else None
 
+    nominatim = app.state.nominatim
+    candidates: list[dict] = []
     try:
-        candidates = await app.state.nominatim.search(query, limit=5)
+        # 1) Ancla primaria: CP estructurado (postalcode + país). Evita que la
+        # provincia arrastre el resultado al centroide provincial.
+        if cp:
+            candidates = await nominatim.search_structured(
+                postalcode=cp, country=country_name, limit=5
+            )
+        # 2) Sin CP o sin resultados: municipio estructurado.
+        if not candidates and municipio:
+            candidates = await nominatim.search_structured(
+                city=municipio, country=country_name, limit=5
+            )
+        # 3) Último recurso: texto libre (CP + municipio).
+        if not candidates:
+            query = _bill_location_query(parsed)
+            if query:
+                candidates = await nominatim.search(query, limit=5)
     except GeocodeError as exc:
         logger.warning("Bill address geocoding failed: %s", exc)
         return _apply_postal_fallback(parsed)
 
     candidates = _european_geocode_results(candidates)
+    if normalized_country and normalized_country != "EU":
+        candidates = [
+            c
+            for c in candidates
+            if normalize_country_code(c.get("country_code")) == normalized_country
+        ]
     if not candidates:
         return _apply_postal_fallback(parsed)
 
-    country_code = parsed.get("country_code")
-    normalized_country = normalize_country_code(country_code) if country_code else None
-    selected = None
-    if normalized_country and normalized_country != "EU":
-        selected = next(
-            (
-                candidate
-                for candidate in candidates
-                if normalize_country_code(candidate.get("country_code")) == normalized_country
-            ),
-            None,
-        )
-        if not selected:
-            return _apply_postal_fallback(parsed)
-    # Entre los candidatos del país, preferir el que nombra el municipio del CP.
-    city = str(parsed.get("city") or "").strip().lower()
-    country_matches = [
-        c
-        for c in candidates
-        if not normalized_country
-        or normalized_country == "EU"
-        or normalize_country_code(c.get("country_code")) == normalized_country
-    ]
-    pool = country_matches or candidates
-    if city:
-        named = next(
-            (c for c in pool if city in str(c.get("display_name") or "").lower()), None
-        )
-        selected = named or selected or pool[0]
-    else:
-        selected = selected or pool[0]
+    # Preferir el candidato cuyo CP coincide con el de la factura; si no, el que
+    # nombra el municipio; si no, el primero.
+    city_l = (municipio or "").strip().lower()
+    cp_match = next((c for c in candidates if _cp_matches(c.get("postcode"), cp)), None)
+    named = (
+        next((c for c in candidates if city_l and city_l in str(c.get("display_name") or "").lower()), None)
+        if city_l
+        else None
+    )
+    selected = cp_match or named or candidates[0]
 
     lat, lon = round(float(selected["lat"]), 6), round(float(selected["lon"]), 6)
-    # Guarda de distancia: la provincia se usa como FILTRO, no como objetivo. Un
-    # resultado lejos del centroide provincial del CP y que no nombra el municipio
-    # es de otra región → se descarta al centroide del CP (baja confianza).
-    province = province_from_postal_code(parsed.get("postal_code"))
-    names_city = bool(city) and city in str(selected.get("display_name") or "").lower()
-    if province and not names_city:
-        _name, plat, plon = province
-        if _haversine_km(lat, lon, plat, plon) > _MAX_REGION_DISTANCE_KM:
-            return _apply_postal_fallback(parsed)
+
+    # Validación de coherencia (solo con centroide provincial ES disponible): si
+    # el CP del resultado NO coincide con el de la factura y además el punto cae
+    # lejos del centroide provincial del CP, es de otra región → se cae al
+    # centroide del CP con baja confianza y aviso (no se planta el pin lejos).
+    province = province_from_postal_code(cp)
+    if (
+        cp
+        and province is not None
+        and not _cp_matches(selected.get("postcode"), cp)
+        and _haversine_km(lat, lon, province[1], province[2]) > _MAX_REGION_DISTANCE_KM
+    ):
+        fallback = _apply_postal_fallback(parsed)
+        _attach_note(fallback, "warning", "location_approx")
+        return fallback
 
     parsed["lat"] = lat
     parsed["lon"] = lon
@@ -475,6 +528,18 @@ async def _enrich_bill_location(parsed: dict) -> dict:
     if selected.get("country_code") and not parsed.get("country_code"):
         parsed["country_code"] = selected["country_code"]
     return parsed
+
+
+def _attach_note(parsed: dict, kind: str, code: str, **params) -> None:
+    """Añade un aviso (texto ES + código i18n) a la factura parseada."""
+    text = bill_messages.text_es(code, **params)
+    note = bill_messages.note(code, **params)
+    if kind == "review":
+        parsed.setdefault("review_reasons", []).append(text)
+        parsed.setdefault("review_notes", []).append(note)
+        parsed["needs_review"] = True
+    parsed.setdefault("warnings", []).append(text)
+    parsed.setdefault("warning_notes", []).append(note)
 
 
 def _is_european_geocode_result(result: dict) -> bool:
@@ -543,6 +608,7 @@ def _resolve_consumption(
             "annual_from_printed": agg.get("annual_from_printed", False),
             "needs_review": agg.get("needs_review", False),
             "review_reasons": agg.get("review_reasons", []),
+            "review_notes": agg.get("review_notes", []),
             "profile": _profile_summary(req, country_code),
         }
         return summary, agg["annual_kwh"]

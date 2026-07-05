@@ -213,9 +213,36 @@ class TestAugmentFromText:
     def test_detects_bono_social(self):
         from app.bills import augment_contract_from_text, detect_bono_social
         assert detect_bono_social("... Descuento por Bono Social -5,40 €") is True
+        assert detect_bono_social("PVPC con Bono Social") is True
+        assert detect_bono_social("cliente marcado como consumidor vulnerable") is True
         assert detect_bono_social("factura normal sin descuentos") is False
         c = augment_contract_from_text({"bono_social": False}, "Aplicado Bono Social")
         assert c["bono_social"] is True
+
+    def test_bono_social_note_and_no_price_warning(self):
+        # Con bono social: aviso de ahorro bajo (código) y SIN aviso de precio.
+        c = _regulated_no_pv_contract()
+        c["total_amount_eur"] = _nf("14,25")  # 0,057 €/kWh, legítimo con bono
+        c["bono_social"] = True
+        bill = contract_to_bill(c)
+        codes = {n["code"] for n in bill["warning_notes"]}
+        assert "bono_social_savings" in codes
+        assert "effective_price_out_of_range" not in codes
+
+
+class TestNotesAreCoded:
+    def test_review_and_warning_notes_have_codes(self):
+        bill = contract_to_bill(_regulated_no_pv_contract())
+        # single_month → warning con código, no texto suelto
+        assert any(n["code"] == "single_month" for n in bill["warning_notes"])
+        for n in bill["warning_notes"] + bill["review_notes"]:
+            assert "code" in n and "params" in n
+
+    def test_existing_pv_note_coded(self):
+        c = _regulated_no_pv_contract()
+        c["self_consumption_block"]["exported_kwh"] = _nf("120")
+        bill = contract_to_bill(c)
+        assert any(n["code"] == "existing_pv" for n in bill["review_notes"])
 
     def test_detects_rolling_annual(self):
         from app.bills import augment_contract_from_text, detect_rolling_annual_kwh

@@ -67,7 +67,7 @@ class TestReconciliationGuard:
         }
         reasons = validate_bill_consumption(bill)
         assert reasons  # debe FALLAR, no pasar en silencio
-        assert any("periodo" in r.lower() for r in reasons)
+        assert any(r["code"] == "effective_price_out_of_range" for r in reasons)
 
     def test_correct_total_reconciles(self):
         bill = {
@@ -83,7 +83,7 @@ class TestEffectivePriceGuard:
     def test_price_of_1_41_trips_review(self):
         bill = {"kwh": 2150.0, "total_eur": 3027.14, "currency": "EUR"}
         reasons = validate_bill_consumption(bill)
-        assert any("precio efectivo" in r.lower() for r in reasons)
+        assert any(r["code"] == "effective_price_out_of_range" for r in reasons)
 
     def test_price_of_0_22_passes(self):
         bill = {"kwh": 13800.0, "total_eur": 3027.14, "currency": "EUR"}

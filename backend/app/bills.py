@@ -13,6 +13,7 @@ from datetime import date, timedelta
 
 from pypdf import PdfReader
 
+from . import bill_messages
 from .profiles import DAYS_PER_MONTH, MONTHLY_WEIGHTS
 from .spain_postal import province_from_postal_code
 
@@ -565,19 +566,20 @@ def reconcile_annual_consumption(bill: dict) -> tuple[float | None, str | None, 
     return authoritative, None, []
 
 
-def validate_bill_consumption(bill: dict) -> list[str]:
+def validate_bill_consumption(bill: dict) -> list[dict]:
     """Guarda de plausibilidad del consumo YA reconciliado: el precio efectivo.
 
     Agnóstica al parser (IA o local). La reconciliación de fuentes la hace
     reconcile_annual_consumption; aquí queda el backstop independiente: si
     incluso el consumo reconciliado da un precio efectivo imposible (p. ej. una
     factura con una única columna de periodo y sin más fuentes que la corroboren),
-    se deja para revisión. Devuelve motivos (lista vacía = sin objeciones).
+    se deja para revisión. Con bono social el precio bajo es legítimo (banda más
+    baja) y NO se marca. Devuelve avisos {code, params} (lista vacía = sin objeciones).
     """
-    reasons: list[str] = []
+    notes: list[dict] = []
     kwh = bill.get("kwh")
     if not kwh or kwh <= 0:
-        return reasons
+        return notes
     currency = bill.get("currency")
 
     total = bill.get("total_eur") or bill.get("amount_eur")
@@ -585,12 +587,16 @@ def validate_bill_consumption(bill: dict) -> list[str]:
         effective = total / kwh
         low, high = _effective_price_bounds(currency, bool(bill.get("bono_social")))
         if effective < low or effective > high:
-            reasons.append(
-                f"El precio efectivo detectado ({effective:.2f} {currency or 'EUR'}/kWh) queda "
-                f"fuera de lo razonable ({low:.2f}–{high:.2f} {currency or 'EUR'}/kWh): el consumo "
-                "puede ser una sola columna de periodo en vez del total. Revisa el consumo."
+            notes.append(
+                bill_messages.note(
+                    "effective_price_out_of_range",
+                    price=effective,
+                    low=low,
+                    high=high,
+                    currency=currency or "EUR",
+                )
             )
-    return reasons
+    return notes
 
 
 def _month_from_token(token: str) -> int | None:
@@ -1044,7 +1050,10 @@ def extract_text(pdf_bytes: bytes) -> str:
         raise BillParseError(f"No se pudo leer el PDF: {exc}") from exc
 
 
-_BONO_SOCIAL_RE = re.compile(r"bono\s+social", re.IGNORECASE)
+_BONO_SOCIAL_RE = re.compile(
+    r"bono\s+social|descuento\s+por\s+bono|pvpc\s+con\s+bono|consumidor\s+vulnerable",
+    re.IGNORECASE,
+)
 # "Consumo acumulado del último año: 3.450 kWh" y variantes.
 _ROLLING_ANNUAL_RE = re.compile(
     r"(?:consumo\s+(?:acumulado|total)?\s*(?:del|de\s+los|en\s+los)?\s*"
@@ -1798,6 +1807,7 @@ def aggregate_bills(
     # Si el importe/precio implica un consumo muy distinto, algo se detectó mal.
     currency_out = currencies[0] if currencies else (default_currency or DEFAULT_CURRENCY)
     agg_review: list[str] = []
+    agg_review_notes: list[dict] = []
     any_bono_social = any(bill.get("bono_social") for bill in bills)
 
     # (Consolidación por CUPS) Varias facturas del MISMO CUPS son meses de un
@@ -1810,18 +1820,19 @@ def aggregate_bills(
         if (c := bill.get("cups")) and str(c).strip()
     })
     if len(distinct_cups) > 1:
-        agg_review.append(
-            "Las facturas parecen de puntos de suministro distintos (CUPS diferentes: "
-            f"{len(distinct_cups)}); sube solo las de un mismo suministro para dimensionar bien."
-        )
+        note = bill_messages.note("mixed_cups", n=len(distinct_cups))
+        agg_review_notes.append(note)
+        agg_review.append(bill_messages.text_es(note["code"], **note["params"]))
     if annual_amount and annual_kwh > 0:
         effective = annual_amount / annual_kwh
         low, high = _effective_price_bounds(currency_out, any_bono_social)
         if effective < low or effective > high:
-            agg_review.append(
-                f"El precio efectivo anual ({effective:.2f} {currency_out}/kWh) queda fuera de "
-                f"lo razonable ({low:.2f}–{high:.2f}); revisa el consumo detectado."
+            note = bill_messages.note(
+                "effective_price_annual_out_of_range",
+                price=effective, low=low, high=high, currency=currency_out,
             )
+            agg_review_notes.append(note)
+            agg_review.append(bill_messages.text_es(note["code"], **note["params"]))
 
     # Fiabilidad del anual: si descansa sobre ~1 mes sin histórico ni factura
     # anual, la estacionalidad lo hace poco fiable para dimensionar (se avisa,
@@ -1836,6 +1847,7 @@ def aggregate_bills(
         "annual_kwh": round(annual_kwh, 1),
         "needs_review": bool(agg_review),
         "review_reasons": agg_review,
+        "review_notes": agg_review_notes,
         "consumption_reliability": consumption_reliability,
         "single_month": single_month,
         "months_covered": round(months_covered, 1),

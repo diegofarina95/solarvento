@@ -326,6 +326,7 @@ class ConsumptionSummary(BaseModel):
     annual_from_printed: bool = False  # anual tomado de "consumo acumulado del último año"
     needs_review: bool = False
     review_reasons: list[str] = Field(default_factory=list)
+    review_notes: list[dict] = Field(default_factory=list)
     profile: dict | None = None
 
 
@@ -566,6 +567,10 @@ class ParsedBill(BaseModel):
     cups: str | None = None
     needs_review: bool = False
     review_reasons: list[str] = []
+    # Avisos como CÓDIGO+params para traducir en el frontend (i18n). El texto ES
+    # de review_reasons/warnings se conserva para logs/compatibilidad.
+    review_notes: list[dict] = []
+    warning_notes: list[dict] = []
     currency: str | None = None
     month: int | None = None
     start_date: date | None = None

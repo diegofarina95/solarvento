@@ -234,6 +234,12 @@ HARD RULES:
   Always transcribe exported_kwh and compensated_eur (use "0" / "0,00" if the line shows zero).
 - bono_social = true if the bill mentions the social discount (PVPC con bono social / Descuento
   por Bono Social); it legitimately lowers the €/kWh.
-- Use the SUPPLY-POINT address, never the supplier office or fiscal/billing address.
+- supply_address = the "Dirección de suministro / punto de suministro / CUPS" address ONLY.
+  NEVER the account holder (titular), nor the retailer/distributor address (near a company
+  CIF 'A-XXXXXXXX'/'B-XXXXXXXX', 'S.A.', 'S.L.', or HQs like 'Avenida de América 38, Madrid',
+  'Plaza del Gas, Barcelona').
+- In 'MUNICIPIO -PARROQUIA- (PROVINCIA)' (common in Galicia), municipio = the MUNICIPALITY
+  (e.g. 'A Estrada'), NOT the province in parentheses (e.g. 'Pontevedra'), and NOT the parish
+  between dashes. Put the province in provincia, the municipality in municipio.
 - A messy/partial bill must STILL return the schema with nulls where unsure — never refuse.
 """

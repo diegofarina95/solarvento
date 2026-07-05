@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import bill_resolver, bills
+from . import bill_messages, bill_resolver, bills
 
 _LOW_CONFIDENCE = 0.4
 # 2.0TD residencial: P1 punta / P2 llano / P3 valle.
@@ -169,15 +169,14 @@ def _reconcile_period(sources: dict[str, float], profile_periods: dict) -> tuple
             return (
                 head if head else (values[0] if values else None),
                 None,
-                [f"Las fuentes de consumo de la factura no coinciden ({detail} kWh); revísalo."],
+                [bill_messages.note("sources_disagree", detail=detail)],
             )
         return (values[0] if values else None), None, []
 
     note = None
     if head is None or not bills._values_close(head, authoritative):
-        note = (
-            f"Consumo de la factura corregido a {authoritative:.0f} kWh por coincidencia "
-            f"de fuentes; la cifra detectada ({head}) no cuadraba."
+        note = bill_messages.note(
+            "consumption_corrected", value=authoritative, detected=head
         )
     return authoritative, note, []
 
@@ -221,9 +220,16 @@ def _min_confidence(contract: dict) -> float | None:
 def contract_to_bill(contract: dict) -> dict:
     """Contrato del modelo → dict de factura (ParsedBill) normalizado, reconciliado y ruteado."""
     if not isinstance(contract, dict):
-        return _review_bill(["El extractor no devolvió un contrato válido."])
+        return _review_bill([bill_messages.note("extractor_invalid")])
 
-    warnings = [str(w) for w in (contract.get("warnings") or []) if str(w).strip()]
+    # Avisos del MODELO (texto libre) → sobre "raw" para que el frontend los
+    # muestre tal cual. El resto de avisos son códigos i18n del catálogo.
+    warning_notes: list[dict] = [
+        bill_messages.note("raw", text=str(w))
+        for w in (contract.get("warnings") or [])
+        if str(w).strip()
+    ]
+    review_notes: list[dict] = []
     address = contract.get("supply_address") or {}
     billing = contract.get("billing_period") or {}
 
@@ -247,9 +253,10 @@ def contract_to_bill(contract: dict) -> dict:
         period_sources["period_sum"] = period_sum
     if meter_diff:
         period_sources["meter_diff"] = meter_diff
-    bill_period_kwh, note, review = _reconcile_period(period_sources, profile_periods)
-    if note:
-        warnings.append(note)
+    bill_period_kwh, recon_note, recon_review = _reconcile_period(period_sources, profile_periods)
+    if recon_note:
+        warning_notes.append(recon_note)
+    review_notes.extend(recon_review)
 
     # (Layer 6) Autoconsumo REAL, no la línea de plantilla. "Compensación de
     # excedentes 0,00 €" sale en TODAS las facturas reguladas sin placas; solo
@@ -316,60 +323,63 @@ def contract_to_bill(contract: dict) -> dict:
 
     # (Layer 5) Precio efectivo LIKE-WITH-LIKE: importe de la factura ÷ consumo de
     # la MISMA factura (kwh ya es el del propio periodo, no el anual).
-    review = review + bills.validate_bill_consumption(bill)
+    review_notes.extend(bills.validate_bill_consumption(bill))
 
     # (Layer 4) Sin consumo anual resoluble → revisión.
     if resolution["annual_kwh"] is None:
-        review.append("No se pudo resolver el consumo anual; envía una factura con histórico o anual.")
+        review_notes.append(bill_messages.note("no_annual_resolved"))
     elif resolution.get("single_month"):
         # Una sola factura mensual NO permite dimensionar con fiabilidad: la
         # estacionalidad (calefacción/AA) hace que un mes no represente el año.
-        warnings.append(
-            "Esto es el consumo de UN mes, no el anual. Una sola factura mensual no permite "
-            "dimensionar con fiabilidad por la estacionalidad; sube el histórico anual (gráfico "
-            "de 12 meses) o varias facturas repartidas por el año."
-        )
+        warning_notes.append(bill_messages.note("single_month"))
     elif resolution["confidence"] == "low":
-        warnings.append(
-            f"Estimación: solo ~{resolution['months_real']:g} meses de dato real. "
-            "Envía más meses o una factura anual para mayor precisión."
+        warning_notes.append(
+            bill_messages.note("estimate_few_months", months=resolution["months_real"])
         )
 
     # Baja confianza del modelo sin corroboración → revisión.
     if bill_period_kwh is not None:
         min_conf = _min_confidence(contract)
-        corroborated = len([v for v in period_sources.values()]) >= 2 or note is not None
+        corroborated = len([v for v in period_sources.values()]) >= 2 or recon_note is not None
         if min_conf is not None and min_conf < _LOW_CONFIDENCE and not corroborated:
-            review.append(
-                f"Baja confianza en el consumo ({min_conf:.0%}) y sin otra fuente que lo "
-                "corrobore; confírmalo."
+            review_notes.append(
+                bill_messages.note("low_confidence_consumption", conf=min_conf)
             )
 
     # (Layer 6) Autoconsumo existente: no dimensionar sobre el consumo de red.
     if existing_pv:
-        review.append(
-            "Este suministro ya tiene autoconsumo; el consumo de red no refleja la demanda "
-            "real de la casa. Revisa antes de dimensionar (no se calcula sobre la red)."
-        )
+        review_notes.append(bill_messages.note("existing_pv"))
+
+    # (Layer 5) Bono social: aviso de que el ahorro puede ser bajo (precio ya
+    # subvencionado); si se pierde el bono, el solar compensa más.
+    if bono_social:
+        warning_notes.append(bill_messages.note("bono_social_savings"))
 
     bill["consumption_candidates"] = _consumption_candidates(
         contract, period_sum, meter_diff, history
     )
-    bill["needs_review"] = bool(review)
+    review = [bill_messages.text_es(n["code"], **n["params"]) for n in review_notes]
+    bill["needs_review"] = bool(review_notes)
     bill["review_reasons"] = review
+    bill["review_notes"] = review_notes
     # Estado explícito (máquina de 3 estados). VALID solo si hay consumo anual
     # resuelto Y ninguna guarda objeta.
-    if resolution["annual_kwh"] is None and not review:
+    if resolution["annual_kwh"] is None and not review_notes:
         bill["state"] = "extraction_failed"
     else:
-        bill["state"] = "needs_review" if review else "valid"
-    if review:
-        warnings.extend(review)
-    bill["warnings"] = _dedupe(warnings)
+        bill["state"] = "needs_review" if review_notes else "valid"
+    # warning_notes = SOLO avisos informativos (el frontend los muestra aparte de
+    # los de revisión). El texto `warnings` (logs/compat) los junta con los de
+    # revisión, como hasta ahora.
+    bill["warning_notes"] = warning_notes
+    bill["warnings"] = _dedupe(
+        [bill_messages.text_es(n["code"], **n["params"]) for n in warning_notes + review_notes]
+    )
     return bill
 
 
-def _review_bill(reasons: list[str]) -> dict:
+def _review_bill(notes: list[dict]) -> dict:
+    reasons = [bill_messages.text_es(n["code"], **n["params"]) for n in notes]
     return {
         "kwh": None,
         "parser": "openai-contract",
@@ -379,7 +389,9 @@ def _review_bill(reasons: list[str]) -> dict:
         "state": "extraction_failed",
         "needs_review": True,
         "review_reasons": reasons,
+        "review_notes": notes,
         "warnings": list(reasons),
+        "warning_notes": notes,
     }
 
 
