@@ -121,6 +121,10 @@ class BillInput(BaseModel):
     bono_social: bool | None = Field(
         None, description="La factura aplica bono social (baja legítimamente el precio efectivo)."
     )
+    rolling_annual_kwh: float | None = Field(
+        None, gt=0, le=60000,
+        description="Consumo anual impreso ('acumulado del último año'); anual real de la casa.",
+    )
 
     @model_validator(mode="after")
     def _check_period(self) -> "BillInput":
@@ -318,6 +322,8 @@ class ConsumptionSummary(BaseModel):
     single_month: bool = False
     months_covered: float | None = None
     distinct_cups: int | None = None
+    bono_social: bool = False
+    annual_from_printed: bool = False  # anual tomado de "consumo acumulado del último año"
     needs_review: bool = False
     review_reasons: list[str] = Field(default_factory=list)
     profile: dict | None = None
@@ -552,6 +558,7 @@ class ParsedBill(BaseModel):
     consumption_resolution: ConsumptionResolution | None = None
     existing_pv: bool = False
     bono_social: bool = False
+    rolling_annual_kwh: float | None = None
     # Máquina de 3 estados: valid (calcula) | needs_review (confirmar) |
     # extraction_failed (introducir a mano). Nunca hay un 4º que invente números.
     state: str = "valid"

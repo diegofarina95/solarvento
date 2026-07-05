@@ -1044,6 +1044,49 @@ def extract_text(pdf_bytes: bytes) -> str:
         raise BillParseError(f"No se pudo leer el PDF: {exc}") from exc
 
 
+_BONO_SOCIAL_RE = re.compile(r"bono\s+social", re.IGNORECASE)
+# "Consumo acumulado del último año: 3.450 kWh" y variantes.
+_ROLLING_ANNUAL_RE = re.compile(
+    r"(?:consumo\s+(?:acumulado|total)?\s*(?:del|de\s+los|en\s+los)?\s*"
+    r"(?:[úu]ltimo|últimos)\s+(?:12\s*meses|a[ñn]o)"
+    r"|consumo\s+anual"
+    r"|consumo\s+en\s+los\s+[úu]ltimos\s+12\s*meses)"
+    r"[^\d]{0,40}?([\d][\d.\s]*\d|\d)\s*k?wh",
+    re.IGNORECASE,
+)
+
+
+def detect_bono_social(text: str | None) -> bool:
+    """True si el texto de la factura menciona el bono social."""
+    return bool(text and _BONO_SOCIAL_RE.search(text))
+
+
+def detect_rolling_annual_kwh(text: str | None) -> float | None:
+    """Consumo anual impreso ('Consumo acumulado del último año: X kWh'), si existe."""
+    if not text:
+        return None
+    for match in _ROLLING_ANNUAL_RE.finditer(text):
+        value = safe_to_float(match.group(1))
+        if value is not None and 0 < value <= MAX_BILL_KWH:
+            return value
+    return None
+
+
+def augment_contract_from_text(contract: dict, text: str | None) -> dict:
+    """Rellena bono_social y rolling_annual_kwh desde el texto si el modelo los
+    omitió (refuerzo determinista; no pisa lo que el modelo sí detectó)."""
+    if not isinstance(contract, dict) or not text:
+        return contract
+    if not contract.get("bono_social") and detect_bono_social(text):
+        contract["bono_social"] = True
+    if contract.get("rolling_annual_kwh") in (None, ""):
+        rolling = detect_rolling_annual_kwh(text)
+        if rolling is not None:
+            # El contrato guarda números como STRING verbatim; se normaliza igual.
+            contract["rolling_annual_kwh"] = str(rolling)
+    return contract
+
+
 def parse_bill_text(text: str) -> dict:
     """Extrae kwh, importes y periodo del texto de una factura.
 
@@ -1108,6 +1151,10 @@ def parse_bill_text(text: str) -> dict:
     result["vat_base_eur"] = _find_charge_amount(text, _VAT_BASE_LABELS)
     result["contracted_power_kw"] = _find_contracted_power_kw(text)
     result["consumption_history"] = parse_consumption_history(text)
+    # Bono social y consumo anual impreso (misma detección que el refuerzo del
+    # contrato LLM), para la vía de degradación local.
+    result["bono_social"] = detect_bono_social(text)
+    result["rolling_annual_kwh"] = detect_rolling_annual_kwh(text)
 
     # Domicilio del punto de suministro (preferido sobre el fiscal) para geocodar
     supply = _find_supply_location(text)
@@ -1634,10 +1681,42 @@ def aggregate_bills(
     history = _merge_consumption_history(bills)
     estimated_months: list[int] = []
     annual_only = not history and all(_is_annual_bill(bill) for bill in bills)
+    # "Consumo acumulado del último año" impreso: el anual REAL de la casa. Manda
+    # sobre la extrapolación de los meses subidos (que pueden ser solo valle y
+    # sesgar a la baja). Se toma el mayor si varias facturas lo imprimen.
+    rolling_candidates = [
+        float(b["rolling_annual_kwh"])
+        for b in bills
+        if b.get("rolling_annual_kwh") and float(b["rolling_annual_kwh"]) > 0
+    ]
+    rolling_annual = max(rolling_candidates) if rolling_candidates else None
+    # Forma estacional del histórico (si lo hay), calculada una vez.
+    history_monthly = history_sum = None
     if history:
-        monthly, estimated_months = _twelve_months_from_history(history)
+        history_monthly, estimated_months = _twelve_months_from_history(history)
+        history_sum = sum(history_monthly)
+    # El anual impreso solo MANDA si no hay histórico, o si supera claramente la
+    # suma del histórico (caso "solo meses valle subidos" que sesga a la baja).
+    # Si coincide con el histórico (factura consolidada anual), manda el histórico.
+    use_rolling = bool(rolling_annual) and (
+        not history or rolling_annual > (history_sum or 0) * 1.10
+    )
+    if use_rolling and history and history_sum:
+        # El histórico da la FORMA estacional; se reescala al anual impreso.
+        annual_kwh = rolling_annual
         observed_months = sorted(history)
-        annual_kwh = sum(monthly)
+        monthly = [round(v * rolling_annual / history_sum, 1) for v in history_monthly]
+        seasonality_source = "printed_annual_history_shape"
+    elif use_rolling:
+        # Sin histórico: perfil residencial por defecto aguas abajo.
+        annual_kwh = rolling_annual
+        observed_months = []
+        monthly = None
+        seasonality_source = "printed_annual"
+    elif history:
+        monthly = history_monthly
+        observed_months = sorted(history)
+        annual_kwh = history_sum
         seasonality_source = "bill_history"
     elif annual_only:
         monthly = None
@@ -1748,7 +1827,9 @@ def aggregate_bills(
     # anual, la estacionalidad lo hace poco fiable para dimensionar (se avisa,
     # no se bloquea: el usuario puede seguir con la salvedad).
     months_covered = total_days / 30.4 if total_days else 0.0
-    single_month = not history and not annual_only and months_covered < 2
+    single_month = (
+        not use_rolling and not history and not annual_only and months_covered < 2
+    )
     consumption_reliability = "low" if single_month else "normal"
 
     return {
@@ -1759,6 +1840,8 @@ def aggregate_bills(
         "single_month": single_month,
         "months_covered": round(months_covered, 1),
         "distinct_cups": len(distinct_cups),
+        "bono_social": any_bono_social,
+        "annual_from_printed": use_rolling,
         "valle_price_eur_kwh": valle_price_eur_kwh,
         "avg_price_eur_kwh": price,
         "avg_price_kwh": price,

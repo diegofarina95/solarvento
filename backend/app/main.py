@@ -307,6 +307,11 @@ async def _extract_bill_contract(
     if contract is None:
         contract = await parser.extract_contract(content, filename, parser_type, text_hint)
         cache.set(key, contract)
+    # Refuerzo determinista sobre el texto del PDF: el modelo a veces no marca el
+    # bono social ni el "consumo acumulado del último año". Si están escritos en
+    # la factura, se rellenan (sin pisar lo que el modelo sí detectó).
+    if isinstance(contract, dict) and text_hint:
+        contract = bills_mod.augment_contract_from_text(contract, text_hint)
     return bill_normalise.contract_to_bill(contract)
 
 
@@ -534,6 +539,8 @@ def _resolve_consumption(
             "single_month": agg.get("single_month", False),
             "months_covered": agg.get("months_covered"),
             "distinct_cups": agg.get("distinct_cups"),
+            "bono_social": agg.get("bono_social", False),
+            "annual_from_printed": agg.get("annual_from_printed", False),
             "needs_review": agg.get("needs_review", False),
             "review_reasons": agg.get("review_reasons", []),
             "profile": _profile_summary(req, country_code),

@@ -73,6 +73,18 @@ class TestResolver:
         assert r["annual_kwh"] == 4000
         assert r["method"] == "declared_annual"
 
+    def test_printed_rolling_annual_wins_over_months(self):
+        # "Consumo acumulado del último año" manda sobre la extrapolación de meses
+        # valle subidos (que sesgarían a la baja).
+        r = resolve_annual_consumption(
+            bill_period_kwh=180, history=[{"month": 1, "kwh": 180}],
+            rolling_annual_kwh=3450,
+        )
+        assert r["method"] == "printed_annual"
+        assert r["annual_kwh"] == 3450
+        assert r["single_month"] is False
+        assert r["confidence"] == "high"
+
     def test_insufficient(self):
         r = resolve_annual_consumption(bill_period_kwh=None, history=[])
         assert r["annual_kwh"] is None

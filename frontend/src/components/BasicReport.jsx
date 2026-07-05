@@ -9,19 +9,25 @@ const VERDICT_OK_MAX_YEARS = 15
 // probablemente no compensa; mejor decirlo que dar un informe optimista.
 export const LOW_SUITABILITY_KWH = 3000
 export const LOW_SUITABILITY_PAYBACK_YEARS = 8
+// Tope del Solar score cuando la idoneidad es baja: cae al tramo "poor" (<40)
+// para que el score no contradiga el veredicto.
+export const LOW_SUITABILITY_SCORE_CAP = 39
 
-export function lowSuitabilityReason(paybackYears, annualKwh) {
+export function lowSuitabilityReason(paybackYears, annualKwh, bonoSocial = false) {
   const lowConsumption = annualKwh != null && annualKwh < LOW_SUITABILITY_KWH
   const slowPayback =
     paybackYears == null || paybackYears <= 0 || paybackYears > LOW_SUITABILITY_PAYBACK_YEARS
   if (lowConsumption && slowPayback) return 'both'
   if (lowConsumption) return 'lowConsumption'
   if (slowPayback) return 'slowPayback'
+  // Bono social ⇒ consumidor vulnerable con consumo bajo subvencionado: el ahorro
+  // marginal del solar es pequeño y el caso es marginal aunque el payback cuadre.
+  if (bonoSocial) return 'bonoSocial'
   return null
 }
 
-export function computeVerdict(paybackYears, annualKwh) {
-  if (lowSuitabilityReason(paybackYears, annualKwh)) return 'poor'
+export function computeVerdict(paybackYears, annualKwh, bonoSocial = false) {
+  if (lowSuitabilityReason(paybackYears, annualKwh, bonoSocial)) return 'poor'
   if (paybackYears == null || paybackYears <= 0) return 'poor'
   if (paybackYears <= VERDICT_GOOD_MAX_YEARS) return 'good'
   if (paybackYears <= VERDICT_OK_MAX_YEARS) return 'ok'
@@ -63,7 +69,8 @@ export function computeSolarScore(data) {
   }
   const pb = eco.payback_years
   if (pb != null && pb > 0) {
-    const tone = pb <= 8 ? 'good' : pb <= 12 ? 'ok' : 'poor'
+    // Alineado con el umbral de idoneidad (>8 años = no compensa).
+    const tone = pb <= LOW_SUITABILITY_PAYBACK_YEARS ? 'good' : pb <= 12 ? 'ok' : 'poor'
     score += tone === 'good' ? 30 : tone === 'ok' ? 20 : 8
     factors.push({ key: 'payback', tone })
   }
@@ -75,7 +82,8 @@ export function computeSolarScore(data) {
   }
   const annual = cons.annual_kwh
   if (annual != null) {
-    const tone = annual >= 4000 ? 'good' : annual >= 2500 ? 'ok' : 'poor'
+    // Alineado con el umbral de idoneidad (<3.000 kWh = consumo bajo).
+    const tone = annual >= 4000 ? 'good' : annual >= LOW_SUITABILITY_KWH ? 'ok' : 'poor'
     score += tone === 'good' ? 15 : tone === 'ok' ? 10 : 5
     factors.push({ key: 'consumption', tone })
   }
@@ -90,7 +98,13 @@ export function computeSolarScore(data) {
       factors.push({ key: 'battery', tone: 'ok' })
     }
   }
-  return { score: Math.round(score), factors }
+  score = Math.round(score)
+  // Tope de idoneidad: un perfil que no compensa (consumo bajo, amortización
+  // larga o bono social) NO puede puntuar alto aunque la irradiación sea buena.
+  // El score no debe contradecir el veredicto ni los propios números.
+  const reason = lowSuitabilityReason(eco.payback_years, annual, cons.bono_social)
+  if (reason) score = Math.min(score, LOW_SUITABILITY_SCORE_CAP)
+  return { score, factors, lowSuitability: reason }
 }
 
 function scoreQualifier(score) {
@@ -342,8 +356,9 @@ export default function BasicReport({ data, i18n, fmt }) {
   const annualSavings = eco.annual_savings_eur ?? 0
   const payback = eco.payback_years
   const annualKwh = cons.annual_kwh
-  const verdict = computeVerdict(payback, annualKwh)
-  const lowReason = lowSuitabilityReason(payback, annualKwh)
+  const bonoSocial = !!cons.bono_social
+  const verdict = computeVerdict(payback, annualKwh, bonoSocial)
+  const lowReason = lowSuitabilityReason(payback, annualKwh, bonoSocial)
   const singleMonth = !!cons.single_month || cons.consumption_reliability === 'low'
 
   const paybackText =

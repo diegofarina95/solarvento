@@ -135,6 +135,10 @@ BILL_CONTRACT_SCHEMA: dict[str, Any] = {
         "annual_consumption_kwh": _num(
             "Headline billed consumption ('consumo activa/facturado/del periodo') as printed"
         ),
+        "rolling_annual_kwh": _num(
+            "Printed rolling-year total: 'Consumo acumulado del último año' / 'Consumo anual' / "
+            "'Tu consumo en los últimos 12 meses' (kWh). This is the REAL yearly consumption; null if absent"
+        ),
         "period_total_kwh": _num("TOTAL row of the tariff-period table (sum printed), if shown"),
         "period_split": _PERIOD_SPLIT,
         "period_split_prices": _PERIOD_SPLIT_PRICES,
@@ -176,6 +180,7 @@ BILL_CONTRACT_SCHEMA: dict[str, Any] = {
     "required": [
         "bill_type_hint",
         "annual_consumption_kwh",
+        "rolling_annual_kwh",
         "period_total_kwh",
         "period_split",
         "period_split_prices",
@@ -214,6 +219,8 @@ HARD RULES:
   symbols. If a value is not printed, use null. NEVER calculate, sum, infer, or convert.
 - Extract EACH consumption candidate separately, do NOT pre-pick "the" total:
     * annual_consumption_kwh = the headline "consumo (activa/facturado/del periodo)".
+    * rolling_annual_kwh = the printed rolling-year total if present ("Consumo acumulado del
+      último año", "Consumo anual", "últimos 12 meses"). This is the real yearly figure.
     * period_total_kwh = the TOTAL row of the tariff-period table (only if printed).
     * period_split = each tariff-period column (P1/P2/P3) separately.
     * monthly_history = each row of the embedded 12-month history chart/table.

@@ -197,6 +197,44 @@ class TestSingleMonthResolution:
         assert res["monthly_kwh"] == 250.0
         assert any("un mes" in w.lower() or "mensual" in w.lower() for w in bill["warnings"])
 
+    def test_printed_rolling_annual_used(self):
+        # Con "consumo acumulado del último año" en el contrato, se usa como anual
+        # y deja de ser single_month.
+        c = _regulated_no_pv_contract()
+        c["rolling_annual_kwh"] = _nf("3.450", "Acumulado último año")
+        bill = contract_to_bill(c)
+        res = bill["consumption_resolution"]
+        assert res["method"] == "printed_annual"
+        assert res["annual_kwh"] == 3450.0
+        assert res["single_month"] is False
+
+
+class TestAugmentFromText:
+    def test_detects_bono_social(self):
+        from app.bills import augment_contract_from_text, detect_bono_social
+        assert detect_bono_social("... Descuento por Bono Social -5,40 €") is True
+        assert detect_bono_social("factura normal sin descuentos") is False
+        c = augment_contract_from_text({"bono_social": False}, "Aplicado Bono Social")
+        assert c["bono_social"] is True
+
+    def test_detects_rolling_annual(self):
+        from app.bills import augment_contract_from_text, detect_rolling_annual_kwh
+        assert detect_rolling_annual_kwh("Consumo acumulado del último año: 3.450 kWh") == 3450.0
+        assert detect_rolling_annual_kwh("Consumo anual 4.120 kWh") == 4120.0
+        c = augment_contract_from_text(
+            {"rolling_annual_kwh": None},
+            "Consumo acumulado del último año 3.450 kWh",
+        )
+        assert c["rolling_annual_kwh"] == "3450.0"
+
+    def test_does_not_overwrite_model_values(self):
+        from app.bills import augment_contract_from_text
+        c = augment_contract_from_text(
+            {"bono_social": True, "rolling_annual_kwh": "5000"},
+            "Consumo acumulado del último año 3.450 kWh bono social",
+        )
+        assert c["rolling_annual_kwh"] == "5000"  # no se pisa lo del modelo
+
 
 def _assert_strict(schema):
     """Todo objeto: additionalProperties=False y required == todas las propiedades."""

@@ -291,7 +291,11 @@ def contract_to_bill(contract: dict) -> dict:
         "parser": "openai-contract",
     }
 
-    # (Layer 4) Resolutor del ANUAL — histórico > anual declarado > estimación.
+    # (Layer 4) Resolutor del ANUAL — anual impreso > histórico > declarado > estimación.
+    rolling_annual = _val(contract.get("rolling_annual_kwh"))
+    if rolling_annual is not None and not (0 < rolling_annual <= bills.MAX_BILL_KWH):
+        rolling_annual = None
+    bill["rolling_annual_kwh"] = rolling_annual
     resolution = bill_resolver.resolve_annual_consumption(
         bill_period_kwh=bill_period_kwh,
         history=history,
@@ -299,6 +303,7 @@ def contract_to_bill(contract: dict) -> dict:
         end=bill["end_date"],
         days=days,
         bill_type_hint=_text(contract.get("bill_type_hint")),
+        rolling_annual_kwh=rolling_annual,
     )
     bill["consumption_resolution"] = {
         "annual_kwh": resolution["annual_kwh"],

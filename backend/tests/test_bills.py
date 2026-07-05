@@ -380,6 +380,23 @@ class TestAggregateBills:
         assert result["distinct_cups"] == 1
         assert not any("suministro" in r.lower() for r in result["review_reasons"])
 
+    def test_rolling_annual_overrides_valle_months(self):
+        # Solo meses valle subidos (bajos) + anual impreso alto: se usa el anual
+        # impreso, no la extrapolación a la baja.
+        bills = [
+            {"month": 1, "kwh": 120, "days": 30, "rolling_annual_kwh": 3600},
+            {"month": 2, "kwh": 110, "days": 30, "rolling_annual_kwh": 3600},
+        ]
+        result = aggregate_bills(bills)
+        assert result["annual_kwh"] == 3600
+        assert result["annual_from_printed"] is True
+        assert result["single_month"] is False
+        assert result["consumption_reliability"] == "normal"
+
+    def test_bono_social_exposed(self):
+        result = aggregate_bills([{"kwh": 300, "days": 30, "bono_social": True}])
+        assert result["bono_social"] is True
+
     def test_distinct_cups_flagged(self):
         bills = [
             {"month": 1, "kwh": 300, "days": 30, "cups": "ES0031ABC"},

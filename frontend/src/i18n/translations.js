@@ -407,6 +407,8 @@ export const translations = {
           `La amortización (~${years} años) es larga: con estos datos la instalación probablemente no compensa.`,
         both: ({ kwh, years }) =>
           `Consumo bajo (~${kwh} kWh/año) y amortización larga (~${years} años): la instalación probablemente no compensa.`,
+        bonoSocial: () =>
+          `Con bono social el consumo es bajo y subvencionado: el ahorro del solar es pequeño y probablemente no compensa salvo que el consumo vaya a crecer.`,
       },
       singleMonthCaveat:
         'Este cálculo parte de una sola factura mensual. La estacionalidad hace que un mes no represente el año: súbela con histórico anual o varias facturas para una estimación fiable.',
@@ -916,6 +918,8 @@ export const translations = {
           `The payback (~${years} years) is long: with this data the system probably isn't worth it.`,
         both: ({ kwh, years }) =>
           `Low consumption (~${kwh} kWh/year) and long payback (~${years} years): the system probably isn't worth it.`,
+        bonoSocial: () =>
+          `With the social discount, consumption is low and subsidised: solar savings are small and it probably isn't worth it unless consumption will grow.`,
       },
       singleMonthCaveat:
         'This estimate is based on a single monthly bill. Seasonality means one month does not represent the year: upload a 12-month history or several bills for a reliable estimate.',
@@ -1425,6 +1429,8 @@ export const translations = {
           `Le retour sur investissement (~${years} ans) est long : avec ces données l'installation n'est probablement pas rentable.`,
         both: ({ kwh, years }) =>
           `Faible consommation (~${kwh} kWh/an) et amortissement long (~${years} ans) : l'installation n'est probablement pas rentable.`,
+        bonoSocial: () =>
+          `Avec le tarif social, la consommation est faible et subventionnée : les économies solaires sont faibles et ce n'est probablement pas rentable, sauf si la consommation augmente.`,
       },
       singleMonthCaveat:
         "Cette estimation part d'une seule facture mensuelle. La saisonnalité fait qu'un mois ne représente pas l'année : ajoutez un historique de 12 mois ou plusieurs factures pour une estimation fiable.",
@@ -1934,6 +1940,8 @@ export const translations = {
           `Il ritorno (~${years} anni) è lungo: con questi dati l'impianto probabilmente non conviene.`,
         both: ({ kwh, years }) =>
           `Consumo basso (~${kwh} kWh/anno) e ammortamento lungo (~${years} anni): l'impianto probabilmente non conviene.`,
+        bonoSocial: () =>
+          `Con il bonus sociale il consumo è basso e sovvenzionato: il risparmio del solare è piccolo e probabilmente non conviene, a meno che il consumo non aumenti.`,
       },
       singleMonthCaveat:
         "Questa stima parte da una sola bolletta mensile. La stagionalità fa sì che un mese non rappresenti l'anno: carica uno storico di 12 mesi o più bollette per una stima affidabile.",

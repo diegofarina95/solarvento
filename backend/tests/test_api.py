@@ -239,6 +239,8 @@ def test_solar_estimate_advanced_mode(respx_mock, client):
         "single_month": False,
         "months_covered": None,
         "distinct_cups": None,
+        "bono_social": False,
+        "annual_from_printed": False,
         "needs_review": False,
         "review_reasons": [],
         "profile": {

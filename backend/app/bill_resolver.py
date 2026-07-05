@@ -88,12 +88,27 @@ def resolve_annual_consumption(
     end=None,
     days: float | None = None,
     bill_type_hint: str | None = None,
+    rolling_annual_kwh: float | None = None,
 ) -> dict:
     """Resuelve el consumo anual y devuelve annual_kwh + method + months_real + confidence."""
     real_months = sorted({r["month"] for r in history if r.get("kwh")})
     start_d, end_d = _parse_date(start), _parse_date(end)
     if days is None and start_d and end_d:
         days = (end_d - start_d).days
+
+    # 0) "Consumo acumulado del último año" impreso en la factura: es el anual
+    # REAL de la casa, no una extrapolación de los meses subidos (que pueden ser
+    # solo meses valle y sesgar a la baja). Manda sobre todo lo demás.
+    if rolling_annual_kwh and rolling_annual_kwh > 0:
+        return {
+            "annual_kwh": round(rolling_annual_kwh, 1),
+            # Si hay histórico, se conserva para el PERFIL estacional aguas abajo.
+            "monthly_map": _history_monthly_map(history) if real_months else None,
+            "months_real": 12,
+            "method": "printed_annual",
+            "confidence": "high",
+            "single_month": False,
+        }
 
     # 1) Histórico de 12 meses embebido: un año real en una sola factura.
     if len(real_months) >= 11:
