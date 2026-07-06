@@ -49,6 +49,22 @@ _ocr_engine = None
 _ocr_failed_at: float | None = None
 _OCR_RETRY_SECONDS = 600.0
 
+# Observabilidad (lo expone /api/health): si documents_unredacted_fallback
+# crece, hay fotos/escaneos saliendo hacia OpenAI SIN tapar y hay que mirar
+# el log — la degradación deja de ser silenciosa.
+_stats = {"documents_redacted": 0, "documents_unredacted_fallback": 0}
+
+
+def status() -> dict:
+    """Estado de la capa de redacción para /api/health (no fuerza la carga)."""
+    if _ocr_engine is not None:
+        engine = "loaded"
+    elif _ocr_failed_at is not None:
+        engine = "load_failed_retrying"
+    else:
+        engine = "not_loaded_yet"
+    return {"engine": engine, **_stats}
+
 # Lado mayor máximo antes de OCR/envío: acota el coste del OCR (~proporcional a
 # los píxeles) y del payload; OpenAI reescala de todos modos las imágenes
 # grandes, y a ~180 dpi el texto de una factura sigue siendo legible.
@@ -275,7 +291,9 @@ def redact_for_vision(
                 texts.append(text)
                 boxes += n
         if not images:
+            _stats["documents_unredacted_fallback"] += 1
             return None
+        _stats["documents_redacted"] += 1
         payload = VisionPayload(
             images=images,
             image_type="image/jpeg",
@@ -291,6 +309,7 @@ def redact_for_vision(
         return payload
     except Exception as exc:
         # Best-effort: no se bloquea el servicio por un fallo del OCR; se envía
-        # el original (estado previo) y queda constancia en el log.
+        # el original (estado previo) y queda constancia en el log y en /api/health.
+        _stats["documents_unredacted_fallback"] += 1
         logger.warning("ocr_redact: sin redacción (%s: %s); se envía el original", type(exc).__name__, exc)
         return None

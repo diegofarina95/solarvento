@@ -1,0 +1,6 @@
+[Unit]
+Description=Vigilante de SolarVento (salud local y publica)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/solvento-watchdog.sh

@@ -148,7 +148,14 @@ app.add_middleware(
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"status": "ok", "bill_parser": getattr(app.state, "bill_parser_mode", "local")}
+    return {
+        "status": "ok",
+        "bill_parser": getattr(app.state, "bill_parser_mode", "local"),
+        # Estado de la capa de privacidad de la vía visión: si el contador de
+        # fallback crece, hay documentos saliendo sin tapar (vigilable desde
+        # fuera sin acceso al log).
+        "vision_redaction": ocr_redact.status(),
+    }
 
 
 @app.get("/api/geocode", response_model=list[GeocodeResult])

@@ -74,9 +74,22 @@ class TestPagesUserContent:
         assert sum(p["type"] == "input_text" for p in parts) == 1
 
 
-def test_garbage_inputs_fall_back_to_none():
+def test_garbage_inputs_fall_back_to_none_and_count_it():
+    before = ocr_redact.status()["documents_unredacted_fallback"]
     assert ocr_redact.redact_for_vision(b"not an image", "image/png") is None
     assert ocr_redact.redact_for_vision(b"not a pdf", "application/pdf") is None
+    status = ocr_redact.status()
+    # La degradación al original queda contada (la expone /api/health).
+    assert status["documents_unredacted_fallback"] == before + 2
+    assert {"engine", "documents_redacted", "documents_unredacted_fallback"} <= set(status)
+
+
+async def test_health_exposes_redaction_status():
+    from app import main as main_mod
+
+    body = await main_mod.health()
+    assert body["status"] == "ok"
+    assert "documents_unredacted_fallback" in body["vision_redaction"]
 
 
 # ---------------------------------------------------------------------------
