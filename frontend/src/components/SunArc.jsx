@@ -90,8 +90,14 @@ export function celestialPosition(date, force) {
   return { x, y, isDay }
 }
 
+// Estrellitas del cielo nocturno: [x, y, radio]. Repartidas a mano por todo el
+// viewBox (640×92), más densas arriba y sin amontonarse sobre el horizonte.
 const STARS = [
-  [80, 30], [150, 55], [250, 22], [400, 40], [500, 30], [560, 58], [320, 12],
+  [30, 18, 0.9], [55, 48, 0.7], [80, 30, 1.3], [110, 12, 0.8], [150, 55, 0.9],
+  [185, 28, 0.7], [215, 64, 1.1], [250, 22, 1.3], [285, 45, 0.7], [320, 12, 1.1],
+  [345, 58, 0.8], [375, 30, 0.7], [400, 40, 1.3], [430, 15, 0.9], [465, 52, 0.7],
+  [500, 30, 1.1], [530, 10, 0.8], [560, 58, 1.3], [590, 35, 0.9], [615, 18, 0.7],
+  [70, 68, 0.7], [260, 72, 0.8], [455, 70, 0.9], [605, 66, 0.7],
 ]
 
 export default function SunArc({ force }) {
@@ -149,10 +155,19 @@ export default function SunArc({ force }) {
       {/* Horizonte */}
       <line x1="0" y1="88" x2="640" y2="88" stroke="#e7e2d6" strokeWidth="1.5" />
 
-      {/* Estrellas tenues solo de noche */}
+      {/* Estrellas tenues solo de noche (las grandes brillan un poco más; el
+          parpadeo lo pone .sunarc-star y se apaga con prefers-reduced-motion) */}
       {!isDay &&
-        STARS.map(([sx, sy], i) => (
-          <circle key={i} cx={sx} cy={sy} r={i % 3 === 0 ? 1.3 : 0.9} fill="#94a3b8" opacity="0.7" />
+        STARS.map(([sx, sy, r], i) => (
+          <circle
+            key={i}
+            className="sunarc-star"
+            style={{ animationDelay: `${(i % 7) * 0.55}s` }}
+            cx={sx}
+            cy={sy}
+            r={r}
+            fill={r >= 1.2 ? '#cbd5e1' : '#94a3b8'}
+          />
         ))}
 
       {/* El astro en su posición según la hora */}

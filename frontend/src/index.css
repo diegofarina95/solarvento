@@ -408,3 +408,23 @@ body {
 .print-report .pr-footer p {
   margin: 2px 0;
 }
+
+/* ---- Estrellas del SunArc (modo noche): parpadeo suave y decorativo ---- */
+.sunarc-star {
+  opacity: 0.7;
+  animation: sunarc-twinkle 3.6s ease-in-out infinite;
+}
+@keyframes sunarc-twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sunarc-star {
+    animation: none;
+  }
+}
