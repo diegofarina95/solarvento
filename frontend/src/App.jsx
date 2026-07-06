@@ -558,6 +558,14 @@ export default function App() {
           onEdit={editBeforeCalc}
         />
       )}
+
+      <footer className="mt-10 border-t border-stone-200 pt-4 text-center text-xs text-stone-500 print:hidden">
+        <a href="/privacidad.html" className="underline hover:text-stone-700">
+          {t('app.privacyPolicy')}
+        </a>
+        <span className="mx-2">·</span>
+        <span>© SolarVento</span>
+      </footer>
     </div>
   )
 }
