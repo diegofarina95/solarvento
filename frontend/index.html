@@ -2,17 +2,108 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary meta -->
+    <title>Calculadora de placas y baterías con tu factura | SolarVento</title>
+    <meta
+      name="description"
+      content="Sube tu factura de la luz y calcula cuántas placas solares y baterías necesitas, con el ahorro, la amortización y el ROI. Gratis, sin registro y basado en datos de radiación de PVGIS."
+    />
+    <meta
+      name="keywords"
+      content="calculadora solar, calculadora placas solares, calculadora baterías solares, cuántas placas necesito, autoconsumo sin registro, calcular solar con factura, fotovoltaica, ahorro factura luz, amortización solar, PVGIS, España"
+    />
+    <meta name="author" content="SolarVento" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://solarvento.es/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:url" content="https://solarvento.es/" />
+    <meta property="og:title" content="Calculadora de placas y baterías con tu factura | SolarVento" />
+    <meta
+      property="og:description"
+      content="Sube tu factura de la luz y calcula cuántas placas solares y baterías necesitas, con ahorro, amortización y ROI. Gratis, sin registro y basado en PVGIS."
+    />
+    <meta property="og:image" content="https://solarvento.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="SolarVento — calculadora de placas solares con tu factura de la luz" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Calculadora de placas y baterías con tu factura | SolarVento" />
+    <meta
+      name="twitter:description"
+      content="Calcula placas solares y baterías, ahorro, amortización y ROI a partir de tu factura de la luz. Gratis, sin registro y basado en PVGIS."
+    />
+    <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
+
+    <!-- Icons -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#f59e0b" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SolarVento — Calculadora solar fotovoltaica</title>
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebApplication",
+            "name": "SolarVento",
+            "url": "https://solarvento.es/",
+            "description": "Calculadora de autoconsumo solar que, a partir de tu factura de la luz, estima cuántas placas solares y baterías necesitas, además del ahorro, la amortización y el ROI. Gratis, sin registro y con datos de radiación de PVGIS.",
+            "applicationCategory": "FinanceApplication",
+            "operatingSystem": "Web",
+            "browserRequirements": "Requires JavaScript",
+            "inLanguage": "es",
+            "isAccessibleForFree": true,
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "EUR"
+            },
+            "featureList": [
+              "Lectura automática de la factura de la luz",
+              "Estimación del número de placas solares",
+              "Estimación de la batería recomendada",
+              "Cálculo de ahorro anual y amortización",
+              "Estimación de ROI y excedentes",
+              "Sin registro: resultado instantáneo",
+              "Radiación solar basada en PVGIS"
+            ],
+            "provider": {
+              "@type": "Organization",
+              "name": "SolarVento",
+              "url": "https://solarvento.es/",
+              "logo": "https://solarvento.es/android-chrome-512x512.png"
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="max-width: 42rem; margin: 3rem auto; padding: 0 1.25rem; font-family: system-ui, sans-serif; line-height: 1.6; color: #292524;">
+        <h1>SolarVento — Calculadora de placas solares y baterías con tu factura de la luz</h1>
+        <p>
+          SolarVento es una calculadora gratuita de autoconsumo solar. Sube tu factura de la
+          luz y calcula al instante cuántas placas solares y qué batería necesitas, junto con
+          el ahorro anual, la amortización y el ROI de tu instalación en España.
+          Sin registro y con datos de radiación solar de PVGIS.
+        </p>
+        <p>Esta herramienta necesita JavaScript activado para funcionar. Activa JavaScript en tu navegador para usar la calculadora.</p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -1,15 +1,14 @@
 import { useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 
-// Con bundlers, Leaflet no resuelve solo las rutas de sus iconos por defecto.
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
+const markerIconUrl = `${import.meta.env.BASE_URL}map-marker.png`
+
+const locationIcon = L.icon({
+  iconUrl: markerIconUrl,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -41],
 })
 
 function ClickHandler({ onChange }) {
@@ -64,6 +63,7 @@ export default function MapPicker({ position, onChange }) {
       <ClickHandler onChange={handleInternalChange} />
       <FlyToPosition position={position} internalChange={internalChange} />
       <Marker
+        icon={locationIcon}
         position={[position.lat, position.lon]}
         draggable
         eventHandlers={{

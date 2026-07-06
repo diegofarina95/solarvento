@@ -129,6 +129,14 @@ body {
   font: inherit;
 }
 
+.leaflet-marker-draggable {
+  cursor: grab;
+}
+
+.leaflet-marker-draggable:active {
+  cursor: grabbing;
+}
+
 /* --- Modo noche ---
    Se activa poniendo data-theme="night" en <html>. Voltea las variables del tema
    (el body y las clases basadas en var cambian solas) y añade una capa de
