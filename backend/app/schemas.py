@@ -3,7 +3,7 @@
 from datetime import date
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 
 class BillHistoryEntry(BaseModel):
@@ -56,7 +56,10 @@ class BillInput(BaseModel):
 
     # Tope alto para admitir facturas anuales de viviendas grandes; una lectura
     # acumulada del contador se filtra por precio implícito, no por este máximo.
-    kwh: float = Field(..., gt=0, le=60000)
+    # Se admiten negativos a nivel de esquema para poder devolver un mensaje
+    # ESPECÍFICO ("regularización/ajuste") en el cortafuegos, en vez del 422
+    # genérico de pydantic.
+    kwh: float = Field(..., ge=-60000, le=60000)
     energy_eur: float | None = Field(
         None,
         gt=0,
@@ -126,14 +129,9 @@ class BillInput(BaseModel):
         description="Consumo anual impreso ('acumulado del último año'); anual real de la casa.",
     )
 
-    @model_validator(mode="after")
-    def _check_period(self) -> "BillInput":
-        if self.start_date and self.end_date and self.start_date >= self.end_date:
-            raise ValueError(
-                "El periodo de la factura es inválido: la fecha de inicio debe ser "
-                "anterior a la de fin"
-            )
-        return self
+    # Nota: la coherencia del periodo (fin < inicio) NO se valida aquí a nivel de
+    # esquema; se comprueba en el cortafuegos del endpoint para poder devolver un
+    # mensaje ESPECÍFICO ("fin anterior al inicio") en vez del 422 genérico.
 
 
 class SolarEstimateRequest(BaseModel):
@@ -150,7 +148,9 @@ class SolarEstimateRequest(BaseModel):
         le=180,
         description="Azimut convención PVGIS: 0=Sur, 90=Oeste, -90=Este; si se omite se usa el óptimo",
     )
-    annual_consumption_kwh: float | None = Field(None, gt=0, le=1_000_000)
+    # Se admite fuera de rango (incl. ≤0) para que el cortafuegos del endpoint
+    # devuelva un mensaje específico (negativo / fuera de rango residencial).
+    annual_consumption_kwh: float | None = Field(None, ge=-1_000_000, le=1_000_000)
     installation_cost_eur: float | None = Field(None, gt=0, le=100_000_000)
     electricity_price_eur_kwh: float | None = Field(None, gt=0, le=5)
     panel_power_w: int = Field(450, ge=50, le=1000)

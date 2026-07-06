@@ -6,12 +6,13 @@
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
 
 export class ApiError extends Error {
-  constructor(code, { detail = null, status = null } = {}) {
-    super(detail ?? code)
+  constructor(code, { detail = null, status = null, params = null } = {}) {
+    super((typeof detail === 'string' ? detail : null) ?? code)
     this.name = 'ApiError'
     this.code = code
     this.detail = detail
     this.status = status
+    this.params = params
   }
 }
 
@@ -25,18 +26,23 @@ async function request(path, options) {
   if (!resp.ok) {
     let detail = null
     let code = 'generic'
+    let params = null
     try {
       const body = await resp.json()
       if (typeof body.detail === 'string') {
         detail = body.detail
         if (body.detail.includes('Europa') || body.detail.includes('europeas')) code = 'europeOnly'
+      } else if (body.detail && typeof body.detail === 'object' && typeof body.detail.code === 'string') {
+        // Detalle TIPADO {code, params}: cortafuegos de sanidad, límite de subidas…
+        code = body.detail.code
+        params = body.detail.params ?? null
       } else if (Array.isArray(body.detail)) {
         code = 'invalidParameters'
       }
     } catch {
       /* cuerpo no JSON: se mantiene el mensaje genérico */
     }
-    throw new ApiError(code, { detail, status: resp.status })
+    throw new ApiError(code, { detail, status: resp.status, params })
   }
   return resp.json()
 }
@@ -46,7 +52,14 @@ export function apiErrorMessage(err, t) {
     if (err.code === 'network') return t('errors.network')
     if (err.code === 'invalidParameters') return t('errors.invalidParameters')
     if (err.code === 'europeOnly') return t('errors.europeOnly')
-    if (err.detail) return err.detail
+    // Códigos tipados del cortafuegos de sanidad (estimateErrors.*): se traducen
+    // con sus params. t() devuelve la clave si no existe → probamos y validamos.
+    if (err.code) {
+      const key = `estimateErrors.${err.code}`
+      const msg = t(key, err.params || {})
+      if (msg !== key) return msg
+    }
+    if (typeof err.detail === 'string' && err.detail) return err.detail
     return t('errors.generic')
   }
   return t('errors.generic')

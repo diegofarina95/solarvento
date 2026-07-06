@@ -32,10 +32,86 @@ function parseDateInput(value) {
 function inferBillMonth(start, end) {
   const startDate = parseDateInput(start)
   const endDate = parseDateInput(end)
-  const date = startDate && endDate
-    ? new Date((startDate.getTime() + endDate.getTime()) / 2)
-    : (startDate ?? endDate)
+  if (startDate && endDate) {
+    // Periodo ~anual (01/01–31/12): no tiene un mes representativo → dejar en
+    // "Auto" (vacío), no el punto medio (que daría julio, sin sentido).
+    const spanDays = (endDate.getTime() - startDate.getTime()) / 86400000
+    if (spanDays >= 330) return ''
+    return String(new Date((startDate.getTime() + endDate.getTime()) / 2).getMonth() + 1)
+  }
+  const date = startDate ?? endDate
   return date ? String(date.getMonth() + 1) : ''
+}
+
+function spanDays(start, end) {
+  const s = parseDateInput(start)
+  const e = parseDateInput(end)
+  if (!s || !e) return 0
+  return (e.getTime() - s.getTime()) / 86400000
+}
+
+function monthFromDates(start, end) {
+  const m = inferBillMonth(start, end)
+  return m ? Number(m) : null
+}
+
+// Consolida el resumen "Datos detectados" por CUPS: varias facturas del mismo
+// suministro se combinan como meses (nº real de meses, consumo combinado), en vez
+// de mostrar solo la última y avisar de "un solo mes" habiendo varias.
+function mergeDetected(prev, rawEntries) {
+  const groups = new Map(
+    prev.map((g) => [
+      g.cupsKey,
+      { ...g, months: new Set(g.months), periods: new Set(g.periodKeys || []) },
+    ]),
+  )
+  for (const e of rawEntries) {
+    let g = groups.get(e.cupsKey)
+    if (!g) {
+      g = {
+        cupsKey: e.cupsKey,
+        cups: e.cups,
+        months: new Set(),
+        periods: new Set(),
+        monthlyKwh: 0,
+        printedAnnual: null,
+        isAnnual: false,
+        tariff: null,
+        bonoSocial: false,
+        price: null,
+        currency: e.currency,
+        lastFallbackAnnual: null,
+      }
+      groups.set(e.cupsKey, g)
+    }
+    // La MISMA factura reimportada no cuenta dos veces (mismo periodo+kWh).
+    if (g.periods.has(e.periodKey)) continue
+    g.periods.add(e.periodKey)
+    if (e.month) g.months.add(e.month)
+    if (e.monthlyKwh != null) g.monthlyKwh += e.monthlyKwh
+    if (e.printedAnnual != null) g.printedAnnual = e.printedAnnual
+    if (e.isAnnual) g.isAnnual = true
+    if (e.tariff) g.tariff = e.tariff
+    if (e.bonoSocial) g.bonoSocial = true
+    if (e.price != null) g.price = e.price
+    if (e.currency) g.currency = e.currency
+    g.lastFallbackAnnual = e.fallbackAnnual
+  }
+  return Array.from(groups.values()).map((g) => ({
+    cupsKey: g.cupsKey,
+    cups: g.cups,
+    months: Array.from(g.months).sort((a, b) => a - b),
+    periodKeys: Array.from(g.periods),
+    count: g.periods.size,
+    monthlyKwh: g.monthlyKwh,
+    printedAnnual: g.printedAnnual,
+    isAnnual: g.isAnnual,
+    tariff: g.tariff,
+    bonoSocial: g.bonoSocial,
+    price: g.price,
+    currency: g.currency,
+    lastFallbackAnnual: g.lastFallbackAnnual,
+  }))
 }
 
 function MiniField({ label, children }) {
@@ -80,12 +156,13 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
     setNotice(null)
     setReview(null)
     setAdvisory(null)
-    setDetected([])
+    // NO se resetea `detected`: se consolidan las nuevas facturas con las ya
+    // detectadas (mismo CUPS = meses del mismo suministro).
     const added = []
     const problems = []
     const reviews = []
     const advisories = []
-    const detectedList = []
+    const detectedRaw = []
     let detectedLocation = null
     // Los PDFs se parsean en paralelo: con varios archivos y un parser lento
     // la espera secuencial se multiplicaba por el número de facturas.
@@ -94,13 +171,20 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
       const file = fileList[index]
       if (result.status === 'rejected') {
         const err = result.reason
+        // Límite de subidas: NO es un error de lectura. Aviso propio y traducido,
+        // sin interpolar el texto (antes mezclaba idiomas: "the bill could not be
+        // read (Has alcanzado el límite...)").
+        if (err instanceof ApiError && (err.code === 'upload_limit' || err.code === 'upload_quota')) {
+          problems.push({ kind: err.code, file: file.name, params: err.params })
+          return
+        }
         // Se guardan datos, NO texto ya traducido: así el aviso se traduce al
         // idioma actual en cada render (antes quedaba fijado al idioma de la
         // importación y podía verse en inglés dentro de la app en español).
         problems.push({
           kind: 'billParseFailed',
           file: file.name,
-          detail: err instanceof ApiError ? err.detail : null,
+          detail: err instanceof ApiError && typeof err.detail === 'string' ? err.detail : null,
         })
         return
       }
@@ -120,7 +204,8 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
       }
       added.push(newRow({
         month: parsed.month ? String(parsed.month) : inferBillMonth(parsed.start_date, parsed.end_date),
-        kwh: parsed.kwh ?? '',
+        // Redondeo también en el campo editable (no solo en el resumen): nada de "3855.3".
+        kwh: parsed.kwh != null ? String(Math.round(parsed.kwh)) : '',
         energyAmount: parsed.energy_eur ?? '',
         totalAmount: parsed.total_eur ?? parsed.amount_eur ?? '',
         amount: parsed.total_eur ?? parsed.amount_eur ?? '',
@@ -164,24 +249,36 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         detectedLocation = parsed
       }
 
-      // Resumen "Datos detectados" (da confianza tras importar).
+      // Resumen "Datos detectados": entrada CRUDA por factura; se consolidan por
+      // CUPS aguas abajo (dos facturas del mismo suministro = meses del mismo).
       const res = parsed.consumption_resolution ?? {}
-      const annualKwh = res.annual_kwh ?? parsed.kwh
       const total = parsed.total_eur ?? parsed.amount_eur ?? null
-      const months = res.months_real ?? null
-      if (annualKwh != null) {
-        detectedList.push({
-          file: file.name,
-          annualKwh,
-          // Una sola factura mensual: se muestra el consumo MENSUAL, no el anual.
-          singleMonth: !!res.single_month,
-          monthlyKwh: res.monthly_kwh ?? parsed.kwh,
-          // El gasto anual solo es fiable si la factura cubre ~un año.
-          spendAnnual: months != null && months >= 11 && total ? total : null,
+      const printedAnnual =
+        res.method === 'printed_annual' || parsed.rolling_annual_kwh ? res.annual_kwh : null
+      const isAnnual =
+        ['printed_annual', 'history', 'declared_annual'].includes(res.method) ||
+        spanDays(parsed.start_date, parsed.end_date) >= 330
+      const monthNum = parsed.month
+        ? Number(parsed.month)
+        : monthFromDates(parsed.start_date, parsed.end_date)
+      if (parsed.kwh != null || printedAnnual != null) {
+        detectedRaw.push({
+          cupsKey: parsed.cups ? parsed.cups.trim().toUpperCase() : `file:${file.name}`,
+          cups: parsed.cups || null,
+          month: monthNum,
+          // Firma del periodo para no contar dos veces la misma factura reimportada.
+          periodKey:
+            parsed.start_date && parsed.end_date
+              ? `${parsed.start_date}|${parsed.end_date}|${Math.round(parsed.kwh ?? 0)}`
+              : monthNum != null
+                ? `m${monthNum}|${Math.round(parsed.kwh ?? 0)}`
+                : `f:${file.name}`,
+          monthlyKwh: parsed.kwh ?? null,
+          printedAnnual,
+          fallbackAnnual: res.annual_kwh ?? parsed.kwh ?? null,
+          isAnnual,
           tariff: parsed.tariff ?? null,
-          months,
           bonoSocial: !!parsed.bono_social,
-          // Precio efectivo like-with-like: importe ÷ consumo del MISMO periodo.
           price: total && parsed.kwh ? total / parsed.kwh : null,
           currency: parsed.currency || '€',
         })
@@ -194,7 +291,7 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
     if (problems.length) setNotice(problems)
     if (reviews.length) setReview(reviews)
     if (advisories.length) setAdvisory(advisories)
-    if (detectedList.length) setDetected(detectedList)
+    if (detectedRaw.length) setDetected((prev) => mergeDetected(prev, detectedRaw))
     setUploading(false)
   }
 
@@ -356,61 +453,69 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
       )}
       {detected.length > 0 && (
         <div className="mt-2 space-y-2">
-          {detected.map((d, i) => (
-            <div key={i} className="rounded-md border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-emerald-900">
-              <p className="font-semibold">{t('bills.detectedTitle')}</p>
-              <dl className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5">
-                {d.singleMonth ? (
-                  <>
-                    <dt className="text-emerald-700">{t('bills.detectedMonthly')}</dt>
-                    <dd className="text-right font-medium">{nfmt.format(d.monthlyKwh)} kWh</dd>
-                  </>
-                ) : (
-                  <>
-                    <dt className="text-emerald-700">{t('bills.detectedAnnual')}</dt>
-                    <dd className="text-right font-medium">{nfmt.format(d.annualKwh)} kWh</dd>
-                  </>
+          {detected.map((d, i) => {
+            const monthsCount = d.months.length || d.count
+            const reliableAnnual = d.printedAnnual ?? (d.isAnnual ? d.lastFallbackAnnual : null)
+            const singleMonth = !d.isAnnual && reliableAnnual == null && monthsCount < 2
+            return (
+              <div key={d.cupsKey ?? i} className="rounded-md border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-emerald-900">
+                <p className="font-semibold">{t('bills.detectedTitle')}</p>
+                <dl className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5">
+                  {reliableAnnual != null ? (
+                    <>
+                      <dt className="text-emerald-700">{t('bills.detectedAnnual')}</dt>
+                      <dd className="text-right font-medium">{nfmt.format(reliableAnnual)} kWh</dd>
+                    </>
+                  ) : singleMonth ? (
+                    <>
+                      <dt className="text-emerald-700">{t('bills.detectedMonthly')}</dt>
+                      <dd className="text-right font-medium">{nfmt.format(d.monthlyKwh)} kWh</dd>
+                    </>
+                  ) : (
+                    <>
+                      <dt className="text-emerald-700">{t('bills.detectedCombined')}</dt>
+                      <dd className="text-right font-medium">{nfmt.format(d.monthlyKwh)} kWh</dd>
+                    </>
+                  )}
+                  {reliableAnnual == null && monthsCount >= 1 && (
+                    <>
+                      <dt className="text-emerald-700">{t('bills.detectedPeriod')}</dt>
+                      <dd className="text-right font-medium">{t('bills.detectedMonths', { n: nfmt.format(monthsCount) })}</dd>
+                    </>
+                  )}
+                  {d.tariff && (
+                    <>
+                      <dt className="text-emerald-700">{t('bills.detectedTariff')}</dt>
+                      <dd className="text-right font-medium">{d.tariff}</dd>
+                    </>
+                  )}
+                  {d.price != null && (
+                    <>
+                      <dt className="text-emerald-700">{t('bills.detectedPrice')}</dt>
+                      <dd className="text-right font-medium">
+                        {pfmt.format(d.price)} {d.currency}/kWh
+                        {d.bonoSocial ? ` · ${t('bills.detectedBonoSocial')}` : ''}
+                      </dd>
+                    </>
+                  )}
+                </dl>
+                {singleMonth && (
+                  <p className="mt-1.5 text-amber-700">{t('bills.singleMonthWarning')}</p>
                 )}
-                {d.spendAnnual != null && (
-                  <>
-                    <dt className="text-emerald-700">{t('bills.detectedSpend')}</dt>
-                    <dd className="text-right font-medium">{nfmt.format(d.spendAnnual)} {d.currency}</dd>
-                  </>
-                )}
-                {d.tariff && (
-                  <>
-                    <dt className="text-emerald-700">{t('bills.detectedTariff')}</dt>
-                    <dd className="text-right font-medium">{d.tariff}</dd>
-                  </>
-                )}
-                {d.months != null && (
-                  <>
-                    <dt className="text-emerald-700">{t('bills.detectedPeriod')}</dt>
-                    <dd className="text-right font-medium">{t('bills.detectedMonths', { n: nfmt.format(d.months) })}</dd>
-                  </>
-                )}
-                {d.price != null && (
-                  <>
-                    <dt className="text-emerald-700">{t('bills.detectedPrice')}</dt>
-                    <dd className="text-right font-medium">
-                      {pfmt.format(d.price)} {d.currency}/kWh
-                      {d.bonoSocial ? ` · ${t('bills.detectedBonoSocial')}` : ''}
-                    </dd>
-                  </>
-                )}
-              </dl>
-              {d.singleMonth && (
-                <p className="mt-1.5 text-amber-700">{t('bills.singleMonthWarning')}</p>
-              )}
-            </div>
-          ))}
+              </div>
+            )
+          })}
         </div>
       )}
       {notice && notice.length > 0 && (
         <p className="mt-2 text-xs text-amber-700">
-          {notice
-            .map((p) => t(`errors.${p.kind}`, { file: p.file, detail: p.detail }))
-            .join(' ')}
+          {[
+            ...new Set(
+              notice.map((p) =>
+                t(`errors.${p.kind}`, { file: p.file, detail: p.detail, ...(p.params || {}) }),
+              ),
+            ),
+          ].join(' ')}
         </p>
       )}
     </div>

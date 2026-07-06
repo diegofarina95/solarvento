@@ -77,6 +77,27 @@ _TEMPLATES: dict[str, Any] = {
         + (f" ({p['country']})" if p.get("country") else "")
         + "; no se ha calculado nada."
     ),
+    # --- Cortafuegos de sanidad (bloqueos duros antes de calcular) ---
+    "consumption_negative": lambda p: (
+        "Esta factura parece una regularización o ajuste (consumo negativo). Sube una factura "
+        "de consumo normal."
+    ),
+    "annual_out_of_range": lambda p: (
+        f"El consumo detectado ({p['annual']:.0f} kWh/año) está fuera del rango residencial "
+        f"({p['low']:.0f}–{p['high']:.0f} kWh). Revísalo o comprueba que es una vivienda."
+    ),
+    "incoherent_period": lambda p: (
+        "Las fechas del periodo no son válidas (fin anterior al inicio). Revísalas."
+    ),
+    # --- Límite de subidas (no es un error de lectura) ---
+    "upload_limit": lambda p: (
+        f"Has alcanzado el límite de {p.get('limit', 10)} facturas subidas. Introduce el resto "
+        "de datos a mano o inténtalo más tarde."
+    ),
+    "upload_quota": lambda p: (
+        "El servicio de lectura de facturas ha alcanzado su cupo diario. Introduce los datos a "
+        "mano o inténtalo mañana."
+    ),
 }
 
 

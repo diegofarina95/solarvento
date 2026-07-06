@@ -64,6 +64,14 @@ export const translations = {
       billReviewHint:
         'El consumo detectado no cuadra: confirma o corrige los kWh del periodo en la tabla antes de continuar.',
       billParseFailed: ({ file, detail }) => detail ? `${file}: no se pudo leer la factura (${detail}).` : `${file}: no se pudo leer la factura.`,
+      upload_limit: ({ limit }) => `Has alcanzado el límite de ${limit ?? 10} facturas subidas. Introduce el resto de datos a mano o inténtalo más tarde.`,
+      upload_quota: () => 'El servicio de lectura de facturas ha alcanzado su cupo diario. Introduce los datos a mano o inténtalo mañana.',
+    },
+    estimateErrors: {
+      consumption_negative: () => 'Esta factura parece una regularización o ajuste (consumo negativo). Sube una factura de consumo normal.',
+      annual_out_of_range: ({ annual, low, high }) => `El consumo detectado (${annual} kWh/año) está fuera del rango residencial (${low}–${high} kWh). Revísalo o comprueba que es una vivienda.`,
+      effective_price_out_of_range: ({ price, low, high, currency }) => `El precio efectivo (${price != null ? Number(price).toFixed(3) : '—'} ${currency}/kWh) queda fuera de lo razonable (${low}–${high} ${currency}/kWh). Revisa el consumo o el importe.`,
+      incoherent_period: () => 'Las fechas del periodo no son válidas (fin anterior al inicio). Revísalas.',
     },
     billNotices: {
       raw: ({ text }) => text ?? '',
@@ -282,6 +290,7 @@ export const translations = {
       detectedTitle: 'Datos detectados de la factura',
       detectedAnnual: 'Consumo anual',
       detectedMonthly: 'Consumo mensual',
+      detectedCombined: 'Consumo combinado',
       detectedSpend: 'Gasto anual',
       detectedTariff: 'Tarifa',
       detectedPeriod: 'Periodo',
@@ -437,6 +446,7 @@ export const translations = {
           selfSuff: 'Autosuficiencia',
           consumption: 'Consumo anual',
           battery: 'Batería',
+          reliability: 'Fiabilidad del dato',
         },
       },
       verdict: {
@@ -619,6 +629,14 @@ export const translations = {
       billReviewHint:
         'The detected consumption does not reconcile: confirm or fix the period kWh in the table before continuing.',
       billParseFailed: ({ file, detail }) => detail ? `${file}: the bill could not be read (${detail}).` : `${file}: the bill could not be read.`,
+      upload_limit: ({ limit }) => `You've reached the limit of ${limit ?? 10} uploaded bills. Enter the rest manually or try again later.`,
+      upload_quota: () => 'The bill-reading service has reached its daily quota. Enter the data manually or try again tomorrow.',
+    },
+    estimateErrors: {
+      consumption_negative: () => 'This bill looks like a correction or adjustment (negative consumption). Upload a normal consumption bill.',
+      annual_out_of_range: ({ annual, low, high }) => `The detected consumption (${annual} kWh/year) is outside the residential range (${low}–${high} kWh). Check it, or confirm it is a home.`,
+      effective_price_out_of_range: ({ price, low, high, currency }) => `The effective price (${price != null ? Number(price).toFixed(3) : '—'} ${currency}/kWh) is outside the sensible range (${low}–${high} ${currency}/kWh). Check the consumption or the amount.`,
+      incoherent_period: () => 'The billing period dates are invalid (end before start). Please check them.',
     },
     billNotices: {
       raw: ({ text }) => text ?? '',
@@ -837,6 +855,7 @@ export const translations = {
       detectedTitle: 'Detected from the bill',
       detectedAnnual: 'Annual consumption',
       detectedMonthly: 'Monthly consumption',
+      detectedCombined: 'Combined consumption',
       detectedSpend: 'Annual spend',
       detectedTariff: 'Tariff',
       detectedPeriod: 'Period',
@@ -992,6 +1011,7 @@ export const translations = {
           selfSuff: 'Self-sufficiency',
           consumption: 'Annual consumption',
           battery: 'Battery',
+          reliability: 'Data reliability',
         },
       },
       verdict: {
@@ -1174,6 +1194,14 @@ export const translations = {
       billReviewHint:
         'La consommation détectée ne concorde pas : confirmez ou corrigez les kWh par période dans le tableau avant de continuer.',
       billParseFailed: ({ file, detail }) => detail ? `${file} : la facture n’a pas pu être lue (${detail}).` : `${file} : la facture n’a pas pu être lue.`,
+      upload_limit: ({ limit }) => `Vous avez atteint la limite de ${limit ?? 10} factures téléchargées. Saisissez le reste à la main ou réessayez plus tard.`,
+      upload_quota: () => 'Le service de lecture de factures a atteint son quota quotidien. Saisissez les données à la main ou réessayez demain.',
+    },
+    estimateErrors: {
+      consumption_negative: () => 'Cette facture semble être une régularisation ou un ajustement (consommation négative). Envoyez une facture de consommation normale.',
+      annual_out_of_range: ({ annual, low, high }) => `La consommation détectée (${annual} kWh/an) est hors de la plage résidentielle (${low}–${high} kWh). Vérifiez-la ou confirmez qu’il s’agit d’un logement.`,
+      effective_price_out_of_range: ({ price, low, high, currency }) => `Le prix effectif (${price != null ? Number(price).toFixed(3) : '—'} ${currency}/kWh) est hors de la plage raisonnable (${low}–${high} ${currency}/kWh). Vérifiez la consommation ou le montant.`,
+      incoherent_period: () => 'Les dates de la période ne sont pas valides (fin avant le début). Vérifiez-les.',
     },
     billNotices: {
       raw: ({ text }) => text ?? '',
@@ -1392,6 +1420,7 @@ export const translations = {
       detectedTitle: 'Données détectées de la facture',
       detectedAnnual: 'Consommation annuelle',
       detectedMonthly: 'Consommation mensuelle',
+      detectedCombined: 'Consommation combinée',
       detectedSpend: 'Dépense annuelle',
       detectedTariff: 'Tarif',
       detectedPeriod: 'Période',
@@ -1547,6 +1576,7 @@ export const translations = {
           selfSuff: 'Autosuffisance',
           consumption: 'Consommation annuelle',
           battery: 'Batterie',
+          reliability: 'Fiabilité de la donnée',
         },
       },
       verdict: {
@@ -1729,6 +1759,14 @@ export const translations = {
       billReviewHint:
         'Il consumo rilevato non torna: conferma o correggi i kWh per periodo nella tabella prima di continuare.',
       billParseFailed: ({ file, detail }) => detail ? `${file}: impossibile leggere la bolletta (${detail}).` : `${file}: impossibile leggere la bolletta.`,
+      upload_limit: ({ limit }) => `Hai raggiunto il limite di ${limit ?? 10} bollette caricate. Inserisci il resto a mano o riprova più tardi.`,
+      upload_quota: () => 'Il servizio di lettura bollette ha raggiunto la quota giornaliera. Inserisci i dati a mano o riprova domani.',
+    },
+    estimateErrors: {
+      consumption_negative: () => 'Questa bolletta sembra una rettifica o un conguaglio (consumo negativo). Carica una bolletta di consumo normale.',
+      annual_out_of_range: ({ annual, low, high }) => `Il consumo rilevato (${annual} kWh/anno) è fuori dall’intervallo residenziale (${low}–${high} kWh). Verificalo o conferma che è un’abitazione.`,
+      effective_price_out_of_range: ({ price, low, high, currency }) => `Il prezzo effettivo (${price != null ? Number(price).toFixed(3) : '—'} ${currency}/kWh) è fuori dall’intervallo ragionevole (${low}–${high} ${currency}/kWh). Verifica il consumo o l’importo.`,
+      incoherent_period: () => 'Le date del periodo non sono valide (fine prima dell’inizio). Verificale.',
     },
     billNotices: {
       raw: ({ text }) => text ?? '',
@@ -1947,6 +1985,7 @@ export const translations = {
       detectedTitle: 'Dati rilevati dalla bolletta',
       detectedAnnual: 'Consumo annuo',
       detectedMonthly: 'Consumo mensile',
+      detectedCombined: 'Consumo combinato',
       detectedSpend: 'Spesa annua',
       detectedTariff: 'Tariffa',
       detectedPeriod: 'Periodo',
@@ -2102,6 +2141,7 @@ export const translations = {
           selfSuff: 'Autosufficienza',
           consumption: 'Consumo annuo',
           battery: 'Batteria',
+          reliability: 'Affidabilità del dato',
         },
       },
       verdict: {
@@ -2287,6 +2327,14 @@ export const translations = {
       billReviewHint:
         'O consumo detetado não bate certo: confirma ou corrige os kWh por período na tabela antes de continuar.',
       billParseFailed: ({ file, detail }) => detail ? `${file}: não foi possível ler a fatura (${detail}).` : `${file}: não foi possível ler a fatura.`,
+      upload_limit: ({ limit }) => `Atingiu o limite de ${limit ?? 10} faturas carregadas. Introduza o resto à mão ou tente mais tarde.`,
+      upload_quota: () => 'O serviço de leitura de faturas atingiu a quota diária. Introduza os dados à mão ou tente amanhã.',
+    },
+    estimateErrors: {
+      consumption_negative: () => 'Esta fatura parece uma regularização ou acerto (consumo negativo). Carregue uma fatura de consumo normal.',
+      annual_out_of_range: ({ annual, low, high }) => `O consumo detetado (${annual} kWh/ano) está fora do intervalo residencial (${low}–${high} kWh). Reveja-o ou confirme que é uma habitação.`,
+      effective_price_out_of_range: ({ price, low, high, currency }) => `O preço efetivo (${price != null ? Number(price).toFixed(3) : '—'} ${currency}/kWh) está fora do intervalo razoável (${low}–${high} ${currency}/kWh). Reveja o consumo ou o valor.`,
+      incoherent_period: () => 'As datas do período não são válidas (fim antes do início). Reveja-as.',
     },
     billNotices: {
       raw: ({ text }) => text ?? '',
@@ -2505,6 +2553,7 @@ export const translations = {
       detectedTitle: 'Dados detetados a partir da fatura',
       detectedAnnual: 'Consumo anual',
       detectedMonthly: 'Consumo mensal',
+      detectedCombined: 'Consumo combinado',
       detectedSpend: 'Despesa anual',
       detectedTariff: 'Tarifa',
       detectedPeriod: 'Período',
@@ -2660,6 +2709,7 @@ export const translations = {
           selfSuff: 'Autossuficiência',
           consumption: 'Consumo anual',
           battery: 'Bateria',
+          reliability: 'Fiabilidade do dado',
         },
       },
       verdict: {

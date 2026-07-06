@@ -1570,8 +1570,12 @@ def _dedupe_bills(bills: list[dict]) -> list[dict]:
     for bill in bills:
         start, end = bill.get("start_date"), bill.get("end_date")
         kwh = bill.get("kwh")
+        cups = bill.get("cups")
+        cups_norm = str(cups).strip().upper() if cups else None
         if start and end and isinstance(kwh, (int, float)):
-            key = (str(start), str(end), round(float(kwh), 1))
+            # Incluye el CUPS: dos suministros distintos que coincidan en fechas
+            # y kWh NO se funden; el mismo CUPS+periodo+kWh sí es un duplicado.
+            key = (cups_norm, str(start), str(end), round(float(kwh), 1))
             if key in seen:
                 continue
             seen.add(key)
@@ -1608,6 +1612,7 @@ def aggregate_bills(
     tax_factor_weighted = 0.0
     tax_factor_kwh = 0.0
     tax_sources: set[str] = set()
+    contributing_bills = 0  # facturas que aportan consumo (para contar meses reales)
 
     bills = _dedupe_bills(bills)
 
@@ -1654,7 +1659,8 @@ def aggregate_bills(
         days = float(days) if days else 30.4
         total_kwh += kwh
         total_days += days
-        if variable_amount is not None:
+        contributing_bills += 1
+        if variable_amount is not None and kwh > 0:
             effective_price = variable_amount / kwh
             if _is_anomalous_effective_price(effective_price, currency):
                 ignored_price_bill_count += 1
@@ -1864,8 +1870,13 @@ def aggregate_bills(
     # anual, la estacionalidad lo hace poco fiable para dimensionar (se avisa,
     # no se bloquea: el usuario puede seguir con la salvedad).
     months_covered = total_days / 30.4 if total_days else 0.0
+    # Meses REALES de dato: nº de facturas que aportan, o meses cubiertos por días
+    # redondeados. NO se cuentan los meses de calendario TOCADOS: una sola factura
+    # de ~30 días a caballo de dos meses toca 2 meses pero es 1 mes de dato. Así
+    # ene+feb (2 facturas) = 2 meses, y una factura suelta = 1 mes.
+    real_months = max(contributing_bills, round(months_covered))
     single_month = (
-        not use_rolling and not history and not annual_only and months_covered < 2
+        not use_rolling and not history and not annual_only and real_months < 2
     )
     consumption_reliability = "low" if single_month else "normal"
     # Coherencia: si hay anual impreso Y suma independiente del histórico, deben

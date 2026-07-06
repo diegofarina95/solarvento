@@ -411,6 +411,30 @@ class TestAggregateBills:
         assert result["single_month"] is False
         assert result["consumption_reliability"] == "normal"
 
+    def test_same_cups_two_months_not_single(self):
+        # Dos facturas del MISMO CUPS (ene+feb) = dos meses de un suministro:
+        # NO debe marcarse "un solo mes".
+        bills = [
+            {"kwh": 300, "month": 1, "days": 30, "cups": "ES0031ABC"},
+            {"kwh": 280, "month": 2, "days": 30, "cups": "ES0031ABC"},
+        ]
+        result = aggregate_bills(bills)
+        assert result["single_month"] is False
+        assert result["consumption_reliability"] == "normal"
+        assert result["distinct_cups"] == 1
+
+    def test_single_bill_is_single_month(self):
+        result = aggregate_bills([{"kwh": 300, "month": 1, "days": 30, "cups": "ES0031ABC"}])
+        assert result["single_month"] is True
+
+    def test_single_bill_straddling_two_months_still_single(self):
+        # Una sola factura de ~30 días a caballo de dos meses toca 2 meses de
+        # calendario pero sigue siendo UN mes de dato: single_month True.
+        result = aggregate_bills([
+            {"kwh": 300, "start_date": date(2026, 1, 20), "end_date": date(2026, 2, 10)},
+        ])
+        assert result["single_month"] is True
+
     def test_bono_social_exposed(self):
         result = aggregate_bills([{"kwh": 300, "days": 30, "bono_social": True}])
         assert result["bono_social"] is True

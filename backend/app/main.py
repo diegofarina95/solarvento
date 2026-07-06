@@ -23,6 +23,10 @@ from .cache import TTLCache
 from .config import get_settings
 from .geocode import GeocodeError, NominatimClient
 from .openai_bills import OpenAIBillParser
+from .pricing.default_prices import (
+    DEFAULT_ELECTRICITY_TAX_FACTOR,
+    ELECTRICITY_TAX_FACTOR_BY_COUNTRY,
+)
 from .pricing import (
     PricingService,
     calculate_system_cost,
@@ -247,14 +251,14 @@ async def parse_bill(request: Request, file: UploadFile, website: str | None = F
     limiter: RateLimiter = app.state.upload_limiter
     allowed, blocked_by = limiter.check_and_record(_client_ip(request))
     if not allowed:
-        detail = (
-            "El servicio de lectura de facturas ha alcanzado su cupo diario. "
-            "Introduce los datos a mano o inténtalo mañana."
-            if blocked_by == "global"
-            else f"Has alcanzado el límite de {limiter.limit} facturas subidas. "
-            "Introduce el resto de datos a mano o inténtalo más tarde."
-        )
-        raise HTTPException(status_code=429, detail=detail)
+        # Es un LÍMITE, no un error de lectura: detalle tipado (código+params)
+        # para que el frontend lo muestre como su propio aviso, traducido, sin
+        # mezclar idiomas ni confundirlo con un fallo de parseo.
+        if blocked_by == "global":
+            note = bill_messages.note("upload_quota")
+        else:
+            note = bill_messages.note("upload_limit", limit=limiter.limit)
+        raise HTTPException(status_code=429, detail={**note})
 
     # Vía primaria: extractor LLM → contrato tipado → normalización/validación
     # deterministas (bill_normalise). El parser posicional/regex queda RETIRADO de
@@ -670,6 +674,75 @@ def _profile_summary(req: SolarEstimateRequest, country_code: str) -> dict:
         "has_ev": req.has_ev,
         "has_pool": req.has_pool,
     }
+
+
+def _sanity_block(code: str, **params) -> "HTTPException":
+    """422 con detalle TIPADO {code, params} para traducir en el frontend."""
+    return HTTPException(status_code=422, detail={"code": code, "params": params})
+
+
+# Rango residencial razonable de consumo anual (kWh); fuera de él se bloquea.
+_ANNUAL_MIN_KWH = 500
+_ANNUAL_MAX_KWH = 30000
+
+
+def _enforce_input_sanity(req: SolarEstimateRequest) -> None:
+    """Cortafuegos sobre la ENTRADA cruda: negativos y periodos incoherentes."""
+    if req.annual_consumption_kwh is not None and req.annual_consumption_kwh <= 0:
+        raise _sanity_block("consumption_negative")
+    for bill in req.bills or []:
+        # ≤0 (no solo <0): un kWh 0 con importe rompería el precio efectivo
+        # (división por cero) aguas abajo; se bloquea con mensaje específico.
+        if bill.kwh is not None and bill.kwh <= 0:
+            raise _sanity_block("consumption_negative")
+        if bill.start_date and bill.end_date and bill.start_date >= bill.end_date:
+            raise _sanity_block("incoherent_period")
+
+
+def _enforce_resolved_sanity(
+    req: SolarEstimateRequest, summary: dict | None, annual: float | None, country=None
+) -> None:
+    """Cortafuegos sobre el consumo YA resuelto: rango anual y precio efectivo.
+
+    Solo bloquea con evidencia dura y ANTES de PVGIS. La suma-mensual-vs-anual
+    (>5%) NO se bloquea aquí: es aviso suave (annual_sum_mismatch → PrecheckModal).
+    """
+    if annual is not None and not (_ANNUAL_MIN_KWH <= annual <= _ANNUAL_MAX_KWH):
+        raise _sanity_block(
+            "annual_out_of_range", annual=round(annual), low=_ANNUAL_MIN_KWH, high=_ANNUAL_MAX_KWH
+        )
+    # Periodo incoherente detectado por el agregado (0 meses cubiertos).
+    if summary is not None and summary.get("source") == "bills":
+        months_covered = summary.get("months_covered")
+        if months_covered is not None and months_covered <= 0:
+            raise _sanity_block("incoherent_period")
+    # Precio efectivo conocido ANTES de PVGIS: manual o derivado de facturas.
+    # (El precio por defecto del país solo se conoce tras PVGIS y siempre es sano.)
+    price = None
+    if req.electricity_price_eur_kwh is not None:
+        price = req.electricity_price_eur_kwh
+    elif summary is not None:
+        avg = summary.get("avg_price_eur_kwh")
+        if avg:
+            # MISMO precio efectivo que aguas abajo: si la factura no trae factor
+            # marginal (facturas EUR no-ES sin líneas de impuestos), se usa el
+            # factor impositivo del país, no 1.0 (si no, la banda validaría un
+            # número más bajo que el que muestra la app).
+            factor = summary.get("marginal_price_factor")
+            if not factor and country is not None:
+                factor = ELECTRICITY_TAX_FACTOR_BY_COUNTRY.get(
+                    country.code, DEFAULT_ELECTRICITY_TAX_FACTOR
+                )
+            price = avg * (factor or 1.0)
+    if price is not None:
+        bono = bool(summary.get("bono_social")) if summary else False
+        low = 0.01 if bono else 0.02
+        if not (low <= price <= 0.50):
+            currency = (summary.get("currency") if summary else None) or "EUR"
+            raise _sanity_block(
+                "effective_price_out_of_range",
+                price=round(price, 3), low=low, high=0.50, currency=currency,
+            )
 
 
 def _resolve_consumption(
@@ -1279,11 +1352,18 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
             ),
         )
     country = country_for_coordinates(req.lat, req.lon, req.country_code)
+    # Cortafuegos 1: sanidad de la ENTRADA cruda (antes de agregar/PVGIS). Da un
+    # mensaje específico para negativos y periodos incoherentes en vez del 422
+    # genérico o de un "sin consumos válidos".
+    _enforce_input_sanity(req)
     consumption_summary, annual_consumption = _resolve_consumption(
         req,
         default_currency=country.currency,
         country_code=country.code,
     )
+    # Cortafuegos 2: sanidad del consumo YA resuelto (rango anual, precio
+    # efectivo), aún ANTES de cualquier llamada a PVGIS.
+    _enforce_resolved_sanity(req, consumption_summary, annual_consumption, country)
 
     # Todo lo que no depende de resultados previos va en un único gather:
     # cotización de precios, PVcalc óptimo, PVcalc del usuario y, si ya

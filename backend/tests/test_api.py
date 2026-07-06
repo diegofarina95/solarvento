@@ -540,7 +540,7 @@ def test_parse_bill_rate_limited_per_ip(client, monkeypatch):
             files={"file": ("f.pdf", b"%PDF-1.4 basura", "application/pdf")},
         )
         assert blocked.status_code == 429
-        assert "límite" in blocked.json()["detail"]
+        assert blocked.json()["detail"]["code"] == "upload_limit"
     get_settings.cache_clear()
 
 
@@ -681,6 +681,57 @@ def test_estimate_rejects_non_eur_bill(client):
     })
     assert resp.status_code == 422
     assert "España" in resp.json()["detail"]
+
+
+class TestSanityBlocks:
+    """Cortafuegos duros ANTES de PVGIS: 422 tipado, sin mock de PVGIS (no llega)."""
+
+    def _post(self, client, **extra):
+        return client.post("/api/solar-estimate", json={
+            "lat": 40.4, "lon": -3.7, "peak_power_kwp": 3.0, **extra,
+        })
+
+    def test_negative_manual_consumption(self, client):
+        r = self._post(client, annual_consumption_kwh=-5)
+        assert r.status_code == 422
+        assert r.json()["detail"]["code"] == "consumption_negative"
+
+    def test_annual_below_range(self, client):
+        r = self._post(client, annual_consumption_kwh=100)
+        assert r.status_code == 422
+        assert r.json()["detail"]["code"] == "annual_out_of_range"
+
+    def test_annual_above_range(self, client):
+        r = self._post(client, annual_consumption_kwh=45000)
+        assert r.status_code == 422
+        assert r.json()["detail"]["code"] == "annual_out_of_range"
+
+    def test_negative_bill_kwh(self, client):
+        r = self._post(client, bills=[{"kwh": -107, "days": 30}])
+        assert r.status_code == 422
+        assert r.json()["detail"]["code"] == "consumption_negative"
+
+    def test_zero_bill_kwh_typed_not_500(self, client):
+        # kWh 0 con importe: antes reventaba (división por cero → 500).
+        r = self._post(client, bills=[{"kwh": 0, "energy_eur": 50, "days": 30}])
+        assert r.status_code == 422
+        assert r.json()["detail"]["code"] == "consumption_negative"
+
+    def test_incoherent_period(self, client):
+        r = self._post(client, bills=[{"kwh": 300, "start_date": "2026-03-31", "end_date": "2026-03-01"}])
+        assert r.status_code == 422
+        assert r.json()["detail"]["code"] == "incoherent_period"
+
+    def test_effective_price_out_of_range(self, client):
+        r = self._post(client, annual_consumption_kwh=4000, electricity_price_eur_kwh=0.9)
+        assert r.status_code == 422
+        assert r.json()["detail"]["code"] == "effective_price_out_of_range"
+
+    def test_valid_manual_passes_gate(self, respx_mock, client):
+        # En rango → NO bloquea (necesita PVGIS, se mockea).
+        mock_pvgis(respx_mock)
+        r = self._post(client, annual_consumption_kwh=4000)
+        assert r.status_code == 200
 
 
 def test_parse_bill_repairs_openai_single_period_as_total(respx_mock, openai_client):
@@ -1223,7 +1274,7 @@ def test_upload_global_cap(client, monkeypatch):
             files={"file": ("f.pdf", b"%PDF-1.4 x", "application/pdf")},
         )
         assert blocked.status_code == 429
-        assert "cupo diario" in blocked.json()["detail"]
+        assert blocked.json()["detail"]["code"] == "upload_quota"
     get_settings.cache_clear()
 
 
