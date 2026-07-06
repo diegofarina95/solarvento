@@ -4,6 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Consent Mode v2: denegar por defecto hasta que el mensaje RGPD de Google
+         actualice el estado (cumplimiento UE). Debe ir ANTES del script de AdSense. -->
+    <script>
+      window.dataLayer = window.dataLayer || []
+      function gtag() { dataLayer.push(arguments) }
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500,
+      })
+    </script>
+
+    <!-- Google AdSense (verificación del sitio + Auto Ads). El diseño discreto
+         (huecos manuales) se activa aparte vía VITE_ADSENSE_* al construir. -->
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9951922085596728"
+      crossorigin="anonymous"
+    ></script>
+
     <!-- Primary meta -->
     <title>Calculadora de placas y baterías con tu factura | SolarVento</title>
     <meta
