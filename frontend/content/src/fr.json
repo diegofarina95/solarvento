@@ -1,0 +1,129 @@
+{
+  "lang": "fr",
+  "faq": {
+    "title": "Questions fréquentes sur les panneaux solaires et l'autoconsommation | SolarVento",
+    "description": "Questions fréquentes sur l'autoconsommation solaire : combien de panneaux vous faut-il, une batterie en vaut-elle la peine, combien économise-t-on, l'amortissement, la compensation des excédents et les autorisations en Espagne.",
+    "keywords": "combien de panneaux solaires me faut-il, calculer panneaux solaires facture, batterie solaire en vaut-elle la peine, économies panneaux solaires, amortissement solaire, compensation des excédents, autoconsommation Espagne, kWp, PVGIS",
+    "back": "&larr; Retour au calculateur",
+    "h1": "Questions fréquentes sur les panneaux solaires et l'autoconsommation",
+    "leadHtml": "Nous répondons aux questions les plus courantes sur l'autoconsommation solaire en Espagne : combien de panneaux vous faut-il, une batterie en vaut-elle la peine, combien économise-t-on, l'amortissement et les autorisations. Vous voulez des chiffres pour votre cas ? Utilisez le calculateur avec votre facture.",
+    "cta": "Calculer mon installation solaire",
+    "questions": [
+      {
+        "q": "Combien de panneaux solaires me faut-il pour ma maison ?",
+        "aHtml": "Cela dépend de votre <strong>consommation annuelle</strong>, de l'orientation et de l'inclinaison de la toiture et de l'ensoleillement de votre région. À titre indicatif, un logement qui consomme environ 3 500 kWh par an se couvre généralement avec <strong>3 à 5 kWp</strong>, soit environ <strong>7 à 12 panneaux</strong> de ~450 W. La méthode précise consiste à le calculer avec votre facture réelle : SolarVento estime la puissance et le nombre de panneaux à partir de votre consommation et de votre emplacement.",
+        "ldQ": "Combien de panneaux solaires me faut-il pour ma maison ?",
+        "ldA": "Cela dépend de votre consommation annuelle, de l'orientation et de l'inclinaison de la toiture et de l'ensoleillement de votre région. À titre indicatif, un logement espagnol qui consomme environ 3 500 kWh par an se couvre généralement avec 3 à 5 kWp, soit environ 7 à 12 panneaux de ~450 W. La méthode précise consiste à le calculer avec votre facture réelle : le calculateur de SolarVento estime la puissance et le nombre de panneaux à partir de votre consommation et de votre emplacement."
+      },
+      {
+        "q": "Comment calcule-t-on les panneaux solaires à partir de la facture d'électricité ?",
+        "aHtml": "Votre facture indique combien d'énergie vous consommez (kWh) et sur quelles périodes. Avec cette consommation et l'ensoleillement de votre emplacement (données de <strong>PVGIS</strong>, de la Commission européenne), on estime la puissance nécessaire pour couvrir une bonne partie de votre dépense, le nombre de panneaux, la batterie recommandée et les économies. SolarVento lit automatiquement ces données sur la facture que vous téléversez.",
+        "ldQ": "Comment calcule-t-on les panneaux solaires à partir de la facture d'électricité ?",
+        "ldA": "Votre facture indique combien d'énergie vous consommez (kWh) et sur quelles périodes. Avec cette consommation et l'ensoleillement de votre emplacement (données de PVGIS, de la Commission européenne), on estime la puissance nécessaire pour couvrir une bonne partie de votre dépense, le nombre de panneaux, la batterie recommandée et les économies. SolarVento lit automatiquement ces données sur la facture que vous téléversez."
+      },
+      {
+        "q": "Une batterie solaire en vaut-elle la peine ?",
+        "aHtml": "Une batterie est surtout intéressante si vous consommez beaucoup <strong>la nuit ou en fin de journée</strong>, quand il n'y a plus de soleil. Elle augmente l'autonomie et l'autoconsommation, mais elle renchérit aussi l'installation et allonge l'amortissement. Si votre consommation est diurne et que vous bénéficiez d'une bonne compensation des excédents, elle peut ne pas être rentable. Le calculateur évalue votre cas concret et vous dit si elle vous convient.",
+        "ldQ": "Une batterie solaire en vaut-elle la peine ?",
+        "ldA": "Une batterie est surtout intéressante si vous consommez beaucoup la nuit ou en fin de journée, quand il n'y a plus de soleil. Elle augmente l'autonomie et l'autoconsommation, mais elle renchérit aussi l'installation et allonge l'amortissement. Si votre consommation est diurne et que vous bénéficiez d'une bonne compensation des excédents, elle peut ne pas être rentable. Le calculateur évalue votre cas concret et vous dit si elle vous convient."
+      },
+      {
+        "q": "Combien peut-on économiser avec des panneaux solaires ?",
+        "aHtml": "Les économies dépendent de votre consommation, de la quantité d'énergie que vous utilisez pendant qu'il y a du soleil et de votre tarif. Dans les installations résidentielles bien dimensionnées, il est courant de réduire de <strong>40 % à 70 %</strong> de la part énergie de la facture. Le chiffre exact pour votre cas s'obtient avec le calculateur.",
+        "ldQ": "Combien peut-on économiser avec des panneaux solaires ?",
+        "ldA": "Les économies dépendent de votre consommation, de la quantité d'énergie que vous utilisez pendant qu'il y a du soleil et de votre tarif. Dans les installations résidentielles bien dimensionnées, il est courant de réduire de 40 % à 70 % la part énergie de la facture. Le chiffre exact pour votre cas s'obtient avec le calculateur."
+      },
+      {
+        "q": "En combien de temps une installation solaire est-elle amortie ?",
+        "aHtml": "L'amortissement (payback) typique d'une installation résidentielle en Espagne se situe généralement entre <strong>5 et 9 ans</strong>, selon le coût, la consommation et les aides disponibles. Comme les panneaux durent 25-30 ans, le reste de leur durée de vie constitue une économie. SolarVento calcule votre amortissement et votre ROI estimés.",
+        "ldQ": "En combien de temps une installation solaire est-elle amortie ?",
+        "ldA": "L'amortissement (payback) typique d'une installation résidentielle en Espagne se situe généralement entre 5 et 9 ans, selon le coût, la consommation et les aides disponibles. Comme les panneaux durent 25 à 30 ans, le reste de leur durée de vie constitue une économie. SolarVento calcule votre amortissement et votre ROI estimés."
+      },
+      {
+        "q": "Qu'est-ce que la compensation des excédents ?",
+        "aHtml": "C'est le mécanisme par lequel l'énergie que vous produisez et que vous ne consommez pas (les <strong>excédents</strong>) est injectée dans le réseau et votre fournisseur vous la déduit sur la facture. Dans la modalité de <strong>compensation simplifiée</strong>, la déduction ne peut pas dépasser le coût de l'énergie que vous consommez effectivement : la facture d'énergie peut tomber à zéro, mais <strong>pas devenir négative</strong>. Les excédents qui dépassent ce seuil ne sont pas payés, sauf contrats de vente spécifiques.",
+        "ldQ": "Qu'est-ce que la compensation des excédents ?",
+        "ldA": "C'est le mécanisme par lequel l'énergie que vous produisez et que vous ne consommez pas (les excédents) est injectée dans le réseau et votre fournisseur vous la déduit sur la facture. Dans la modalité de compensation simplifiée, la déduction ne peut pas dépasser le coût de l'énergie que vous consommez effectivement : la facture d'énergie peut tomber à zéro, mais pas devenir négative. Les excédents qui dépassent ce seuil ne sont pas payés, sauf contrats de vente spécifiques."
+      },
+      {
+        "q": "Faut-il des autorisations pour l'autoconsommation en Espagne ?",
+        "aHtml": "Les petites installations d'autoconsommation bénéficient d'une <strong>procédure simplifiée</strong>, mais il faut les légaliser : certificat d'installation, déclaration à la communauté autonome et au distributeur, et inscription à la modalité de compensation des excédents le cas échéant. C'est généralement l'installateur qui s'en charge. Il est conseillé de faire appel à un installateur agréé.",
+        "ldQ": "Faut-il des autorisations pour l'autoconsommation en Espagne ?",
+        "ldA": "Les petites installations d'autoconsommation bénéficient d'une procédure simplifiée, mais il faut les légaliser : certificat d'installation, déclaration à la communauté autonome et au distributeur, et inscription à la modalité de compensation des excédents le cas échéant. C'est généralement l'installateur qui s'en charge. Il est conseillé de faire appel à un installateur agréé ; ce guide est indicatif et ne remplace pas un conseil professionnel."
+      },
+      {
+        "q": "Qu'est-ce que la puissance crête (kWp) ?",
+        "aHtml": "Le <strong>kWp</strong> (kilowatt-crête) est la puissance maximale que peut générer une installation dans des conditions standard. C'est la mesure avec laquelle on dimensionne le système : par exemple, une installation de 4 kWp avec des panneaux de ~450 W compterait environ 9 panneaux.",
+        "ldQ": "Qu'est-ce que la puissance crête (kWp) ?",
+        "ldA": "Le kWp (kilowatt-crête) est la puissance maximale que peut générer une installation solaire dans des conditions standard. C'est la mesure avec laquelle on dimensionne le système : par exemple, une installation de 4 kWp avec des panneaux de ~450 W compterait environ 9 panneaux."
+      },
+      {
+        "q": "Combien d'énergie produit un panneau solaire par an en Espagne ?",
+        "aHtml": "En Espagne, chaque kWp installé produit environ entre <strong>1 400 et 1 700 kWh par an</strong>, selon la région (davantage dans le sud, moins dans le nord) et l'orientation. SolarVento utilise des données d'ensoleillement réelles de votre emplacement (PVGIS) pour affiner l'estimation.",
+        "ldQ": "Combien d'énergie produit un panneau solaire par an en Espagne ?",
+        "ldA": "En Espagne, chaque kWp installé produit environ entre 1 400 et 1 700 kWh par an, selon la région (davantage dans le sud, moins dans le nord) et l'orientation. SolarVento utilise des données d'ensoleillement réelles de votre emplacement (PVGIS) pour affiner cette estimation."
+      },
+      {
+        "q": "Le calculateur est-il gratuit et dois-je m'inscrire ?",
+        "aHtml": "SolarVento est <strong>gratuit et ne nécessite pas d'inscription</strong> ni de création de compte. Vous téléversez votre facture ou saisissez les données à la main et vous obtenez l'estimation instantanément.",
+        "ldQ": "Le calculateur est-il gratuit et dois-je m'inscrire ?",
+        "ldA": "SolarVento est gratuit et ne nécessite ni inscription ni création de compte. Vous téléversez votre facture ou saisissez les données à la main et vous obtenez l'estimation instantanément."
+      },
+      {
+        "q": "Qu'advient-il de ma facture et de mes données ?",
+        "aHtml": "Votre facture est traitée uniquement pour estimer votre installation et n'est pas conservée au-delà de votre session. Vous trouverez le détail dans la <a href=\"/privacidad-fr.html\">politique de confidentialité</a>.",
+        "ldQ": "Qu'advient-il de ma facture et de mes données ?",
+        "ldA": "Votre facture est traitée uniquement pour estimer votre installation et n'est pas conservée au-delà de votre session. Vous pouvez consulter le détail dans la politique de confidentialité de SolarVento."
+      }
+    ],
+    "disclaimer": "Tous les chiffres de cette page sont indicatifs et ne remplacent ni une étude technique professionnelle ni une offre d'un installateur.",
+    "footerHtml": "SolarVento · <a href=\"/\">Calculateur</a> · <a href=\"/privacidad-fr.html\">Politique de confidentialité</a>"
+  },
+  "privacy": {
+    "title": "Politique de confidentialité | SolarVento",
+    "description": "Politique de confidentialité de SolarVento : quelles données nous traitons, cookies, publicités de Google et vos droits (RGPD).",
+    "back": "&larr; Retour au calculateur",
+    "h1": "Politique de confidentialité",
+    "updated": "Dernière mise à jour : 6 juillet 2026",
+    "introHtml": "Cette politique explique quelles données traite <strong>SolarVento</strong> (ci-après « le site », accessible à l'adresse <a href=\"https://solarvento.es/\">solarvento.es</a>) lorsque vous utilisez le calculateur d'autoconsommation solaire, à quelles fins, sur quelle base légale et quels droits vous avez. SolarVento est un outil gratuit qui estime les panneaux solaires, les batteries et les économies à partir de votre facture d'électricité, <strong>sans inscription ni création de compte</strong>.",
+    "sections": [
+      {
+        "h2": "1. Responsable du traitement",
+        "bodyHtml": "<p>Responsable : <strong>SolarVento</strong>. Pour toute question relative à la confidentialité ou pour exercer vos droits, vous pouvez écrire à <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>.</p>"
+      },
+      {
+        "h2": "2. Quelles données nous traitons et à quelles fins",
+        "bodyHtml": "<ul> <li> <strong>Votre facture d'électricité.</strong> Lorsque vous téléversez une facture, elle est traitée pour extraire des données de consommation (kWh, périodes, puissance, etc.) et estimer votre installation. Si la facture est un <strong>PDF avec du texte</strong>, ce texte est <strong>anonymisé avant d'être envoyé</strong> au fournisseur d'intelligence artificielle qui réalise l'extraction : les nom et prénoms, le DNI/NIF/NIE/CIF et l'IBAN sont supprimés. S'il s'agit d'une <strong>image ou d'un PDF scanné</strong> (sans couche de texte), avant l'envoi, une reconnaissance optique de caractères (OCR) est appliquée <strong>sur notre propre serveur</strong> afin de masquer ces mêmes données directement sur l'image. Ce masquage est automatique et peut ne pas être parfait (une donnée que l'OCR ne parviendrait pas à lire, ou un nom sans étiquette, pourrait ne pas être masqué ; et si l'OCR n'était pas disponible, l'image serait envoyée telle quelle), de sorte que l'image envoyée peut inclure certaines de ces données ; elle est utilisée uniquement pour extraire la consommation. En aucun cas le fichier original n'est conservé de manière permanente. </li> <li> <strong>Résultat de l'extraction.</strong> Le résultat est enregistré temporairement dans un cache lié à un <em>cookie de session</em> de votre navigateur, afin de ne pas répéter l'analyse de la même facture. Ces entrées sont supprimées à la fermeture du navigateur et, au maximum, au bout de 24 heures. </li> <li> <strong>Emplacement.</strong> L'emplacement que vous indiquez (adresse ou point sur la carte) est utilisé pour consulter l'ensoleillement dans le service PVGIS de la Commission européenne. Nous ne l'associons pas à votre identité. </li> <li> <strong>Données techniques.</strong> Votre adresse IP est utilisée de façon limitée pour prévenir les abus et appliquer des limites de téléversement de factures (sécurité du service). </li> </ul>"
+      },
+      {
+        "h2": "3. Cookies",
+        "bodyHtml": "<ul> <li> <strong>Cookie de session nécessaire</strong> (<code>solvento_bill_session</code>) : il permet d'associer les factures que vous analysez à votre session. Il n'a pas de date d'expiration : il disparaît à la fermeture du navigateur. </li> <li> <strong>Cookies publicitaires de tiers (Google AdSense) :</strong> ils sont utilisés pour afficher des publicités. <strong>Ils ne s'activent que si vous donnez votre consentement.</strong> Par défaut, les cookies publicitaires sont <em>refusés</em> (Consent Mode) jusqu'à ce que vous acceptiez dans le message de consentement. </li> </ul>"
+      },
+      {
+        "h2": "4. Publicité de Google",
+        "bodyHtml": "<p>Ce site utilise <strong>Google AdSense</strong>, un service de publicité de Google. Google et ses partenaires peuvent utiliser des cookies et des technologies similaires pour afficher des publicités en fonction de vos visites sur ce site et sur d'autres, à condition que vous ayez donné votre consentement. Vous pouvez consulter la manière dont Google utilise l'information dans <a href=\"https://policies.google.com/technologies/partner-sites\" target=\"_blank\" rel=\"noopener\"> « Comment Google utilise les informations provenant de sites ou d'applications qui font appel à ses services »</a> et gérer vos préférences dans <a href=\"https://myadcenter.google.com/\" target=\"_blank\" rel=\"noopener\">My Ad Center</a>. Le consentement est recueilli au moyen d'une plateforme de gestion du consentement (CMP) certifiée par Google, et vous pouvez modifier votre décision à tout moment depuis le message de consentement lui-même.</p>"
+      },
+      {
+        "h2": "5. Tiers et transferts internationaux",
+        "bodyHtml": "<p>Pour fournir le service, nous faisons appel à ces prestataires :</p> <ul> <li> <strong>Fournisseur d'IA (OpenAI) :</strong> il reçoit le texte <em>anonymisé</em> de la facture pour extraire les données de consommation. Cela peut impliquer un transfert vers les États-Unis, couvert par les garanties prévues par le RGPD. </li> <li> <strong>Google (AdSense) :</strong> publicité, sous réserve de consentement. </li> <li> <strong>PVGIS (Commission européenne) :</strong> données d'ensoleillement à partir de l'emplacement. </li> </ul>"
+      },
+      {
+        "h2": "6. Base légale",
+        "bodyHtml": "<ul> <li><strong>Exécution du service que vous demandez</strong> (art. 6.1.b RGPD) : traiter votre facture et calculer l'estimation.</li> <li><strong>Consentement</strong> (art. 6.1.a RGPD) : cookies et publicité de tiers.</li> <li><strong>Intérêt légitime</strong> (art. 6.1.f RGPD) : sécurité et prévention des abus du service.</li> </ul>"
+      },
+      {
+        "h2": "7. Conservation",
+        "bodyHtml": "<p>Les données de la facture et le résultat de son analyse ne sont conservés que pendant votre session (elles sont supprimées à la fermeture du navigateur et, au maximum, au bout de 24 heures). Nous ne conservons pas vos factures ni vos données personnelles au-delà de ce qui est nécessaire pour vous fournir le service à ce moment-là.</p>"
+      },
+      {
+        "h2": "8. Vos droits",
+        "bodyHtml": "<p>Vous avez le droit d'accéder à vos données, de les rectifier et de les supprimer, ainsi que de limiter le traitement ou de vous y opposer, à la portabilité et de retirer votre consentement à tout moment. Comme le service ne nécessite pas d'inscription et que les données de facture sont supprimées avec votre session, la plupart des informations cessent d'être disponibles à la fermeture du navigateur. Pour exercer vos droits, écrivez à <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>. Vous pouvez également introduire une réclamation auprès de l'<a href=\"https://www.aepd.es/\" target=\"_blank\" rel=\"noopener\">Agence espagnole de protection des données (AEPD)</a>.</p>"
+      },
+      {
+        "h2": "9. Modifications de cette politique",
+        "bodyHtml": "<p>Nous pouvons mettre à jour cette politique pour refléter des changements dans le service ou dans la réglementation. Nous publierons la version en vigueur sur cette même page, en indiquant la date de la dernière mise à jour.</p>"
+      }
+    ],
+    "footerHtml": "SolarVento · Calculateur d'autoconsommation solaire · <a href=\"/\">solarvento.es</a>"
+  }
+}

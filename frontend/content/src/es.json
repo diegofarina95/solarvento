@@ -1,0 +1,129 @@
+{
+  "lang": "es",
+  "faq": {
+    "title": "Preguntas frecuentes sobre placas solares y autoconsumo | SolarVento",
+    "description": "Dudas frecuentes sobre autoconsumo solar: cuántas placas necesitas, si merece la pena una batería, cuánto se ahorra, la amortización, la compensación de excedentes y los permisos en España.",
+    "keywords": "cuántas placas solares necesito, calcular placas solares factura, merece la pena batería solar, ahorro placas solares, amortización solar, compensación de excedentes, autoconsumo España, kWp, PVGIS",
+    "back": "&larr; Volver a la calculadora",
+    "h1": "Preguntas frecuentes sobre placas solares y autoconsumo",
+    "leadHtml": "Resolvemos las dudas más habituales sobre el autoconsumo solar en España: cuántas placas necesitas, si merece la pena una batería, cuánto se ahorra, la amortización y los permisos. ¿Quieres cifras para tu caso? Usa la calculadora con tu factura.",
+    "cta": "Calcular mi instalación solar",
+    "questions": [
+      {
+        "q": "¿Cuántas placas solares necesito para mi casa?",
+        "aHtml": "Depende de tu <strong>consumo anual</strong>, de la orientación e inclinación del tejado y de la radiación de tu zona. Como referencia, una vivienda que consume unos 3.500 kWh al año suele cubrirse con <strong>3 a 5 kWp</strong>, es decir, unas <strong>7 a 12 placas</strong> de ~450 W. La forma precisa es calcularlo con tu factura real: SolarVento estima la potencia y el número de placas a partir de tu consumo y tu ubicación.",
+        "ldQ": "¿Cuántas placas solares necesito para mi casa?",
+        "ldA": "Depende de tu consumo anual, de la orientación e inclinación del tejado y de la radiación de tu zona. Como referencia, una vivienda española que consume unos 3.500 kWh al año suele cubrirse con 3 a 5 kWp, es decir, unas 7 a 12 placas de ~450 W. La forma precisa es calcularlo con tu factura real: la calculadora de SolarVento estima la potencia y el número de placas a partir de tu consumo y tu ubicación."
+      },
+      {
+        "q": "¿Cómo se calculan las placas solares a partir de la factura de la luz?",
+        "aHtml": "Tu factura indica cuánta energía consumes (kWh) y en qué periodos. Con ese consumo y la radiación solar de tu ubicación (datos de <strong>PVGIS</strong>, de la Comisión Europea) se estima la potencia necesaria para cubrir buena parte de tu gasto, el número de placas, la batería recomendada y el ahorro. SolarVento lee estos datos automáticamente de la factura que subes.",
+        "ldQ": "¿Cómo se calculan las placas solares a partir de la factura de la luz?",
+        "ldA": "Tu factura indica cuánta energía consumes (kWh) y en qué periodos. Con ese consumo y la radiación solar de tu ubicación (datos de PVGIS, de la Comisión Europea) se estima la potencia necesaria para cubrir una buena parte de tu gasto, el número de placas, la batería recomendada y el ahorro. SolarVento lee estos datos automáticamente de la factura que subes."
+      },
+      {
+        "q": "¿Merece la pena una batería solar?",
+        "aHtml": "Una batería interesa sobre todo si consumes mucho <strong>por la noche o al final del día</strong>, cuando ya no hay sol. Aumenta la autonomía y el autoconsumo, pero también encarece la instalación y alarga la amortización. Si tu consumo es diurno y tienes buena compensación de excedentes, puede no compensar. La calculadora evalúa tu caso concreto y te dice si te conviene.",
+        "ldQ": "¿Merece la pena una batería solar?",
+        "ldA": "Una batería interesa sobre todo si consumes mucho por la noche o al final del día, cuando ya no hay sol. Aumenta la autonomía y el autoconsumo, pero también encarece la instalación y alarga la amortización. Si tu consumo es diurno y tienes buena compensación de excedentes, puede no compensar. La calculadora evalúa tu caso concreto y te dice si te conviene."
+      },
+      {
+        "q": "¿Cuánto se puede ahorrar con placas solares?",
+        "aHtml": "El ahorro depende de tu consumo, de cuánta energía uses mientras hay sol y de tu tarifa. En instalaciones residenciales bien dimensionadas es habitual reducir entre un <strong>40% y un 70%</strong> de la parte de energía de la factura. La cifra exacta para tu caso la obtienes con la calculadora.",
+        "ldQ": "¿Cuánto se puede ahorrar con placas solares?",
+        "ldA": "El ahorro depende de tu consumo, de cuánta energía uses mientras hay sol y de tu tarifa. En instalaciones residenciales bien dimensionadas es habitual reducir entre un 40% y un 70% de la parte de energía de la factura. La cifra exacta para tu caso la obtienes con la calculadora."
+      },
+      {
+        "q": "¿En cuánto tiempo se amortiza una instalación solar?",
+        "aHtml": "La amortización (payback) típica de una instalación residencial en España suele estar entre <strong>5 y 9 años</strong>, según el coste, el consumo y las ayudas disponibles. Como los paneles duran 25-30 años, el resto de su vida útil es ahorro. SolarVento calcula tu amortización y tu ROI estimados.",
+        "ldQ": "¿En cuánto tiempo se amortiza una instalación solar?",
+        "ldA": "La amortización (payback) típica de una instalación residencial en España suele estar entre 5 y 9 años, según el coste, el consumo y las ayudas disponibles. Como los paneles duran 25-30 años, el resto de su vida útil es ahorro. SolarVento calcula tu amortización y tu ROI estimados."
+      },
+      {
+        "q": "¿Qué es la compensación de excedentes?",
+        "aHtml": "Es el mecanismo por el que la energía que produces y no consumes (los <strong>excedentes</strong>) se vierte a la red y tu comercializadora te la descuenta en la factura. En la modalidad de <strong>compensación simplificada</strong>, el descuento no puede superar el coste de la energía que sí consumes: la factura de energía puede quedar a cero, pero <strong>no negativa</strong>. Los excedentes por encima de eso no se pagan, salvo con contratos específicos de venta.",
+        "ldQ": "¿Qué es la compensación de excedentes?",
+        "ldA": "Es el mecanismo por el que la energía que produces y no consumes (los excedentes) se vierte a la red y tu comercializadora te la descuenta en la factura. En la modalidad de compensación simplificada, el descuento no puede superar el coste de la energía que sí consumes: la factura de energía puede quedar a cero, pero no negativa. Los excedentes que sobran por encima de eso no se pagan salvo con contratos específicos de venta."
+      },
+      {
+        "q": "¿Necesito permisos para el autoconsumo en España?",
+        "aHtml": "Las instalaciones de autoconsumo pequeñas tienen una <strong>tramitación simplificada</strong>, pero hay que legalizarlas: certificado de instalación, comunicación a la comunidad autónoma y a la distribuidora, y alta en la modalidad de compensación de excedentes si procede. Suele gestionarlo el instalador. Conviene contar con un instalador autorizado.",
+        "ldQ": "¿Necesito permisos para el autoconsumo en España?",
+        "ldA": "Las instalaciones de autoconsumo pequeñas tienen una tramitación simplificada, pero hay que legalizarlas: certificado de instalación, comunicación a la comunidad autónoma y a la distribuidora, y darse de alta en la modalidad de compensación de excedentes si procede. Lo gestiona normalmente el instalador. Conviene contar con un instalador autorizado; esta guía es orientativa y no sustituye el asesoramiento profesional."
+      },
+      {
+        "q": "¿Qué es la potencia pico (kWp)?",
+        "aHtml": "El <strong>kWp</strong> (kilovatio pico) es la potencia máxima que puede generar una instalación en condiciones estándar. Es la medida con la que se dimensiona el sistema: por ejemplo, una instalación de 4 kWp con placas de ~450 W tendría unas 9 placas.",
+        "ldQ": "¿Qué es la potencia pico (kWp)?",
+        "ldA": "El kWp (kilovatio pico) es la potencia máxima que puede generar una instalación solar en condiciones estándar. Es la medida con la que se dimensiona el sistema: por ejemplo, una instalación de 4 kWp con placas de ~450 W tendría unas 9 placas."
+      },
+      {
+        "q": "¿Cuánta energía produce una placa solar al año en España?",
+        "aHtml": "En España, cada kWp instalado produce aproximadamente entre <strong>1.400 y 1.700 kWh al año</strong>, según la zona (más en el sur, menos en el norte) y la orientación. SolarVento usa datos de radiación reales de tu ubicación (PVGIS) para afinar la estimación.",
+        "ldQ": "¿Cuánta energía produce una placa solar al año en España?",
+        "ldA": "En España, cada kWp instalado produce aproximadamente entre 1.400 y 1.700 kWh al año, según la zona (más en el sur, menos en el norte) y la orientación. SolarVento usa datos de radiación reales de tu ubicación (PVGIS) para afinar esta estimación."
+      },
+      {
+        "q": "¿La calculadora es gratis y necesito registrarme?",
+        "aHtml": "SolarVento es <strong>gratuita y no requiere registro</strong> ni crear cuenta. Subes tu factura o introduces los datos a mano y obtienes la estimación al instante.",
+        "ldQ": "¿La calculadora es gratis y necesito registrarme?",
+        "ldA": "SolarVento es gratuita y no requiere registro ni crear cuenta. Subes tu factura o introduces los datos a mano y obtienes la estimación al instante."
+      },
+      {
+        "q": "¿Qué pasa con mi factura y mis datos?",
+        "aHtml": "Tu factura se procesa solo para estimar tu instalación y no se conserva más allá de tu sesión. Tienes el detalle en la <a href=\"/privacidad.html\">política de privacidad</a>.",
+        "ldQ": "¿Qué pasa con mi factura y mis datos?",
+        "ldA": "Tu factura se procesa solo para estimar tu instalación y no se conserva más allá de tu sesión. Puedes consultar el detalle en la política de privacidad de SolarVento."
+      }
+    ],
+    "disclaimer": "Todas las cifras de esta página son orientativas y no sustituyen un estudio técnico profesional ni una oferta de un instalador.",
+    "footerHtml": "SolarVento · <a href=\"/\">Calculadora</a> · <a href=\"/privacidad.html\">Política de privacidad</a>"
+  },
+  "privacy": {
+    "title": "Política de privacidad | SolarVento",
+    "description": "Política de privacidad de SolarVento: qué datos tratamos, cookies, anuncios de Google y tus derechos (RGPD).",
+    "back": "&larr; Volver a la calculadora",
+    "h1": "Política de privacidad",
+    "updated": "Última actualización: 6 de julio de 2026",
+    "introHtml": "Esta política explica qué datos trata <strong>SolarVento</strong> (en adelante, «el sitio», accesible en <a href=\"https://solarvento.es/\">solarvento.es</a>) cuando usas la calculadora de autoconsumo solar, con qué finalidad, en qué base legal y qué derechos tienes. SolarVento es una herramienta gratuita que estima placas solares, baterías y ahorro a partir de tu factura de la luz, <strong>sin registro ni creación de cuenta</strong>.",
+    "sections": [
+      {
+        "h2": "1. Responsable del tratamiento",
+        "bodyHtml": "<p> Responsable: <strong>SolarVento</strong>. Para cualquier consulta sobre privacidad o para ejercer tus derechos puedes escribir a <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>. </p>"
+      },
+      {
+        "h2": "2. Qué datos tratamos y con qué fin",
+        "bodyHtml": "<ul> <li> <strong>Tu factura de la luz.</strong> Cuando subes una factura, se procesa para extraer datos de consumo (kWh, periodos, potencia, etc.) y estimar tu instalación. Si la factura es un <strong>PDF con texto</strong>, ese texto se <strong>anonimiza antes de enviarlo</strong> al proveedor de inteligencia artificial que realiza la extracción: se eliminan nombre y apellidos, DNI/NIF/NIE/CIF e IBAN. Si es una <strong>imagen o un PDF escaneado</strong> (sin capa de texto), antes del envío se aplica un reconocimiento óptico (OCR) <strong>en nuestro propio servidor</strong> que tapa esos mismos datos sobre la propia imagen. Este tapado es automático y puede no ser perfecto (un dato que el OCR no consiga leer, o un nombre sin etiqueta, podría no taparse; y si el OCR no estuviera disponible, la imagen se enviaría tal cual), por lo que la imagen enviada puede llegar a incluir alguno de esos datos; se utiliza únicamente para extraer el consumo. En ningún caso el archivo original se almacena de forma permanente. </li> <li> <strong>Resultado de la extracción.</strong> El resultado se guarda temporalmente en una caché ligada a una <em>cookie de sesión</em> de tu navegador, para no repetir el análisis de la misma factura. Estas entradas se borran al cerrar el navegador y, como máximo, a las 24 horas. </li> <li> <strong>Ubicación.</strong> La ubicación que indicas (dirección o punto en el mapa) se usa para consultar la radiación solar en el servicio PVGIS de la Comisión Europea. No la asociamos a tu identidad. </li> <li> <strong>Datos técnicos.</strong> Tu dirección IP se utiliza de forma limitada para prevenir abusos y aplicar límites de subida de facturas (seguridad del servicio). </li> </ul>"
+      },
+      {
+        "h2": "3. Cookies",
+        "bodyHtml": "<ul> <li> <strong>Cookie de sesión necesaria</strong> (<code>solvento_bill_session</code>): permite asociar las facturas que analizas a tu sesión. No tiene fecha de caducidad: desaparece al cerrar el navegador. </li> <li> <strong>Cookies publicitarias de terceros (Google AdSense):</strong> se utilizan para mostrar anuncios. <strong>Solo se activan si das tu consentimiento.</strong> Por defecto, las cookies de publicidad están <em>denegadas</em> (Consent Mode) hasta que aceptes en el mensaje de consentimiento. </li> </ul>"
+      },
+      {
+        "h2": "4. Publicidad de Google",
+        "bodyHtml": "<p> Este sitio utiliza <strong>Google AdSense</strong>, un servicio de publicidad de Google. Google y sus socios pueden usar cookies y tecnologías similares para mostrar anuncios en función de tus visitas a este y otros sitios, siempre que hayas dado tu consentimiento. Puedes consultar cómo usa Google la información en <a href=\"https://policies.google.com/technologies/partner-sites\" target=\"_blank\" rel=\"noopener\"> «Cómo utiliza Google la información de sitios o aplicaciones que usan sus servicios»</a> y gestionar tus preferencias en <a href=\"https://myadcenter.google.com/\" target=\"_blank\" rel=\"noopener\">My Ad Center</a>. El consentimiento se recoge mediante una plataforma de gestión del consentimiento (CMP) certificada por Google, y puedes cambiar tu decisión en cualquier momento desde el propio mensaje de consentimiento. </p>"
+      },
+      {
+        "h2": "5. Terceros y transferencias internacionales",
+        "bodyHtml": "<p>Para prestar el servicio recurrimos a estos proveedores:</p> <ul> <li> <strong>Proveedor de IA (OpenAI):</strong> recibe el texto <em>anonimizado</em> de la factura para extraer los datos de consumo. Puede implicar una transferencia a EE. UU. amparada en las garantías previstas por el RGPD. </li> <li> <strong>Google (AdSense):</strong> publicidad, previo consentimiento. </li> <li> <strong>PVGIS (Comisión Europea):</strong> datos de radiación solar a partir de la ubicación. </li> </ul>"
+      },
+      {
+        "h2": "6. Base legal",
+        "bodyHtml": "<ul> <li><strong>Ejecución del servicio que solicitas</strong> (art. 6.1.b RGPD): procesar tu factura y calcular la estimación.</li> <li><strong>Consentimiento</strong> (art. 6.1.a RGPD): cookies y publicidad de terceros.</li> <li><strong>Interés legítimo</strong> (art. 6.1.f RGPD): seguridad y prevención de abusos del servicio.</li> </ul>"
+      },
+      {
+        "h2": "7. Conservación",
+        "bodyHtml": "<p> Los datos de la factura y el resultado de su análisis se conservan solo durante tu sesión (se borran al cerrar el navegador y, como máximo, 24 horas). No conservamos tus facturas ni tus datos personales más allá de lo necesario para prestarte el servicio en ese momento. </p>"
+      },
+      {
+        "h2": "8. Tus derechos",
+        "bodyHtml": "<p> Tienes derecho a acceder, rectificar y suprimir tus datos, así como a la limitación u oposición al tratamiento, la portabilidad y a retirar tu consentimiento en cualquier momento. Como el servicio no requiere registro y los datos de factura se borran con tu sesión, la mayoría de la información deja de estar disponible al cerrar el navegador. Para ejercer tus derechos, escribe a <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>. También puedes presentar una reclamación ante la <a href=\"https://www.aepd.es/\" target=\"_blank\" rel=\"noopener\">Agencia Española de Protección de Datos (AEPD)</a>. </p>"
+      },
+      {
+        "h2": "9. Cambios en esta política",
+        "bodyHtml": "<p> Podemos actualizar esta política para reflejar cambios en el servicio o en la normativa. Publicaremos la versión vigente en esta misma página, indicando la fecha de última actualización. </p>"
+      }
+    ],
+    "footerHtml": "SolarVento · Calculadora de autoconsumo solar · <a href=\"/\">solarvento.es</a>"
+  }
+}

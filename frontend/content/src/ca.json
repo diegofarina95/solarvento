@@ -1,0 +1,129 @@
+{
+  "lang": "ca",
+  "faq": {
+    "title": "Preguntes freqüents sobre plaques solars i autoconsum | SolarVento",
+    "description": "Dubtes freqüents sobre l'autoconsum solar: quantes plaques necessites, si val la pena una bateria, quant s'estalvia, l'amortització, la compensació d'excedents i els permisos a Espanya.",
+    "keywords": "quantes plaques solars necessito, calcular plaques solars factura, val la pena bateria solar, estalvi plaques solars, amortització solar, compensació d'excedents, autoconsum Espanya, kWp, PVGIS",
+    "back": "&larr; Torna a la calculadora",
+    "h1": "Preguntes freqüents sobre plaques solars i autoconsum",
+    "leadHtml": "Resolem els dubtes més habituals sobre l'autoconsum solar a Espanya: quantes plaques necessites, si val la pena una bateria, quant s'estalvia, l'amortització i els permisos. Vols xifres per al teu cas? Fes servir la calculadora amb la teva factura.",
+    "cta": "Calcular la meva instal·lació solar",
+    "questions": [
+      {
+        "q": "Quantes plaques solars necessito per a casa meva?",
+        "aHtml": "Depèn del teu <strong>consum anual</strong>, de l'orientació i la inclinació de la teulada i de la radiació de la teva zona. Com a referència, un habitatge que consumeix uns 3.500 kWh l'any se sol cobrir amb <strong>3 a 5 kWp</strong>, és a dir, unes <strong>7 a 12 plaques</strong> de ~450 W. La manera precisa és calcular-ho amb la teva factura real: SolarVento estima la potència i el nombre de plaques a partir del teu consum i la teva ubicació.",
+        "ldQ": "Quantes plaques solars necessito per a casa meva?",
+        "ldA": "Depèn del teu consum anual, de l'orientació i la inclinació de la teulada i de la radiació de la teva zona. Com a referència, un habitatge espanyol que consumeix uns 3.500 kWh l'any se sol cobrir amb 3 a 5 kWp, és a dir, unes 7 a 12 plaques de ~450 W. La manera precisa és calcular-ho amb la teva factura real: la calculadora de SolarVento estima la potència i el nombre de plaques a partir del teu consum i la teva ubicació."
+      },
+      {
+        "q": "Com es calculen les plaques solars a partir de la factura de la llum?",
+        "aHtml": "La teva factura indica quanta energia consumeixes (kWh) i en quins períodes. Amb aquest consum i la radiació solar de la teva ubicació (dades de <strong>PVGIS</strong>, de la Comissió Europea) s'estima la potència necessària per cobrir bona part de la teva despesa, el nombre de plaques, la bateria recomanada i l'estalvi. SolarVento llegeix aquestes dades automàticament de la factura que puges.",
+        "ldQ": "Com es calculen les plaques solars a partir de la factura de la llum?",
+        "ldA": "La teva factura indica quanta energia consumeixes (kWh) i en quins períodes. Amb aquest consum i la radiació solar de la teva ubicació (dades de PVGIS, de la Comissió Europea) s'estima la potència necessària per cobrir bona part de la teva despesa, el nombre de plaques, la bateria recomanada i l'estalvi. SolarVento llegeix aquestes dades automàticament de la factura que puges."
+      },
+      {
+        "q": "Val la pena una bateria solar?",
+        "aHtml": "Una bateria interessa sobretot si consumeixes molt <strong>a la nit o al final del dia</strong>, quan ja no hi ha sol. Augmenta l'autonomia i l'autoconsum, però també encareix la instal·lació i allarga l'amortització. Si el teu consum és diürn i tens una bona compensació d'excedents, pot no compensar. La calculadora avalua el teu cas concret i et diu si et convé.",
+        "ldQ": "Val la pena una bateria solar?",
+        "ldA": "Una bateria interessa sobretot si consumeixes molt a la nit o al final del dia, quan ja no hi ha sol. Augmenta l'autonomia i l'autoconsum, però també encareix la instal·lació i allarga l'amortització. Si el teu consum és diürn i tens una bona compensació d'excedents, pot no compensar. La calculadora avalua el teu cas concret i et diu si et convé."
+      },
+      {
+        "q": "Quant es pot estalviar amb plaques solars?",
+        "aHtml": "L'estalvi depèn del teu consum, de quanta energia facis servir mentre hi ha sol i de la teva tarifa. En instal·lacions residencials ben dimensionades és habitual reduir entre un <strong>40% i un 70%</strong> de la part d'energia de la factura. La xifra exacta per al teu cas l'obtens amb la calculadora.",
+        "ldQ": "Quant es pot estalviar amb plaques solars?",
+        "ldA": "L'estalvi depèn del teu consum, de quanta energia facis servir mentre hi ha sol i de la teva tarifa. En instal·lacions residencials ben dimensionades és habitual reduir entre un 40% i un 70% de la part d'energia de la factura. La xifra exacta per al teu cas l'obtens amb la calculadora."
+      },
+      {
+        "q": "En quant de temps s'amortitza una instal·lació solar?",
+        "aHtml": "L'amortització (payback) típica d'una instal·lació residencial a Espanya sol estar entre <strong>5 i 9 anys</strong>, segons el cost, el consum i els ajuts disponibles. Com que els panells duren 25-30 anys, la resta de la seva vida útil és estalvi. SolarVento calcula la teva amortització i el teu ROI estimats.",
+        "ldQ": "En quant de temps s'amortitza una instal·lació solar?",
+        "ldA": "L'amortització (payback) típica d'una instal·lació residencial a Espanya sol estar entre 5 i 9 anys, segons el cost, el consum i els ajuts disponibles. Com que els panells duren 25-30 anys, la resta de la seva vida útil és estalvi. SolarVento calcula la teva amortització i el teu ROI estimats."
+      },
+      {
+        "q": "Què és la compensació d'excedents?",
+        "aHtml": "És el mecanisme pel qual l'energia que produeixes i no consumeixes (els <strong>excedents</strong>) s'aboca a la xarxa i la teva comercialitzadora te la descompta a la factura. En la modalitat de <strong>compensació simplificada</strong>, el descompte no pot superar el cost de l'energia que sí que consumeixes: la factura d'energia pot quedar a zero, però <strong>no negativa</strong>. Els excedents per damunt d'això no es paguen, tret que hi hagi contractes específics de venda.",
+        "ldQ": "Què és la compensació d'excedents?",
+        "ldA": "És el mecanisme pel qual l'energia que produeixes i no consumeixes (els excedents) s'aboca a la xarxa i la teva comercialitzadora te la descompta a la factura. En la modalitat de compensació simplificada, el descompte no pot superar el cost de l'energia que sí que consumeixes: la factura d'energia pot quedar a zero, però no negativa. Els excedents que sobren per damunt d'això no es paguen tret que hi hagi contractes específics de venda."
+      },
+      {
+        "q": "Necessito permisos per a l'autoconsum a Espanya?",
+        "aHtml": "Les instal·lacions d'autoconsum petites tenen una <strong>tramitació simplificada</strong>, però cal legalitzar-les: certificat d'instal·lació, comunicació a la comunitat autònoma i a la distribuïdora, i alta en la modalitat de compensació d'excedents si escau. Sol gestionar-ho l'instal·lador. Convé comptar amb un instal·lador autoritzat.",
+        "ldQ": "Necessito permisos per a l'autoconsum a Espanya?",
+        "ldA": "Les instal·lacions d'autoconsum petites tenen una tramitació simplificada, però cal legalitzar-les: certificat d'instal·lació, comunicació a la comunitat autònoma i a la distribuïdora, i donar-se d'alta en la modalitat de compensació d'excedents si escau. Ho gestiona normalment l'instal·lador. Convé comptar amb un instal·lador autoritzat; aquesta guia és orientativa i no substitueix l'assessorament professional."
+      },
+      {
+        "q": "Què és la potència pic (kWp)?",
+        "aHtml": "El <strong>kWp</strong> (quilowatt pic) és la potència màxima que pot generar una instal·lació en condicions estàndard. És la mesura amb la qual es dimensiona el sistema: per exemple, una instal·lació de 4 kWp amb plaques de ~450 W tindria unes 9 plaques.",
+        "ldQ": "Què és la potència pic (kWp)?",
+        "ldA": "El kWp (quilowatt pic) és la potència màxima que pot generar una instal·lació solar en condicions estàndard. És la mesura amb la qual es dimensiona el sistema: per exemple, una instal·lació de 4 kWp amb plaques de ~450 W tindria unes 9 plaques."
+      },
+      {
+        "q": "Quanta energia produeix una placa solar a l'any a Espanya?",
+        "aHtml": "A Espanya, cada kWp instal·lat produeix aproximadament entre <strong>1.400 i 1.700 kWh l'any</strong>, segons la zona (més al sud, menys al nord) i l'orientació. SolarVento fa servir dades de radiació reals de la teva ubicació (PVGIS) per afinar l'estimació.",
+        "ldQ": "Quanta energia produeix una placa solar a l'any a Espanya?",
+        "ldA": "A Espanya, cada kWp instal·lat produeix aproximadament entre 1.400 i 1.700 kWh l'any, segons la zona (més al sud, menys al nord) i l'orientació. SolarVento fa servir dades de radiació reals de la teva ubicació (PVGIS) per afinar aquesta estimació."
+      },
+      {
+        "q": "La calculadora és gratuïta i m'he de registrar?",
+        "aHtml": "SolarVento és <strong>gratuïta i no requereix registre</strong> ni crear compte. Puges la teva factura o introdueixes les dades a mà i obtens l'estimació a l'instant.",
+        "ldQ": "La calculadora és gratuïta i m'he de registrar?",
+        "ldA": "SolarVento és gratuïta i no requereix registre ni crear compte. Puges la teva factura o introdueixes les dades a mà i obtens l'estimació a l'instant."
+      },
+      {
+        "q": "Què passa amb la meva factura i les meves dades?",
+        "aHtml": "La teva factura es processa només per estimar la teva instal·lació i no es conserva més enllà de la teva sessió. Tens el detall a la <a href=\"/privacidad-ca.html\">política de privadesa</a>.",
+        "ldQ": "Què passa amb la meva factura i les meves dades?",
+        "ldA": "La teva factura es processa només per estimar la teva instal·lació i no es conserva més enllà de la teva sessió. Pots consultar el detall a la política de privadesa de SolarVento."
+      }
+    ],
+    "disclaimer": "Totes les xifres d'aquesta pàgina són orientatives i no substitueixen un estudi tècnic professional ni una oferta d'un instal·lador.",
+    "footerHtml": "SolarVento · <a href=\"/\">Calculadora</a> · <a href=\"/privacidad-ca.html\">Política de privadesa</a>"
+  },
+  "privacy": {
+    "title": "Política de privadesa | SolarVento",
+    "description": "Política de privadesa de SolarVento: quines dades tractem, galetes, anuncis de Google i els teus drets (RGPD).",
+    "back": "&larr; Torna a la calculadora",
+    "h1": "Política de privadesa",
+    "updated": "Última actualització: 6 de juliol de 2026",
+    "introHtml": "Aquesta política explica quines dades tracta <strong>SolarVento</strong> (d'ara endavant, «el lloc», accessible a <a href=\"https://solarvento.es/\">solarvento.es</a>) quan fas servir la calculadora d'autoconsum solar, amb quina finalitat, en quina base legal i quins drets tens. SolarVento és una eina gratuïta que estima plaques solars, bateries i estalvi a partir de la teva factura de la llum, <strong>sense registre ni creació de compte</strong>.",
+    "sections": [
+      {
+        "h2": "1. Responsable del tractament",
+        "bodyHtml": "<p>Responsable: <strong>SolarVento</strong>. Per a qualsevol consulta sobre privadesa o per exercir els teus drets pots escriure a <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>.</p>"
+      },
+      {
+        "h2": "2. Quines dades tractem i amb quina finalitat",
+        "bodyHtml": "<ul> <li> <strong>La teva factura de la llum.</strong> Quan puges una factura, es processa per extreure dades de consum (kWh, períodes, potència, etc.) i estimar la teva instal·lació. Si la factura és un <strong>PDF amb text</strong>, aquest text s'<strong>anonimitza abans d'enviar-lo</strong> al proveïdor d'intel·ligència artificial que fa l'extracció: s'eliminen nom i cognoms, DNI/NIF/NIE/CIF i IBAN. Si és una <strong>imatge o un PDF escanejat</strong> (sense capa de text), abans de l'enviament s'aplica un reconeixement òptic (OCR) <strong>al nostre propi servidor</strong> que tapa aquestes mateixes dades sobre la mateixa imatge. Aquest tapat és automàtic i pot no ser perfecte (una dada que l'OCR no aconsegueixi llegir, o un nom sense etiqueta, podria no tapar-se; i si l'OCR no estigués disponible, la imatge s'enviaria tal qual), per la qual cosa la imatge enviada pot arribar a incloure alguna d'aquestes dades; es fa servir únicament per extreure el consum. En cap cas l'arxiu original s'emmagatzema de manera permanent. </li> <li> <strong>Resultat de l'extracció.</strong> El resultat es desa temporalment en una memòria cau lligada a una <em>galeta de sessió</em> del teu navegador, per no repetir l'anàlisi de la mateixa factura. Aquestes entrades s'esborren en tancar el navegador i, com a màxim, a les 24 hores. </li> <li> <strong>Ubicació.</strong> La ubicació que indiques (adreça o punt al mapa) es fa servir per consultar la radiació solar al servei PVGIS de la Comissió Europea. No l'associem a la teva identitat. </li> <li> <strong>Dades tècniques.</strong> La teva adreça IP es fa servir de manera limitada per prevenir abusos i aplicar límits de pujada de factures (seguretat del servei). </li> </ul>"
+      },
+      {
+        "h2": "3. Galetes",
+        "bodyHtml": "<ul> <li> <strong>Galeta de sessió necessària</strong> (<code>solvento_bill_session</code>): permet associar les factures que analitzes a la teva sessió. No té data de caducitat: desapareix en tancar el navegador. </li> <li> <strong>Galetes publicitàries de tercers (Google AdSense):</strong> es fan servir per mostrar anuncis. <strong>Només s'activen si dones el teu consentiment.</strong> Per defecte, les galetes de publicitat estan <em>denegades</em> (Consent Mode) fins que acceptis al missatge de consentiment. </li> </ul>"
+      },
+      {
+        "h2": "4. Publicitat de Google",
+        "bodyHtml": "<p> Aquest lloc fa servir <strong>Google AdSense</strong>, un servei de publicitat de Google. Google i els seus socis poden fer servir galetes i tecnologies similars per mostrar anuncis en funció de les teves visites a aquest i altres llocs, sempre que hagis donat el teu consentiment. Pots consultar com fa servir Google la informació a <a href=\"https://policies.google.com/technologies/partner-sites\" target=\"_blank\" rel=\"noopener\"> «Com utilitza Google la informació de llocs o aplicacions que fan servir els seus serveis»</a> i gestionar les teves preferències a <a href=\"https://myadcenter.google.com/\" target=\"_blank\" rel=\"noopener\">My Ad Center</a>. El consentiment es recull mitjançant una plataforma de gestió del consentiment (CMP) certificada per Google, i pots canviar la teva decisió en qualsevol moment des del mateix missatge de consentiment. </p>"
+      },
+      {
+        "h2": "5. Tercers i transferències internacionals",
+        "bodyHtml": "<p>Per prestar el servei recorrem a aquests proveïdors:</p> <ul> <li> <strong>Proveïdor d'IA (OpenAI):</strong> rep el text <em>anonimitzat</em> de la factura per extreure les dades de consum. Pot implicar una transferència als EUA emparada en les garanties previstes pel RGPD. </li> <li> <strong>Google (AdSense):</strong> publicitat, amb consentiment previ. </li> <li> <strong>PVGIS (Comissió Europea):</strong> dades de radiació solar a partir de la ubicació. </li> </ul>"
+      },
+      {
+        "h2": "6. Base legal",
+        "bodyHtml": "<ul> <li><strong>Execució del servei que sol·licites</strong> (art. 6.1.b RGPD): processar la teva factura i calcular l'estimació.</li> <li><strong>Consentiment</strong> (art. 6.1.a RGPD): galetes i publicitat de tercers.</li> <li><strong>Interès legítim</strong> (art. 6.1.f RGPD): seguretat i prevenció d'abusos del servei.</li> </ul>"
+      },
+      {
+        "h2": "7. Conservació",
+        "bodyHtml": "<p> Les dades de la factura i el resultat de la seva anàlisi es conserven només durant la teva sessió (s'esborren en tancar el navegador i, com a màxim, 24 hores). No conservem les teves factures ni les teves dades personals més enllà del que és necessari per prestar-te el servei en aquell moment. </p>"
+      },
+      {
+        "h2": "8. Els teus drets",
+        "bodyHtml": "<p> Tens dret a accedir, rectificar i suprimir les teves dades, així com a la limitació o oposició al tractament, la portabilitat i a retirar el teu consentiment en qualsevol moment. Com que el servei no requereix registre i les dades de factura s'esborren amb la teva sessió, la majoria de la informació deixa d'estar disponible en tancar el navegador. Per exercir els teus drets, escriu a <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>. També pots presentar una reclamació davant l'<a href=\"https://www.aepd.es/\" target=\"_blank\" rel=\"noopener\">Agència Espanyola de Protecció de Dades (AEPD)</a>. </p>"
+      },
+      {
+        "h2": "9. Canvis en aquesta política",
+        "bodyHtml": "<p> Podem actualitzar aquesta política per reflectir canvis en el servei o en la normativa. Publicarem la versió vigent en aquesta mateixa pàgina, indicant la data de la darrera actualització. </p>"
+      }
+    ],
+    "footerHtml": "SolarVento · Calculadora d'autoconsum solar · <a href=\"/\">solarvento.es</a>"
+  }
+}

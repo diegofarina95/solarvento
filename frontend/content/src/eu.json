@@ -1,0 +1,129 @@
+{
+  "lang": "eu",
+  "faq": {
+    "title": "Eguzki-plaken eta autokontsumoari buruzko ohiko galderak | SolarVento",
+    "description": "Eguzki-autokontsumoari buruzko ohiko zalantzak: zenbat plaka behar dituzun, bateria bat merezi duen, zenbat aurrezten den, amortizazioa, soberakinen konpentsazioa eta Espainiako baimenak.",
+    "keywords": "zenbat eguzki-plaka behar ditut, eguzki-plakak faktura arabera kalkulatu, eguzki-bateria merezi du, eguzki-plaken aurrezpena, eguzki-amortizazioa, soberakinen konpentsazioa, autokontsumoa Espainia, kWp, PVGIS",
+    "back": "&larr; Kalkulagailura itzuli",
+    "h1": "Eguzki-plaken eta autokontsumoari buruzko ohiko galderak",
+    "leadHtml": "Espainiako eguzki-autokontsumoari buruzko ohiko zalantzarik ohikoenak argitzen ditugu: zenbat plaka behar dituzun, bateria bat merezi duen, zenbat aurrezten den, amortizazioa eta baimenak. Zure kasurako zenbakiak nahi dituzu? Erabili kalkulagailua zure fakturarekin.",
+    "cta": "Nire eguzki-instalazioa kalkulatu",
+    "questions": [
+      {
+        "q": "Zenbat eguzki-plaka behar ditut nire etxerako?",
+        "aHtml": "Zure <strong>urteko kontsumoaren</strong>, teilatuaren orientazio eta inklinazioaren eta zure eremuko erradiazioaren araberakoa da. Erreferentzia gisa, urtean 3.500 kWh inguru kontsumitzen dituen etxebizitza bat <strong>3 eta 5 kWp</strong> artean estaltzen da normalean, hau da, ~450 W-ko <strong>7 eta 12 plaka</strong> artean. Modu zehatza zure benetako fakturarekin kalkulatzea da: SolarVentok potentzia eta plaka kopurua estimatzen ditu zure kontsumotik eta kokapenetik abiatuta.",
+        "ldQ": "Zenbat eguzki-plaka behar ditut nire etxerako?",
+        "ldA": "Zure urteko kontsumoaren, teilatuaren orientazio eta inklinazioaren eta zure eremuko erradiazioaren araberakoa da. Erreferentzia gisa, urtean 3.500 kWh inguru kontsumitzen dituen Espainiako etxebizitza bat 3 eta 5 kWp artean estaltzen da normalean, hau da, ~450 W-ko 7 eta 12 plaka artean. Modu zehatza zure benetako fakturarekin kalkulatzea da: SolarVento kalkulagailuak potentzia eta plaka kopurua estimatzen ditu zure kontsumotik eta kokapenetik abiatuta."
+      },
+      {
+        "q": "Nola kalkulatzen dira eguzki-plakak argindarraren fakturatik abiatuta?",
+        "aHtml": "Zure fakturak zenbat energia kontsumitzen duzun (kWh) eta zein alditan adierazten du. Kontsumo horrekin eta zure kokapeneko eguzki-erradiazioarekin (<strong>PVGIS</strong>-en datuak, Europako Batzordearenak) zure gastuaren zati handi bat estaltzeko beharrezkoa den potentzia, plaka kopurua, gomendatutako bateria eta aurrezpena estimatzen dira. SolarVentok datu horiek automatikoki irakurtzen ditu igotzen duzun fakturatik.",
+        "ldQ": "Nola kalkulatzen dira eguzki-plakak argindarraren fakturatik abiatuta?",
+        "ldA": "Zure fakturak zenbat energia kontsumitzen duzun (kWh) eta zein alditan adierazten du. Kontsumo horrekin eta zure kokapeneko eguzki-erradiazioarekin (PVGIS-en datuak, Europako Batzordearenak) zure gastuaren zati handi bat estaltzeko beharrezkoa den potentzia, plaka kopurua, gomendatutako bateria eta aurrezpena estimatzen dira. SolarVentok datu horiek automatikoki irakurtzen ditu igotzen duzun fakturatik."
+      },
+      {
+        "q": "Merezi du eguzki-bateria batek?",
+        "aHtml": "Bateria bat interesgarria da batez ere <strong>gauez edo egunaren amaieran</strong> asko kontsumitzen baduzu, eguzkirik jada ez dagoenean. Autonomia eta autokontsumoa handitzen ditu, baina instalazioa ere garestitzen du eta amortizazioa luzatzen. Zure kontsumoa egunekoa bada eta soberakinen konpentsazio ona baduzu, baliteke ez konpentsatzea. Kalkulagailuak zure kasu zehatza ebaluatzen du eta komeni zaizun esaten dizu.",
+        "ldQ": "Merezi du eguzki-bateria batek?",
+        "ldA": "Bateria bat interesgarria da batez ere gauez edo egunaren amaieran asko kontsumitzen baduzu, eguzkirik jada ez dagoenean. Autonomia eta autokontsumoa handitzen ditu, baina instalazioa ere garestitzen du eta amortizazioa luzatzen. Zure kontsumoa egunekoa bada eta soberakinen konpentsazio ona baduzu, baliteke ez konpentsatzea. Kalkulagailuak zure kasu zehatza ebaluatzen du eta komeni zaizun esaten dizu."
+      },
+      {
+        "q": "Zenbat aurreztu daiteke eguzki-plakekin?",
+        "aHtml": "Aurrezpena zure kontsumoaren, eguzkia dagoen bitartean zenbat energia erabiltzen duzun eta zure tarifaren araberakoa da. Ondo dimentsionatutako etxebizitza-instalazioetan ohikoa da fakturaren energia-zatiaren <strong>%40 eta %70</strong> artean murriztea. Zure kasurako zenbaki zehatza kalkulagailuarekin lortzen duzu.",
+        "ldQ": "Zenbat aurreztu daiteke eguzki-plakekin?",
+        "ldA": "Aurrezpena zure kontsumoaren, eguzkia dagoen bitartean zenbat energia erabiltzen duzun eta zure tarifaren araberakoa da. Ondo dimentsionatutako etxebizitza-instalazioetan ohikoa da fakturaren energia-zatiaren %40 eta %70 artean murriztea. Zure kasurako zehaztasun-kopurua kalkulagailuarekin lortzen duzu."
+      },
+      {
+        "q": "Zenbat denboran amortizatzen da eguzki-instalazio bat?",
+        "aHtml": "Espainian etxebizitza-instalazio baten amortizazio (payback) tipikoa <strong>5 eta 9 urte</strong> artean egon ohi da, kostuaren, kontsumoaren eta eskuragarri dauden laguntzen arabera. Panelek 25-30 urte irauten dutenez, bizitza baliagarriaren gainerakoa aurrezpena da. SolarVentok zure amortizazioa eta ROI estimatuak kalkulatzen ditu.",
+        "ldQ": "Zenbat denboran amortizatzen da eguzki-instalazio bat?",
+        "ldA": "Espainian etxebizitza-instalazio baten amortizazio (payback) tipikoa 5 eta 9 urte artean egon ohi da, kostuaren, kontsumoaren eta eskuragarri dauden laguntzen arabera. Panelek 25-30 urte irauten dutenez, bizitza baliagarriaren gainerakoa aurrezpena da. SolarVentok zure amortizazioa eta ROI estimatuak kalkulatzen ditu."
+      },
+      {
+        "q": "Zer da soberakinen konpentsazioa?",
+        "aHtml": "Produzitzen duzun eta kontsumitzen ez duzun energia (<strong>soberakinak</strong>) sarera isurtzen den eta zure merkaturatzaileak fakturan deskontatzen dizun mekanismoa da. <strong>Konpentsazio sinplifikatuaren</strong> modalitatean, deskontuak ezin du gainditu kontsumitzen duzun energiaren kostua: energiaren faktura zero geratu daiteke, baina <strong>ez negatibo</strong>. Horren gainetik geratzen diren soberakinak ez dira ordaintzen, salmenta-kontratu zehatzekin izan ezik.",
+        "ldQ": "Zer da soberakinen konpentsazioa?",
+        "ldA": "Produzitzen duzun eta kontsumitzen ez duzun energia (soberakinak) sarera isurtzen den eta zure merkaturatzaileak fakturan deskontatzen dizun mekanismoa da. Konpentsazio sinplifikatuaren modalitatean, deskontuak ezin du gainditu kontsumitzen duzun energiaren kostua: energiaren faktura zero geratu daiteke, baina ez negatibo. Horren gainetik geratzen diren soberakinak ez dira ordaintzen, salmenta-kontratu zehatzekin izan ezik."
+      },
+      {
+        "q": "Baimenik behar dut Espainian autokontsumorako?",
+        "aHtml": "Autokontsumoko instalazio txikiek <strong>izapide sinplifikatua</strong> dute, baina legeztatu egin behar dira: instalazio-ziurtagiria, autonomia-erkidegoari eta banatzaileari jakinaraztea, eta soberakinen konpentsazio modalitatean alta ematea hala badagokio. Instalatzaileak kudeatu ohi du. Komeni da baimendutako instalatzaile bat izatea.",
+        "ldQ": "Baimenik behar dut Espainian autokontsumorako?",
+        "ldA": "Autokontsumoko instalazio txikiek izapide sinplifikatua dute, baina legeztatu egin behar dira: instalazio-ziurtagiria, autonomia-erkidegoari eta banatzaileari jakinaraztea, eta soberakinen konpentsazio modalitatean alta ematea hala badagokio. Instalatzaileak kudeatu ohi du. Komeni da baimendutako instalatzaile bat izatea; gida hau orientagarria da eta ez du ordezkatzen aholkularitza profesionala."
+      },
+      {
+        "q": "Zer da potentzia gorena (kWp)?",
+        "aHtml": "<strong>kWp</strong> (kilowatt gorena) instalazio batek baldintza estandarretan sor dezakeen potentzia maximoa da. Sistema dimentsionatzeko erabiltzen den neurria da: adibidez, ~450 W-ko plakekin 4 kWp-ko instalazio batek 9 plaka inguru izango lituzke.",
+        "ldQ": "Zer da potentzia gorena (kWp)?",
+        "ldA": "kWp (kilowatt gorena) eguzki-instalazio batek baldintza estandarretan sor dezakeen potentzia maximoa da. Sistema dimentsionatzeko erabiltzen den neurria da: adibidez, ~450 W-ko plakekin 4 kWp-ko instalazio batek 9 plaka inguru izango lituzke."
+      },
+      {
+        "q": "Zenbat energia produzitzen du eguzki-plaka batek urtean Espainian?",
+        "aHtml": "Espainian, instalatutako kWp bakoitzak gutxi gorabehera <strong>1.400 eta 1.700 kWh artean urtean</strong> produzitzen ditu, eremuaren (gehiago hegoaldean, gutxiago iparraldean) eta orientazioaren arabera. SolarVentok zure kokapeneko benetako erradiazio-datuak (PVGIS) erabiltzen ditu estimazioa doitzeko.",
+        "ldQ": "Zenbat energia produzitzen du eguzki-plaka batek urtean Espainian?",
+        "ldA": "Espainian, instalatutako kWp bakoitzak gutxi gorabehera 1.400 eta 1.700 kWh artean produzitzen ditu urtean, eremuaren (gehiago hegoaldean, gutxiago iparraldean) eta orientazioaren arabera. SolarVentok zure kokapeneko benetako erradiazio-datuak (PVGIS) erabiltzen ditu estimazio hau doitzeko."
+      },
+      {
+        "q": "Kalkulagailua doakoa da eta izena eman behar dut?",
+        "aHtml": "SolarVento <strong>doakoa da eta ez du izena ematerik</strong> edo konturik sortzerik eskatzen. Zure faktura igotzen duzu edo datuak eskuz sartzen dituzu eta estimazioa berehala lortzen duzu.",
+        "ldQ": "Kalkulagailua doakoa da eta izena eman behar dut?",
+        "ldA": "SolarVento doakoa da eta ez du izena ematerik edo konturik sortzerik eskatzen. Zure faktura igotzen duzu edo datuak eskuz sartzen dituzu eta estimazioa berehala lortzen duzu."
+      },
+      {
+        "q": "Zer gertatzen da nire faktura eta datuekin?",
+        "aHtml": "Zure faktura zure instalazioa estimatzeko soilik prozesatzen da eta ez da zure saiotik harago gordetzen. Xehetasuna <a href=\"/privacidad-eu.html\">pribatutasun-politikan</a> duzu.",
+        "ldQ": "Zer gertatzen da nire faktura eta datuekin?",
+        "ldA": "Zure faktura zure instalazioa estimatzeko soilik prozesatzen da eta ez da zure saiotik harago gordetzen. Xehetasuna SolarVentoren pribatutasun-politikan kontsulta dezakezu."
+      }
+    ],
+    "disclaimer": "Orrialde honetako zenbaki guztiak orientagarriak dira eta ez dute ordezkatzen ez azterketa tekniko profesional bat ez instalatzaile baten eskaintza bat.",
+    "footerHtml": "SolarVento · <a href=\"/\">Kalkulagailua</a> · <a href=\"/privacidad-eu.html\">Pribatutasun-politika</a>"
+  },
+  "privacy": {
+    "title": "Pribatutasun-politika | SolarVento",
+    "description": "SolarVentoren pribatutasun-politika: zein datu tratatzen ditugun, cookieak, Google-ren iragarkiak eta zure eskubideak (RGPD).",
+    "back": "&larr; Kalkulagailura itzuli",
+    "h1": "Pribatutasun-politika",
+    "updated": "Azken eguneratzea: 2026ko uztailaren 6a",
+    "introHtml": "Politika honek azaltzen du <strong>SolarVentok</strong> (aurrerantzean, «gunea», <a href=\"https://solarvento.es/\">solarvento.es</a> helbidean eskuragarri) zein datu tratatzen dituen eguzki-autokontsumoaren kalkulagailua erabiltzen duzunean, zer helbururekin, zein oinarri legaletan eta zein eskubide dituzun. SolarVento zure argindarraren fakturatik abiatuta eguzki-plakak, bateriak eta aurrezpena estimatzen dituen doako tresna bat da, <strong>izena eman edo konturik sortu gabe</strong>.",
+    "sections": [
+      {
+        "h2": "1. Tratamenduaren arduraduna",
+        "bodyHtml": "<p> Arduraduna: <strong>SolarVento</strong>. Pribatutasunari buruzko edozein kontsultarako edo zure eskubideak baliatzeko <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a> helbidera idatz dezakezu. </p>"
+      },
+      {
+        "h2": "2. Zein datu tratatzen ditugun eta zer helbururekin",
+        "bodyHtml": "<ul> <li> <strong>Zure argindarraren faktura.</strong> Faktura bat igotzen duzunean, kontsumo-datuak (kWh, aldiak, potentzia, etab.) ateratzeko eta zure instalazioa estimatzeko prozesatzen da. Faktura <strong>testua duen PDF bat</strong> bada, testu hori <strong>bidali aurretik anonimizatu egiten da</strong> ateraketa egiten duen adimen artifizialeko hornitzailera bidali baino lehen: izen-abizenak, DNI/NIF/NIE/CIF eta IBAN kentzen dira. <strong>Irudi bat edo eskaneatutako PDF bat</strong> bada (testu-geruzarik gabe), bidali aurretik ezagutza optiko bat (OCR) aplikatzen da <strong>gure zerbitzari propioan</strong>, datu horiexek irudiaren beraren gainean estaltzeko. Estaltze hori automatikoa da, eta baliteke perfektua ez izatea (OCRak irakurtzea lortzen ez duen datu bat, edo etiketarik gabeko izen bat, estali gabe gera liteke; eta OCRa erabilgarri ez balego, irudia bere horretan bidaliko litzateke); beraz, bidalitako irudiak datu horietakoren bat izan dezake; kontsumoa ateratzeko soilik erabiltzen da. Inolaz ere ez da jatorrizko fitxategia modu iraunkorrean gordetzen. </li> <li> <strong>Ateraketaren emaitza.</strong> Emaitza aldi baterako gordetzen da zure nabigatzailearen <em>saio-cookie</em> bati lotutako cache batean, faktura beraren analisia ez errepikatzeko. Sarrera horiek nabigatzailea ixtean ezabatzen dira eta, gehienez, 24 ordura. </li> <li> <strong>Kokapena.</strong> Adierazten duzun kokapena (helbidea edo mapako puntua) Europako Batzordearen PVGIS zerbitzuan eguzki-erradiazioa kontsultatzeko erabiltzen da. Ez dugu zure identitatearekin lotzen. </li> <li> <strong>Datu teknikoak.</strong> Zure IP helbidea modu mugatuan erabiltzen da abusuak saihesteko eta faktura-igoeren mugak aplikatzeko (zerbitzuaren segurtasuna). </li> </ul>"
+      },
+      {
+        "h2": "3. Cookieak",
+        "bodyHtml": "<ul> <li> <strong>Beharrezkoa den saio-cookiea</strong> (<code>solvento_bill_session</code>): aztertzen dituzun fakturak zure saioari lotzeko aukera ematen du. Ez du iraungitze-datarik: nabigatzailea ixtean desagertzen da. </li> <li> <strong>Hirugarrenen publizitate-cookieak (Google AdSense):</strong> iragarkiak erakusteko erabiltzen dira. <strong>Zure baimena ematen baduzu soilik aktibatzen dira.</strong> Lehenetsita, publizitate-cookieak <em>ukatuta</em> daude (Consent Mode) baimen-mezuan onartu arte. </li> </ul>"
+      },
+      {
+        "h2": "4. Google-ren publizitatea",
+        "bodyHtml": "<p> Gune honek <strong>Google AdSense</strong> erabiltzen du, Google-ren publizitate-zerbitzu bat. Google-k eta bere bazkideek cookieak eta antzeko teknologiak erabil ditzakete iragarkiak erakusteko gune honetara eta beste batzuetara egindako bisiten arabera, betiere zure baimena eman baduzu. Google-k informazioa nola erabiltzen duen kontsulta dezakezu hemen: <a href=\"https://policies.google.com/technologies/partner-sites\" target=\"_blank\" rel=\"noopener\"> «Nola erabiltzen du Google-k bere zerbitzuak erabiltzen dituzten gune edo aplikazioetako informazioa»</a> eta zure hobespenak kudea ditzakezu hemen: <a href=\"https://myadcenter.google.com/\" target=\"_blank\" rel=\"noopener\">My Ad Center</a>. Baimena Google-k ziurtatutako baimena kudeatzeko plataforma (CMP) baten bidez jasotzen da, eta zure erabakia edonoiz alda dezakezu baimen-mezuan bertan. </p>"
+      },
+      {
+        "h2": "5. Hirugarrenak eta nazioarteko transferentziak",
+        "bodyHtml": "<p>Zerbitzua emateko hornitzaile hauetara jotzen dugu:</p> <ul> <li> <strong>IA hornitzailea (OpenAI):</strong> fakturaren testu <em>anonimizatua</em> jasotzen du kontsumo-datuak ateratzeko. EE.BB.etarako transferentzia bat ekar dezake, RGPDk aurreikusitako bermeen babesean. </li> <li> <strong>Google (AdSense):</strong> publizitatea, aurretiko baimenarekin. </li> <li> <strong>PVGIS (Europako Batzordea):</strong> eguzki-erradiazioaren datuak kokapenetik abiatuta. </li> </ul>"
+      },
+      {
+        "h2": "6. Oinarri legala",
+        "bodyHtml": "<ul> <li><strong>Eskatzen duzun zerbitzuaren betearazpena</strong> (RGPDren 6.1.b art.): zure faktura prozesatzea eta estimazioa kalkulatzea.</li> <li><strong>Baimena</strong> (RGPDren 6.1.a art.): hirugarrenen cookieak eta publizitatea.</li> <li><strong>Interes legitimoa</strong> (RGPDren 6.1.f art.): zerbitzuaren segurtasuna eta abusuen prebentzioa.</li> </ul>"
+      },
+      {
+        "h2": "7. Kontserbazioa",
+        "bodyHtml": "<p> Fakturaren datuak eta bere analisiaren emaitza zure saioan zehar soilik gordetzen dira (nabigatzailea ixtean ezabatzen dira eta, gehienez, 24 ordura). Ez ditugu zure fakturak ez zure datu pertsonalak gordetzen une horretan zerbitzua emateko beharrezkoa dena baino gehiago. </p>"
+      },
+      {
+        "h2": "8. Zure eskubideak",
+        "bodyHtml": "<p> Zure datuak eskuratzeko, zuzentzeko eta ezabatzeko eskubidea duzu, baita tratamendua mugatzeko edo hari aurka egiteko, eramangarritasunerako eta zure baimena edonoiz kentzeko ere. Zerbitzuak izena ematerik eskatzen ez duenez eta fakturaren datuak zure saioarekin ezabatzen direnez, informazio gehiena eskuraezin bihurtzen da nabigatzailea ixtean. Zure eskubideak baliatzeko, idatzi hona: <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>. Halaber, erreklamazio bat aurkez dezakezu <a href=\"https://www.aepd.es/\" target=\"_blank\" rel=\"noopener\">Datuak Babesteko Espainiako Agentziaren (AEPD)</a> aurrean. </p>"
+      },
+      {
+        "h2": "9. Politika honen aldaketak",
+        "bodyHtml": "<p> Politika hau egunera dezakegu zerbitzuko edo araudiko aldaketak islatzeko. Indarrean dagoen bertsioa orrialde honetan bertan argitaratuko dugu, azken eguneratzearen data adieraziz. </p>"
+      }
+    ],
+    "footerHtml": "SolarVento · Eguzki-autokontsumoaren kalkulagailua · <a href=\"/\">solarvento.es</a>"
+  }
+}

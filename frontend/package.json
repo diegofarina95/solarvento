@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/generate-static-pages.mjs",
     "build": "vite build",
+    "generate": "node scripts/generate-static-pages.mjs",
     "lint": "oxlint",
     "test": "node --test tests/*.test.mjs",
     "test:e2e": "playwright test",

@@ -140,9 +140,47 @@ test('main estimate flow renders analysed and recommended power separately', asy
   await page.getByRole('button', { name: /Calculate solar production|Calcular producción solar/ }).click()
 
   const app = page.locator('#app-shell')
+  // Informe básico (vista por defecto): recomendación y amortización visibles.
+  await expect(app.getByText(/8 panels|8 paneles/)).toBeVisible()
+  await expect(app.getByText(/8[.,]9 (years|años)/).first()).toBeVisible()
+  // La potencia analizada vive en la vista detallada desde el rediseño del
+  // informe básico: se abre con el conmutador Básico/Detallado.
+  await app.getByRole('button', { name: /Detailed|Detallado/ }).click()
   await expect(app.getByText(/Analysed power|Potencia analizada/)).toBeVisible()
   await expect(app.getByText(/Recommended panels|Paneles recomendados/)).toBeVisible()
   await expect(app.getByText('5 kWp').first()).toBeVisible()
+})
+
+test('language switch updates UI texts and footer links', async ({ page }) => {
+  await page.goto('/')
+  await page.getByLabel(/Language|Idioma/).selectOption('en')
+  await expect(page.getByText('Estimate solar production', { exact: false })).toBeVisible()
+  const footer = page.locator('footer').last()
+  await expect(footer.getByRole('link', { name: 'FAQ' })).toHaveAttribute('href', '/faq-en.html')
+  await expect(footer.getByRole('link', { name: /Privacy policy/ })).toHaveAttribute(
+    'href',
+    '/privacidad-en.html',
+  )
+  await page.getByLabel(/Language|Idioma/).selectOption('es')
+  await expect(footer.getByRole('link', { name: /Preguntas frecuentes/ })).toHaveAttribute(
+    'href',
+    '/faq.html',
+  )
+})
+
+test('static pages are served with structured data and hreflang', async ({ request }) => {
+  const faq = await request.get('/faq.html')
+  expect(faq.ok()).toBeTruthy()
+  const faqHtml = await faq.text()
+  expect(faqHtml).toContain('"FAQPage"')
+  expect(faqHtml).toContain('hreflang="eu"')
+
+  const privacy = await request.get('/privacidad.html')
+  expect(privacy.ok()).toBeTruthy()
+  expect(await privacy.text()).toContain('hreflang="x-default"')
+
+  const ayudas = await request.get('/ayudas.html')
+  expect(ayudas.ok()).toBeTruthy()
 })
 
 test('bill upload fills energy and total amounts from parser response', async ({ page }) => {

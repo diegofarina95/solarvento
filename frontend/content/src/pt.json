@@ -1,0 +1,129 @@
+{
+  "lang": "pt",
+  "faq": {
+    "title": "Perguntas frequentes sobre painéis solares e autoconsumo | SolarVento",
+    "description": "Dúvidas frequentes sobre autoconsumo solar: quantos painéis precisa, se vale a pena uma bateria, quanto se poupa, a amortização, a compensação de excedentes e as licenças em Espanha.",
+    "keywords": "quantos painéis solares preciso, calcular painéis solares fatura, vale a pena bateria solar, poupança painéis solares, amortização solar, compensação de excedentes, autoconsumo Espanha, kWp, PVGIS",
+    "back": "&larr; Voltar à calculadora",
+    "h1": "Perguntas frequentes sobre painéis solares e autoconsumo",
+    "leadHtml": "Esclarecemos as dúvidas mais habituais sobre o autoconsumo solar em Espanha: quantos painéis precisa, se vale a pena uma bateria, quanto se poupa, a amortização e as licenças. Quer valores para o seu caso? Use a calculadora com a sua fatura.",
+    "cta": "Calcular a minha instalação solar",
+    "questions": [
+      {
+        "q": "Quantos painéis solares preciso para a minha casa?",
+        "aHtml": "Depende do seu <strong>consumo anual</strong>, da orientação e inclinação do telhado e da radiação da sua zona. Como referência, uma habitação que consome cerca de 3.500 kWh por ano costuma cobrir-se com <strong>3 a 5 kWp</strong>, ou seja, cerca de <strong>7 a 12 painéis</strong> de ~450 W. A forma precisa é calculá-lo com a sua fatura real: a SolarVento estima a potência e o número de painéis a partir do seu consumo e da sua localização.",
+        "ldQ": "Quantos painéis solares preciso para a minha casa?",
+        "ldA": "Depende do seu consumo anual, da orientação e inclinação do telhado e da radiação da sua zona. Como referência, uma habitação espanhola que consome cerca de 3.500 kWh por ano costuma cobrir-se com 3 a 5 kWp, ou seja, cerca de 7 a 12 painéis de ~450 W. A forma precisa é calculá-lo com a sua fatura real: a calculadora da SolarVento estima a potência e o número de painéis a partir do seu consumo e da sua localização."
+      },
+      {
+        "q": "Como se calculam os painéis solares a partir da fatura da luz?",
+        "aHtml": "A sua fatura indica quanta energia consome (kWh) e em que períodos. Com esse consumo e a radiação solar da sua localização (dados do <strong>PVGIS</strong>, da Comissão Europeia) estima-se a potência necessária para cobrir grande parte do seu gasto, o número de painéis, a bateria recomendada e a poupança. A SolarVento lê estes dados automaticamente da fatura que carrega.",
+        "ldQ": "Como se calculam os painéis solares a partir da fatura da luz?",
+        "ldA": "A sua fatura indica quanta energia consome (kWh) e em que períodos. Com esse consumo e a radiação solar da sua localização (dados do PVGIS, da Comissão Europeia) estima-se a potência necessária para cobrir grande parte do seu gasto, o número de painéis, a bateria recomendada e a poupança. A SolarVento lê estes dados automaticamente da fatura que carrega."
+      },
+      {
+        "q": "Vale a pena uma bateria solar?",
+        "aHtml": "Uma bateria interessa sobretudo se consome muito <strong>à noite ou ao final do dia</strong>, quando já não há sol. Aumenta a autonomia e o autoconsumo, mas também encarece a instalação e prolonga a amortização. Se o seu consumo é diurno e tem boa compensação de excedentes, pode não compensar. A calculadora avalia o seu caso concreto e diz-lhe se lhe convém.",
+        "ldQ": "Vale a pena uma bateria solar?",
+        "ldA": "Uma bateria interessa sobretudo se consome muito à noite ou ao final do dia, quando já não há sol. Aumenta a autonomia e o autoconsumo, mas também encarece a instalação e prolonga a amortização. Se o seu consumo é diurno e tem boa compensação de excedentes, pode não compensar. A calculadora avalia o seu caso concreto e diz-lhe se lhe convém."
+      },
+      {
+        "q": "Quanto se pode poupar com painéis solares?",
+        "aHtml": "A poupança depende do seu consumo, de quanta energia usa enquanto há sol e da sua tarifa. Em instalações residenciais bem dimensionadas é habitual reduzir entre <strong>40% e 70%</strong> da parte de energia da fatura. O valor exato para o seu caso obtém-se com a calculadora.",
+        "ldQ": "Quanto se pode poupar com painéis solares?",
+        "ldA": "A poupança depende do seu consumo, de quanta energia usa enquanto há sol e da sua tarifa. Em instalações residenciais bem dimensionadas é habitual reduzir entre 40% e 70% da parte de energia da fatura. O valor exato para o seu caso obtém-se com a calculadora."
+      },
+      {
+        "q": "Em quanto tempo se amortiza uma instalação solar?",
+        "aHtml": "A amortização (payback) típica de uma instalação residencial em Espanha costuma situar-se entre <strong>5 e 9 anos</strong>, consoante o custo, o consumo e os apoios disponíveis. Como os painéis duram 25-30 anos, o resto da sua vida útil é poupança. A SolarVento calcula a sua amortização e o seu ROI estimados.",
+        "ldQ": "Em quanto tempo se amortiza uma instalação solar?",
+        "ldA": "A amortização (payback) típica de uma instalação residencial em Espanha costuma situar-se entre 5 e 9 anos, consoante o custo, o consumo e os apoios disponíveis. Como os painéis duram 25-30 anos, o resto da sua vida útil é poupança. A SolarVento calcula a sua amortização e o seu ROI estimados."
+      },
+      {
+        "q": "O que é a compensação de excedentes?",
+        "aHtml": "É o mecanismo pelo qual a energia que produz e não consome (os <strong>excedentes</strong>) é injetada na rede e a sua comercializadora a desconta na fatura. Na modalidade de <strong>compensação simplificada</strong>, o desconto não pode exceder o custo da energia que efetivamente consome: a fatura de energia pode ficar a zero, mas <strong>não negativa</strong>. Os excedentes acima disso não são pagos, salvo com contratos específicos de venda.",
+        "ldQ": "O que é a compensação de excedentes?",
+        "ldA": "É o mecanismo pelo qual a energia que produz e não consome (os excedentes) é injetada na rede e a sua comercializadora a desconta na fatura. Na modalidade de compensação simplificada, o desconto não pode exceder o custo da energia que efetivamente consome: a fatura de energia pode ficar a zero, mas não negativa. Os excedentes que sobram acima disso não são pagos, salvo com contratos específicos de venda."
+      },
+      {
+        "q": "Preciso de licenças para o autoconsumo em Espanha?",
+        "aHtml": "As instalações de autoconsumo pequenas têm uma <strong>tramitação simplificada</strong>, mas têm de ser legalizadas: certificado de instalação, comunicação à comunidade autónoma e à distribuidora, e inscrição na modalidade de compensação de excedentes, se aplicável. Normalmente trata disso o instalador. Convém contar com um instalador autorizado.",
+        "ldQ": "Preciso de licenças para o autoconsumo em Espanha?",
+        "ldA": "As instalações de autoconsumo pequenas têm uma tramitação simplificada, mas têm de ser legalizadas: certificado de instalação, comunicação à comunidade autónoma e à distribuidora, e inscrição na modalidade de compensação de excedentes, se aplicável. Normalmente é o instalador que trata disso. Convém contar com um instalador autorizado; este guia é orientativo e não substitui o aconselhamento profissional."
+      },
+      {
+        "q": "O que é a potência de pico (kWp)?",
+        "aHtml": "O <strong>kWp</strong> (quilowatt-pico) é a potência máxima que uma instalação pode gerar em condições padrão. É a medida com que se dimensiona o sistema: por exemplo, uma instalação de 4 kWp com painéis de ~450 W teria cerca de 9 painéis.",
+        "ldQ": "O que é a potência de pico (kWp)?",
+        "ldA": "O kWp (quilowatt-pico) é a potência máxima que uma instalação solar pode gerar em condições padrão. É a medida com que se dimensiona o sistema: por exemplo, uma instalação de 4 kWp com painéis de ~450 W teria cerca de 9 painéis."
+      },
+      {
+        "q": "Quanta energia produz um painel solar por ano em Espanha?",
+        "aHtml": "Em Espanha, cada kWp instalado produz aproximadamente entre <strong>1.400 e 1.700 kWh por ano</strong>, consoante a zona (mais no sul, menos no norte) e a orientação. A SolarVento usa dados de radiação reais da sua localização (PVGIS) para afinar a estimativa.",
+        "ldQ": "Quanta energia produz um painel solar por ano em Espanha?",
+        "ldA": "Em Espanha, cada kWp instalado produz aproximadamente entre 1.400 e 1.700 kWh por ano, consoante a zona (mais no sul, menos no norte) e a orientação. A SolarVento usa dados de radiação reais da sua localização (PVGIS) para afinar esta estimativa."
+      },
+      {
+        "q": "A calculadora é gratuita e preciso de me registar?",
+        "aHtml": "A SolarVento é <strong>gratuita e não requer registo</strong> nem criação de conta. Carrega a sua fatura ou introduz os dados manualmente e obtém a estimativa de imediato.",
+        "ldQ": "A calculadora é gratuita e preciso de me registar?",
+        "ldA": "A SolarVento é gratuita e não requer registo nem criação de conta. Carrega a sua fatura ou introduz os dados manualmente e obtém a estimativa de imediato."
+      },
+      {
+        "q": "O que acontece com a minha fatura e os meus dados?",
+        "aHtml": "A sua fatura é processada apenas para estimar a sua instalação e não é conservada para além da sua sessão. Tem o detalhe na <a href=\"/privacidad-pt.html\">política de privacidade</a>.",
+        "ldQ": "O que acontece com a minha fatura e os meus dados?",
+        "ldA": "A sua fatura é processada apenas para estimar a sua instalação e não é conservada para além da sua sessão. Pode consultar o detalhe na política de privacidade da SolarVento."
+      }
+    ],
+    "disclaimer": "Todos os valores desta página são orientativos e não substituem um estudo técnico profissional nem uma proposta de um instalador.",
+    "footerHtml": "SolarVento · <a href=\"/\">Calculadora</a> · <a href=\"/privacidad-pt.html\">Política de privacidade</a>"
+  },
+  "privacy": {
+    "title": "Política de privacidade | SolarVento",
+    "description": "Política de privacidade da SolarVento: que dados tratamos, cookies, anúncios do Google e os seus direitos (RGPD).",
+    "back": "&larr; Voltar à calculadora",
+    "h1": "Política de privacidade",
+    "updated": "Última atualização: 6 de julho de 2026",
+    "introHtml": "Esta política explica que dados trata a <strong>SolarVento</strong> (doravante, «o sítio», acessível em <a href=\"https://solarvento.es/\">solarvento.es</a>) quando usa a calculadora de autoconsumo solar, com que finalidade, com que base legal e que direitos tem. A SolarVento é uma ferramenta gratuita que estima painéis solares, baterias e poupança a partir da sua fatura da luz, <strong>sem registo nem criação de conta</strong>.",
+    "sections": [
+      {
+        "h2": "1. Responsável pelo tratamento",
+        "bodyHtml": "<p> Responsável: <strong>SolarVento</strong>. Para qualquer questão sobre privacidade ou para exercer os seus direitos pode escrever para <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>. </p>"
+      },
+      {
+        "h2": "2. Que dados tratamos e com que fim",
+        "bodyHtml": "<ul> <li> <strong>A sua fatura da luz.</strong> Quando carrega uma fatura, esta é processada para extrair dados de consumo (kWh, períodos, potência, etc.) e estimar a sua instalação. Se a fatura for um <strong>PDF com texto</strong>, esse texto é <strong>anonimizado antes de ser enviado</strong> ao fornecedor de inteligência artificial que realiza a extração: eliminam-se nome e apelidos, DNI/NIF/NIE/CIF e IBAN. Se for uma <strong>imagem ou um PDF digitalizado</strong> (sem camada de texto), antes do envio aplica-se um reconhecimento ótico (OCR) <strong>no nosso próprio servidor</strong> que oculta esses mesmos dados sobre a própria imagem. Esta ocultação é automática e pode não ser perfeita (um dado que o OCR não consiga ler, ou um nome sem etiqueta, poderia não ser ocultado; e se o OCR não estiver disponível, a imagem é enviada tal como está), pelo que a imagem enviada pode chegar a incluir algum desses dados; é utilizada unicamente para extrair o consumo. Em nenhum caso o ficheiro original é armazenado de forma permanente. </li> <li> <strong>Resultado da extração.</strong> O resultado é guardado temporariamente numa cache associada a uma <em>cookie de sessão</em> do seu navegador, para não repetir a análise da mesma fatura. Estas entradas são apagadas ao fechar o navegador e, no máximo, ao fim de 24 horas. </li> <li> <strong>Localização.</strong> A localização que indica (endereço ou ponto no mapa) é usada para consultar a radiação solar no serviço PVGIS da Comissão Europeia. Não a associamos à sua identidade. </li> <li> <strong>Dados técnicos.</strong> O seu endereço IP é utilizado de forma limitada para prevenir abusos e aplicar limites de carregamento de faturas (segurança do serviço). </li> </ul>"
+      },
+      {
+        "h2": "3. Cookies",
+        "bodyHtml": "<ul> <li> <strong>Cookie de sessão necessária</strong> (<code>solvento_bill_session</code>): permite associar as faturas que analisa à sua sessão. Não tem data de validade: desaparece ao fechar o navegador. </li> <li> <strong>Cookies publicitárias de terceiros (Google AdSense):</strong> são utilizadas para mostrar anúncios. <strong>Só se ativam se der o seu consentimento.</strong> Por defeito, as cookies de publicidade estão <em>recusadas</em> (Consent Mode) até que aceite na mensagem de consentimento. </li> </ul>"
+      },
+      {
+        "h2": "4. Publicidade do Google",
+        "bodyHtml": "<p> Este sítio utiliza o <strong>Google AdSense</strong>, um serviço de publicidade do Google. O Google e os seus parceiros podem usar cookies e tecnologias semelhantes para mostrar anúncios em função das suas visitas a este e a outros sítios, desde que tenha dado o seu consentimento. Pode consultar como o Google usa a informação em <a href=\"https://policies.google.com/technologies/partner-sites\" target=\"_blank\" rel=\"noopener\"> «Como o Google utiliza a informação de sítios ou aplicações que usam os seus serviços»</a> e gerir as suas preferências em <a href=\"https://myadcenter.google.com/\" target=\"_blank\" rel=\"noopener\">My Ad Center</a>. O consentimento é recolhido através de uma plataforma de gestão do consentimento (CMP) certificada pelo Google, e pode alterar a sua decisão a qualquer momento a partir da própria mensagem de consentimento. </p>"
+      },
+      {
+        "h2": "5. Terceiros e transferências internacionais",
+        "bodyHtml": "<p>Para prestar o serviço recorremos a estes fornecedores:</p> <ul> <li> <strong>Fornecedor de IA (OpenAI):</strong> recebe o texto <em>anonimizado</em> da fatura para extrair os dados de consumo. Pode implicar uma transferência para os EUA amparada nas garantias previstas pelo RGPD. </li> <li> <strong>Google (AdSense):</strong> publicidade, mediante consentimento prévio. </li> <li> <strong>PVGIS (Comissão Europeia):</strong> dados de radiação solar a partir da localização. </li> </ul>"
+      },
+      {
+        "h2": "6. Base legal",
+        "bodyHtml": "<ul> <li><strong>Execução do serviço que solicita</strong> (art. 6.1.b RGPD): processar a sua fatura e calcular a estimativa.</li> <li><strong>Consentimento</strong> (art. 6.1.a RGPD): cookies e publicidade de terceiros.</li> <li><strong>Interesse legítimo</strong> (art. 6.1.f RGPD): segurança e prevenção de abusos do serviço.</li> </ul>"
+      },
+      {
+        "h2": "7. Conservação",
+        "bodyHtml": "<p> Os dados da fatura e o resultado da sua análise são conservados apenas durante a sua sessão (são apagados ao fechar o navegador e, no máximo, ao fim de 24 horas). Não conservamos as suas faturas nem os seus dados pessoais para além do necessário para lhe prestar o serviço nesse momento. </p>"
+      },
+      {
+        "h2": "8. Os seus direitos",
+        "bodyHtml": "<p> Tem direito a aceder, retificar e eliminar os seus dados, bem como à limitação ou oposição ao tratamento, à portabilidade e a retirar o seu consentimento a qualquer momento. Como o serviço não requer registo e os dados da fatura são apagados com a sua sessão, a maioria da informação deixa de estar disponível ao fechar o navegador. Para exercer os seus direitos, escreva para <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>. Também pode apresentar uma reclamação junto da <a href=\"https://www.aepd.es/\" target=\"_blank\" rel=\"noopener\">Agência Espanhola de Proteção de Dados (AEPD)</a>. </p>"
+      },
+      {
+        "h2": "9. Alterações a esta política",
+        "bodyHtml": "<p> Podemos atualizar esta política para refletir alterações no serviço ou na regulamentação. Publicaremos a versão em vigor nesta mesma página, indicando a data da última atualização. </p>"
+      }
+    ],
+    "footerHtml": "SolarVento · Calculadora de autoconsumo solar · <a href=\"/\">solarvento.es</a>"
+  }
+}

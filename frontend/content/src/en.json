@@ -1,0 +1,129 @@
+{
+  "lang": "en",
+  "faq": {
+    "title": "Frequently asked questions about solar panels and self-consumption | SolarVento",
+    "description": "Common questions about solar self-consumption: how many panels you need, whether a battery is worth it, how much you save, the payback period, surplus compensation and permits in Spain.",
+    "keywords": "how many solar panels do I need, calculate solar panels from bill, is a solar battery worth it, solar panel savings, solar payback, surplus compensation, self-consumption Spain, kWp, PVGIS",
+    "back": "&larr; Back to the calculator",
+    "h1": "Frequently asked questions about solar panels and self-consumption",
+    "leadHtml": "We answer the most common questions about solar self-consumption in Spain: how many panels you need, whether a battery is worth it, how much you save, the payback and the permits. Want figures for your case? Use the calculator with your bill.",
+    "cta": "Calculate my solar installation",
+    "questions": [
+      {
+        "q": "How many solar panels do I need for my home?",
+        "aHtml": "It depends on your <strong>annual consumption</strong>, on the orientation and tilt of your roof and on the solar radiation in your area. As a reference, a home that consumes around 3,500 kWh per year is usually covered by <strong>3 to 5 kWp</strong>, that is, about <strong>7 to 12 panels</strong> of ~450 W. The precise way is to calculate it with your real bill: SolarVento estimates the power and the number of panels based on your consumption and your location.",
+        "ldQ": "How many solar panels do I need for my home?",
+        "ldA": "It depends on your annual consumption, on the orientation and tilt of your roof and on the solar radiation in your area. As a reference, a Spanish home that consumes around 3,500 kWh per year is usually covered by 3 to 5 kWp, that is, about 7 to 12 panels of ~450 W. The precise way is to calculate it with your real bill: the SolarVento calculator estimates the power and the number of panels based on your consumption and your location."
+      },
+      {
+        "q": "How are solar panels calculated from the electricity bill?",
+        "aHtml": "Your bill shows how much energy you consume (kWh) and in which periods. With that consumption and the solar radiation of your location (data from <strong>PVGIS</strong>, from the European Commission), the power needed to cover a good part of your spending, the number of panels, the recommended battery and the savings are estimated. SolarVento reads this data automatically from the bill you upload.",
+        "ldQ": "How are solar panels calculated from the electricity bill?",
+        "ldA": "Your bill shows how much energy you consume (kWh) and in which periods. With that consumption and the solar radiation of your location (data from PVGIS, from the European Commission), the power needed to cover a good part of your spending, the number of panels, the recommended battery and the savings are estimated. SolarVento reads this data automatically from the bill you upload."
+      },
+      {
+        "q": "Is a solar battery worth it?",
+        "aHtml": "A battery is worthwhile above all if you consume a lot <strong>at night or at the end of the day</strong>, when there is no longer any sun. It increases self-sufficiency and self-consumption, but it also makes the installation more expensive and lengthens the payback. If your consumption is during the day and you have good surplus compensation, it may not pay off. The calculator evaluates your specific case and tells you whether it is worth it for you.",
+        "ldQ": "Is a solar battery worth it?",
+        "ldA": "A battery is worthwhile above all if you consume a lot at night or at the end of the day, when there is no longer any sun. It increases self-sufficiency and self-consumption, but it also makes the installation more expensive and lengthens the payback. If your consumption is during the day and you have good surplus compensation, it may not pay off. The calculator evaluates your specific case and tells you whether it is worth it for you."
+      },
+      {
+        "q": "How much can you save with solar panels?",
+        "aHtml": "The savings depend on your consumption, on how much energy you use while there is sun and on your tariff. In well-sized residential installations it is common to reduce between <strong>40% and 70%</strong> of the energy portion of the bill. The exact figure for your case is obtained with the calculator.",
+        "ldQ": "How much can you save with solar panels?",
+        "ldA": "The savings depend on your consumption, on how much energy you use while there is sun and on your tariff. In well-sized residential installations it is common to reduce between 40% and 70% of the energy portion of the bill. The exact figure for your case is obtained with the calculator."
+      },
+      {
+        "q": "How long does it take to pay off a solar installation?",
+        "aHtml": "The typical payback of a residential installation in Spain is usually between <strong>5 and 9 years</strong>, depending on the cost, the consumption and the available subsidies. Since panels last 25-30 years, the rest of their useful life is savings. SolarVento calculates your estimated payback and ROI.",
+        "ldQ": "How long does it take to pay off a solar installation?",
+        "ldA": "The typical payback of a residential installation in Spain is usually between 5 and 9 years, depending on the cost, the consumption and the available subsidies. Since panels last 25-30 years, the rest of their useful life is savings. SolarVento calculates your estimated payback and ROI."
+      },
+      {
+        "q": "What is surplus compensation?",
+        "aHtml": "It is the mechanism by which the energy you produce and do not consume (the <strong>surplus</strong>) is fed into the grid and your electricity supplier discounts it from your bill. Under the <strong>simplified compensation</strong> scheme, the discount cannot exceed the cost of the energy you do consume: the energy bill can drop to zero, but <strong>not go negative</strong>. Any surplus above that is not paid for, except under specific sale contracts.",
+        "ldQ": "What is surplus compensation?",
+        "ldA": "It is the mechanism by which the energy you produce and do not consume (the surplus) is fed into the grid and your electricity supplier discounts it from your bill. Under the simplified compensation scheme, the discount cannot exceed the cost of the energy you do consume: the energy bill can drop to zero, but not go negative. Any surplus above that is not paid for, except under specific sale contracts."
+      },
+      {
+        "q": "Do I need permits for self-consumption in Spain?",
+        "aHtml": "Small self-consumption installations have a <strong>simplified procedure</strong>, but they must be legalised: installation certificate, notification to the regional government and to the distributor, and registration under the surplus compensation scheme if applicable. This is normally handled by the installer. It is advisable to use an authorised installer.",
+        "ldQ": "Do I need permits for self-consumption in Spain?",
+        "ldA": "Small self-consumption installations have a simplified procedure, but they must be legalised: installation certificate, notification to the regional government and to the distributor, and registration under the surplus compensation scheme if applicable. This is normally handled by the installer. It is advisable to use an authorised installer; this guide is indicative and does not replace professional advice."
+      },
+      {
+        "q": "What is peak power (kWp)?",
+        "aHtml": "The <strong>kWp</strong> (kilowatt-peak) is the maximum power that an installation can generate under standard conditions. It is the measure used to size the system: for example, an installation of 4 kWp with ~450 W panels would have about 9 panels.",
+        "ldQ": "What is peak power (kWp)?",
+        "ldA": "The kWp (kilowatt-peak) is the maximum power that a solar installation can generate under standard conditions. It is the measure used to size the system: for example, a 4 kWp installation with ~450 W panels would have about 9 panels."
+      },
+      {
+        "q": "How much energy does a solar panel produce per year in Spain?",
+        "aHtml": "In Spain, each kWp installed produces approximately between <strong>1,400 and 1,700 kWh per year</strong>, depending on the area (more in the south, less in the north) and the orientation. SolarVento uses real radiation data from your location (PVGIS) to fine-tune the estimate.",
+        "ldQ": "How much energy does a solar panel produce per year in Spain?",
+        "ldA": "In Spain, each kWp installed produces approximately between 1,400 and 1,700 kWh per year, depending on the area (more in the south, less in the north) and the orientation. SolarVento uses real radiation data from your location (PVGIS) to fine-tune this estimate."
+      },
+      {
+        "q": "Is the calculator free and do I need to register?",
+        "aHtml": "SolarVento is <strong>free and requires no registration</strong> or account creation. You upload your bill or enter the data by hand and get the estimate instantly.",
+        "ldQ": "Is the calculator free and do I need to register?",
+        "ldA": "SolarVento is free and requires no registration or account creation. You upload your bill or enter the data by hand and get the estimate instantly."
+      },
+      {
+        "q": "What happens to my bill and my data?",
+        "aHtml": "Your bill is processed only to estimate your installation and is not kept beyond your session. You have the details in the <a href=\"/privacidad-en.html\">privacy policy</a>.",
+        "ldQ": "What happens to my bill and my data?",
+        "ldA": "Your bill is processed only to estimate your installation and is not kept beyond your session. You can check the details in the SolarVento privacy policy."
+      }
+    ],
+    "disclaimer": "All the figures on this page are indicative and do not replace a professional technical study or a quote from an installer.",
+    "footerHtml": "SolarVento · <a href=\"/\">Calculator</a> · <a href=\"/privacidad-en.html\">Privacy policy</a>"
+  },
+  "privacy": {
+    "title": "Privacy policy | SolarVento",
+    "description": "SolarVento privacy policy: what data we process, cookies, Google ads and your rights (GDPR).",
+    "back": "&larr; Back to the calculator",
+    "h1": "Privacy policy",
+    "updated": "Last updated: 6 July 2026",
+    "introHtml": "This policy explains what data <strong>SolarVento</strong> (hereinafter, \"the site\", accessible at <a href=\"https://solarvento.es/\">solarvento.es</a>) processes when you use the solar self-consumption calculator, for what purpose, on what legal basis and what rights you have. SolarVento is a free tool that estimates solar panels, batteries and savings from your electricity bill, <strong>with no registration or account creation</strong>.",
+    "sections": [
+      {
+        "h2": "1. Data controller",
+        "bodyHtml": "<p> Controller: <strong>SolarVento</strong>. For any query about privacy or to exercise your rights you can write to <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>. </p>"
+      },
+      {
+        "h2": "2. What data we process and for what purpose",
+        "bodyHtml": "<ul> <li> <strong>Your electricity bill.</strong> When you upload a bill, it is processed to extract consumption data (kWh, periods, power, etc.) and estimate your installation. If the bill is a <strong>PDF with text</strong>, that text is <strong>anonymised before being sent</strong> to the artificial intelligence provider that performs the extraction: first and last names, DNI/NIF/NIE/CIF and IBAN are removed. If it is an <strong>image or a scanned PDF</strong> (with no text layer), before it is sent, optical character recognition (OCR) is applied <strong>on our own server</strong> to mask that same data directly on the image itself. This masking is automatic and may not be perfect (a piece of data the OCR fails to read, or an unlabelled name, might not be masked; and if the OCR were unavailable, the image would be sent as is), so the image that is sent may still include some of that data; it is used solely to extract the consumption. Under no circumstances is the original file stored permanently. </li> <li> <strong>Extraction result.</strong> The result is stored temporarily in a cache linked to a <em>session cookie</em> in your browser, so as not to repeat the analysis of the same bill. These entries are deleted when the browser is closed and, at most, after 24 hours. </li> <li> <strong>Location.</strong> The location you indicate (address or point on the map) is used to query the solar radiation in the European Commission's PVGIS service. We do not associate it with your identity. </li> <li> <strong>Technical data.</strong> Your IP address is used in a limited way to prevent abuse and apply bill upload limits (service security). </li> </ul>"
+      },
+      {
+        "h2": "3. Cookies",
+        "bodyHtml": "<ul> <li> <strong>Necessary session cookie</strong> (<code>solvento_bill_session</code>): allows the bills you analyse to be associated with your session. It has no expiry date: it disappears when the browser is closed. </li> <li> <strong>Third-party advertising cookies (Google AdSense):</strong> used to display ads. <strong>They are only activated if you give your consent.</strong> By default, advertising cookies are <em>denied</em> (Consent Mode) until you accept in the consent message. </li> </ul>"
+      },
+      {
+        "h2": "4. Google advertising",
+        "bodyHtml": "<p> This site uses <strong>Google AdSense</strong>, a Google advertising service. Google and its partners may use cookies and similar technologies to display ads based on your visits to this and other sites, provided that you have given your consent. You can see how Google uses the information in <a href=\"https://policies.google.com/technologies/partner-sites\" target=\"_blank\" rel=\"noopener\"> \"How Google uses information from sites or apps that use its services\"</a> and manage your preferences in <a href=\"https://myadcenter.google.com/\" target=\"_blank\" rel=\"noopener\">My Ad Center</a>. Consent is collected through a consent management platform (CMP) certified by Google, and you can change your decision at any time from the consent message itself. </p>"
+      },
+      {
+        "h2": "5. Third parties and international transfers",
+        "bodyHtml": "<p>To provide the service we rely on these providers:</p> <ul> <li> <strong>AI provider (OpenAI):</strong> receives the <em>anonymised</em> text of the bill to extract the consumption data. This may involve a transfer to the USA covered by the safeguards provided for under the GDPR. </li> <li> <strong>Google (AdSense):</strong> advertising, subject to consent. </li> <li> <strong>PVGIS (European Commission):</strong> solar radiation data based on the location. </li> </ul>"
+      },
+      {
+        "h2": "6. Legal basis",
+        "bodyHtml": "<ul> <li><strong>Performance of the service you request</strong> (art. 6.1.b GDPR): processing your bill and calculating the estimate.</li> <li><strong>Consent</strong> (art. 6.1.a GDPR): cookies and third-party advertising.</li> <li><strong>Legitimate interest</strong> (art. 6.1.f GDPR): security and prevention of service abuse.</li> </ul>"
+      },
+      {
+        "h2": "7. Retention",
+        "bodyHtml": "<p> The bill data and the result of its analysis are kept only during your session (they are deleted when the browser is closed and, at most, after 24 hours). We do not keep your bills or your personal data beyond what is necessary to provide you with the service at that moment. </p>"
+      },
+      {
+        "h2": "8. Your rights",
+        "bodyHtml": "<p> You have the right to access, rectify and erase your data, as well as to restrict or object to the processing, to data portability and to withdraw your consent at any time. Since the service does not require registration and the bill data is deleted with your session, most of the information ceases to be available when the browser is closed. To exercise your rights, write to <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>. You can also lodge a complaint with the <a href=\"https://www.aepd.es/\" target=\"_blank\" rel=\"noopener\">Spanish Data Protection Agency (AEPD)</a>. </p>"
+      },
+      {
+        "h2": "9. Changes to this policy",
+        "bodyHtml": "<p> We may update this policy to reflect changes in the service or in the regulations. We will publish the current version on this same page, indicating the date of the last update. </p>"
+      }
+    ],
+    "footerHtml": "SolarVento · Solar self-consumption calculator · <a href=\"/\">solarvento.es</a>"
+  }
+}
