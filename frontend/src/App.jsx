@@ -26,8 +26,12 @@ const SUPPORTED_LANGUAGES = new Set(LANGUAGE_OPTIONS.map((option) => option.code
 function detectInitialLanguage() {
   if (typeof navigator === 'undefined') return 'es'
   const candidates = [...(navigator.languages ?? []), navigator.language].filter(Boolean)
-  for (const candidate of candidates) {
-    const base = candidate.toLowerCase().split('-')[0]
+  const bases = candidates.map((candidate) => candidate.toLowerCase().split('-')[0])
+  // Sitio orientado a España: si el navegador lleva español en CUALQUIER posición
+  // de su lista de idiomas, arrancamos en ES. Si no, usamos el primer idioma
+  // soportado del navegador; y si ninguno lo está, ES por defecto.
+  if (bases.includes('es')) return 'es'
+  for (const base of bases) {
     if (SUPPORTED_LANGUAGES.has(base)) return base
   }
   return 'es'
