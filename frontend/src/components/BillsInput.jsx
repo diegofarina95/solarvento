@@ -317,10 +317,13 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
           </button>
         </div>
       </div>
+      {/* HEIC/HEIF fuera del accept a propósito: sin anunciarlos, iOS
+          transcodifica la foto a JPEG y la anonimización por OCR del backend
+          aplica también a los iPhone (el HEIC crudo saltaba esa capa). */}
       <input
         ref={fileRef}
         type="file"
-        accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif"
+        accept="application/pdf,image/jpeg,image/png,image/webp"
         multiple
         className="hidden"
         onChange={(e) => {

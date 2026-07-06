@@ -75,8 +75,11 @@
           <strong>PDF amb text</strong>, aquest text s'<strong>anonimitza abans d'enviar-lo</strong> al
           proveïdor d'intel·ligència artificial que fa l'extracció: s'eliminen nom i cognoms,
           DNI/NIF/NIE/CIF i IBAN. Si és una <strong>imatge o un PDF escanejat</strong> (sense capa de text),
-          el document s'envia complet a aquest proveïdor per poder llegir-lo, per la qual cosa pot incloure aquestes
-          dades; es fa servir únicament per extreure el consum. En cap cas l'arxiu original es
+          abans de l'enviament s'aplica un reconeixement òptic (OCR) <strong>al nostre propi servidor</strong>
+          que tapa aquestes mateixes dades sobre la mateixa imatge. Aquest tapat és automàtic i pot no ser
+          perfecte (una dada que l'OCR no aconsegueixi llegir, o un nom sense etiqueta, podria no tapar-se;
+          i si l'OCR no estigués disponible, la imatge s'enviaria tal qual), per la qual cosa la imatge
+          enviada pot arribar a incloure alguna d'aquestes dades; es fa servir únicament per extreure el consum. En cap cas l'arxiu original es
           emmagatzema de manera permanent.
         </li>
         <li>

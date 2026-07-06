@@ -11,6 +11,7 @@ Tres niveles:
 
 from __future__ import annotations
 
+import hashlib
 import io
 import re
 
@@ -201,10 +202,17 @@ async def test_extract_uses_redacted_pages_and_caches_ocr(monkeypatch, _bill_cac
     assert call["page_images"] == [b"page1"]
     assert "[REDACTADO]" in call["vision_hint"]
     assert "PEREZ" not in call["vision_hint"]
-    # El texto local (para refuerzos deterministas) conserva el original.
+    # El texto local (refuerzos deterministas) también va anonimizado pero
+    # conserva lo útil (consumo).
     assert "3450" in local_text
+    assert "PEREZ" not in local_text
     # El refuerzo determinista leyó el consumo anual del OCR.
     assert bill.get("rolling_annual_kwh") == 3450.0
+    # Y lo que queda EN DISCO (caché) no contiene PII.
+    key = f"billsess:sess1:{hashlib.sha256(b'fakeimg').hexdigest()}"
+    cached = _bill_cache.get(key)
+    assert "PEREZ" not in cached["ocr_text"]
+    assert "[REDACTADO]" in cached["ocr_text"]
 
     # Cache-hit: no se repite ni el OCR ni la llamada al parser.
     monkeypatch.setattr(
@@ -230,3 +238,114 @@ async def test_extract_falls_back_to_original_when_ocr_unavailable(monkeypatch, 
     call = parser.calls[0]
     assert "page_images" not in call  # sin páginas: el parser envía el original
     assert local_text is None
+
+
+async def test_kill_switch_disables_ocr(monkeypatch, _bill_cache):
+    """SOLVENTO_BILL_VISION_REDACTION=false debe saltarse el OCR por completo.
+
+    Es el interruptor de emergencia para un OCR colgado en producción: si un
+    refactor pierde la condición, este test lo delata."""
+    from app import main as main_mod
+
+    monkeypatch.setattr(main_mod.settings, "bill_vision_redaction", False)
+    monkeypatch.setattr(
+        main_mod.ocr_redact,
+        "redact_for_vision",
+        lambda *a, **k: pytest.fail("se llamó al OCR con el interruptor apagado"),
+    )
+    parser = _StubParser()
+    _bill, local_text = await main_mod._extract_bill_contract(
+        parser, b"imgK", "foto.jpg", "image/jpeg", None, "sessK"
+    )
+    assert "page_images" not in parser.calls[0]
+    assert local_text is None
+
+
+async def test_old_cache_format_entry_still_readable(_bill_cache):
+    """Entradas pre-envoltorio (solo el contrato a pelo) siguen siendo cache-hit.
+
+    El .db sobrevive a los deploys (rsync excluye *.db) y el TTL es de 24h: la
+    rama de compatibilidad tiene que existir hasta que caduquen."""
+    from app import main as main_mod
+
+    content = b"legacy-bill"
+    key = f"billsess:sessL:{hashlib.sha256(content).hexdigest()}"
+    _bill_cache.set(key, {"algún_campo_de_contrato": "x"})  # formato antiguo
+    parser = _StubParser()
+    _bill, local_text = await main_mod._extract_bill_contract(
+        parser, content, "f.jpg", "image/jpeg", None, "sessL"
+    )
+    assert parser.calls == []  # cache-hit: ni modelo ni OCR
+    assert local_text is None
+
+
+@pytest.mark.ocr
+async def test_late_redaction_on_text_fallback_sends_images_not_pdf(monkeypatch):
+    """Fallback texto→visión: el PDF se rasteriza y redacta EN ese momento.
+
+    Sin este test, una regresión en _late_redaction degradaría en silencio al
+    PDF original con PII (el fallback al original es indistinguible del éxito
+    para el resto de la suite)."""
+    pytest.importorskip("rapidocr_onnxruntime")
+    pytest.importorskip("pypdfium2")
+    from app.bills import BillParseError
+    from app.openai_bills import OpenAIBillParser
+
+    buf = io.BytesIO()
+    _synthetic_bill_image().save(buf, "PDF")
+    parser = OpenAIBillParser(api_key="test")
+    calls = []
+
+    async def fake_request(user_content, *, why):
+        calls.append((why, user_content))
+        if len(calls) == 1:
+            raise BillParseError("texto falló")
+        return {}
+
+    monkeypatch.setattr(parser, "_request", fake_request)
+    try:
+        await parser.extract_contract(
+            buf.getvalue(), "f.pdf", "application/pdf", text_hint="capa de texto cualquiera"
+        )
+    finally:
+        await parser.close()
+    assert [why for why, _ in calls] == ["text", "vision"]
+    types = [part["type"] for part in calls[1][1]]
+    assert "input_image" in types
+    assert "input_file" not in types  # el PDF original con PII NO viaja
+
+
+@pytest.mark.ocr
+def test_redact_multipage_pdf_and_max_pages():
+    """PDF escaneado de 2 páginas: la PII de la página 2 también se tapa; y
+    max_pages recorta de verdad."""
+    pytest.importorskip("rapidocr_onnxruntime")
+    pytest.importorskip("pypdfium2")
+    from PIL import Image, ImageDraw, ImageFont
+
+    try:
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 36)
+    except OSError:  # pragma: no cover
+        font = ImageFont.load_default(size=36)
+    page1 = Image.new("RGB", (1400, 500), "white")
+    ImageDraw.Draw(page1).text((60, 60), "Consumo facturado: 250 kWh", fill="black", font=font)
+    page2 = Image.new("RGB", (1400, 500), "white")
+    d2 = ImageDraw.Draw(page2)
+    d2.text((60, 60), "NIF: 12345678Z", fill="black", font=font)
+    d2.text((60, 170), "IBAN: ES91 2100 0418 4502 0005 1332", fill="black", font=font)
+    buf = io.BytesIO()
+    page1.save(buf, "PDF", save_all=True, append_images=[page2])
+    pdf_bytes = buf.getvalue()
+
+    payload = ocr_redact.redact_for_vision(pdf_bytes, "application/pdf")
+    assert payload is not None
+    assert len(payload.images) == 2
+    compact_p2 = re.sub(r"\s", "", _ocr_text_of(payload.images[1]))
+    assert "12345678Z" not in compact_p2
+    assert "0418" not in compact_p2
+    compact_p1 = re.sub(r"\s", "", _ocr_text_of(payload.images[0]))
+    assert "250" in compact_p1
+
+    trimmed = ocr_redact.redact_for_vision(pdf_bytes, "application/pdf", max_pages=1)
+    assert trimmed is not None
+    assert len(trimmed.images) == 1

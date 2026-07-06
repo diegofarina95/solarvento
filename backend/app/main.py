@@ -67,6 +67,10 @@ async def lifespan(app: FastAPI):
     # Migración: las entradas del formato antiguo ("bill:<hash>", sin sesión y
     # con TTL de un año) contienen datos de factura que ya no deben retenerse.
     app.state.bill_cache.delete_prefix("bill:")
+    # Barrido de caducadas al arrancar: el TTL de get() es perezoso y el beacon
+    # de purga no siempre llega (pestaña muerta); sin esto, entradas de sesión
+    # quedarían en el fichero SQLite indefinidamente.
+    app.state.bill_cache.purge_expired()
     app.state.pvgis = PVGISClient(
         base_url=settings.pvgis_base_url,
         user_agent=settings.http_user_agent,
@@ -185,7 +189,10 @@ async def optimal_angles(
 
 
 _PDF_TYPES = ("application/pdf", "application/x-pdf")
-_IMAGE_TYPES = ("image/jpeg", "image/png", "image/webp", "image/heic", "image/heif")
+# HEIC/HEIF fuera A PROPÓSITO: Pillow no los abre (la redacción de PII no
+# aplicaría) y, al no anunciarlos en el accept del frontend, iOS transcodifica
+# la foto a JPEG él solo — así la capa de privacidad cubre también los iPhone.
+_IMAGE_TYPES = ("image/jpeg", "image/png", "image/webp")
 _MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 
@@ -361,8 +368,8 @@ async def _extract_bill_contract(
     sesión se purgan (beacon) o expiran por TTL.
 
     Devuelve (factura_normalizada, texto_local). El texto local es la capa de
-    texto del PDF o, para fotos/escaneos, el OCR local SIN redactar: nunca se
-    envía fuera; alimenta los refuerzos deterministas (bono, consumo anual,
+    texto del PDF o, para fotos/escaneos, el OCR local ya anonimizado (la PII
+    no hace falta para los refuerzos deterministas: bono, consumo anual,
     bloqueo de facturas no españolas)."""
     cache: TTLCache = app.state.bill_cache
     key = f"billsess:{session_id}:{hashlib.sha256(content).hexdigest()}"
@@ -393,17 +400,20 @@ async def _extract_bill_contract(
                 max_pages=settings.bill_vision_max_pages,
             )
             if vision_payload is not None:
-                ocr_text = vision_payload.ocr_text
+                # El OCR se guarda/usa YA ANONIMIZADO: los refuerzos
+                # deterministas (bono, consumo anual, no-España) no necesitan la
+                # PII, y así la caché en disco nunca contiene nombre/DNI/IBAN.
+                ocr_text = bills_mod.redact_pii(vision_payload.ocr_text)
                 vision_kwargs = {
                     "page_images": vision_payload.images,
                     "page_image_type": vision_payload.image_type,
-                    "vision_hint": bills_mod.redact_pii(vision_payload.ocr_text),
+                    "vision_hint": ocr_text,
                 }
         contract = await parser.extract_contract(
             content, filename, parser_type, redacted, **vision_kwargs
         )
-        # Se cachea también el texto OCR: en un cache-hit no se repite el OCR y
-        # los refuerzos deterministas siguen teniendo su texto.
+        # Se cachea también el texto OCR (anonimizado): en un cache-hit no se
+        # repite el OCR y los refuerzos deterministas siguen teniendo su texto.
         cache.set(key, {"contract": contract, "ocr_text": ocr_text})
     local_text = text_hint if (text_hint and text_hint.strip()) else ocr_text
     # Refuerzo determinista sobre el texto local (capa del PDF u OCR; NO se envía

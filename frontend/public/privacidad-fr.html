@@ -76,9 +76,13 @@
           installation. Si la facture est un <strong>PDF avec du texte</strong>, ce texte est
           <strong>anonymisé avant d'être envoyé</strong> au fournisseur d'intelligence artificielle qui réalise
           l'extraction : les nom et prénoms, le DNI/NIF/NIE/CIF et l'IBAN sont supprimés. S'il s'agit d'une
-          <strong>image ou d'un PDF scanné</strong> (sans couche de texte), le document est envoyé dans son
-          intégralité à ce fournisseur afin de pouvoir être lu, il peut donc inclure ces données ; il est
-          utilisé uniquement pour extraire la consommation. En aucun cas le fichier original n'est conservé de
+          <strong>image ou d'un PDF scanné</strong> (sans couche de texte), avant l'envoi, une reconnaissance
+          optique de caractères (OCR) est appliquée <strong>sur notre propre serveur</strong> afin de masquer
+          ces mêmes données directement sur l'image. Ce masquage est automatique et peut ne pas être parfait
+          (une donnée que l'OCR ne parviendrait pas à lire, ou un nom sans étiquette, pourrait ne pas être
+          masqué ; et si l'OCR n'était pas disponible, l'image serait envoyée telle quelle), de sorte que
+          l'image envoyée peut inclure certaines de ces données ; elle est utilisée uniquement pour extraire
+          la consommation. En aucun cas le fichier original n'est conservé de
           manière permanente.
         </li>
         <li>

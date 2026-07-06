@@ -75,9 +75,12 @@
           <strong>PDF with text</strong>, that text is <strong>anonymised before being sent</strong> to the
           artificial intelligence provider that performs the extraction: first and last names,
           DNI/NIF/NIE/CIF and IBAN are removed. If it is an <strong>image or a scanned PDF</strong> (with no text layer),
-          the full document is sent to that provider so that it can be read, so it may include that
-          data; it is used solely to extract the consumption. Under no circumstances is the original file
-          stored permanently.
+          before it is sent, optical character recognition (OCR) is applied <strong>on our own server</strong> to
+          mask that same data directly on the image itself. This masking is automatic and may not be
+          perfect (a piece of data the OCR fails to read, or an unlabelled name, might not be masked;
+          and if the OCR were unavailable, the image would be sent as is), so the image that is sent
+          may still include some of that data; it is used solely to extract the consumption. Under no
+          circumstances is the original file stored permanently.
         </li>
         <li>
           <strong>Extraction result.</strong> The result is stored temporarily in a cache

@@ -102,6 +102,14 @@ info "Gate local (DEV): build de frontend + import de backend"
 ( cd frontend && npm run build ) >/dev/null 2>&1 || die "Build del frontend FALLA en local. Aborto (prod intacto)."
 ok "Frontend construye en local"
 
+# Exporta las dependencias PINNEADAS del uv.lock a un requirements que viaja
+# por rsync: prod no tiene uv, pero su pip puede instalar exactamente lo mismo.
+UV_BIN="$(command -v uv || echo "$HOME/.local/bin/uv")"
+[ -x "$UV_BIN" ] || die "No encuentro uv (necesario para exportar las dependencias del backend)."
+( cd backend && "$UV_BIN" export --frozen --no-dev --no-emit-project --format requirements-txt \
+    -o requirements.prod.txt --quiet ) || die "uv export falló. Aborto (prod intacto)."
+ok "Dependencias del backend exportadas (requirements.prod.txt)"
+
 if [ -x backend/.venv/bin/python ]; then
   backend/.venv/bin/python -c "import sys; sys.path.insert(0,'backend'); import app.main" 2>/dev/null \
     || die "import app.main FALLA en local. Aborto (prod intacto)."
@@ -156,8 +164,14 @@ sshpass -p "$SSH_PASSWORD" rsync -az "${EXCLUDES[@]}" \
 ok "Archivos sincronizados"
 
 # ============================================================
-# 5) build + import-check en prod (SIN reiniciar todavía)
+# 5) dependencias + build + import-check en prod (SIN reiniciar todavía)
 # ============================================================
+info "Sincronizando dependencias del backend en prod (pip, pinneadas del lock)"
+if ! rsh "cd '$REMOTE_PATH/backend' && .venv/bin/pip install -q -r requirements.prod.txt" >/dev/null 2>&1; then
+  rollback; die "pip install FALLA en prod. Revertido; el servicio seguía con la versión anterior."
+fi
+ok "Dependencias del backend al día en prod"
+
 info "Build de frontend en prod"
 if ! rsh "cd '$REMOTE_PATH/frontend' && npm run build" >/dev/null 2>&1; then
   rollback; die "Build FALLA en prod. Revertido; el servicio seguía con la versión anterior."
@@ -169,6 +183,15 @@ if ! rsh "cd '$REMOTE_PATH/backend' && .venv/bin/python -c 'import app.main'" >/
   rollback; die "import app.main FALLA en prod. Revertido; servicio intacto."
 fi
 ok "Backend importa en prod"
+
+# La redacción de PII de fotos/escaneos depende del OCR: si no carga en prod,
+# la capa de privacidad quedaría INERTE en silencio (todo iría a OpenAI sin
+# tapar). Gate duro: sin OCR no hay deploy.
+info "Comprobando que el OCR de redacción carga en prod"
+if ! rsh "cd '$REMOTE_PATH/backend' && .venv/bin/python -c 'from app import ocr_redact; import sys; sys.exit(0 if ocr_redact._get_ocr() is not None else 1)'" >/dev/null 2>&1; then
+  rollback; die "El OCR de redacción NO carga en prod. Revertido; servicio intacto."
+fi
+ok "OCR de redacción disponible en prod"
 
 # ============================================================
 # 6) restart + health-check con reintentos (+ rollback auto)

@@ -148,13 +148,29 @@ def _text_user_content(text_hint: str) -> list[dict[str, Any]]:
 async def _late_redaction(
     content: bytes, content_type: str
 ) -> tuple[list[bytes] | None, str, str | None]:
-    """Redacción tardía para el fallback texto→visión (import perezoso, en hilo)."""
+    """Redacción tardía para el fallback texto→visión (import perezoso, en hilo).
+
+    Respeta el interruptor de emergencia SOLVENTO_BILL_VISION_REDACTION y el
+    límite de páginas, igual que la redacción normal de main."""
     try:
+        from functools import partial
+
         from anyio import to_thread
 
         from . import bills, ocr_redact
+        from .config import get_settings
 
-        payload = await to_thread.run_sync(ocr_redact.redact_for_vision, content, content_type)
+        settings = get_settings()
+        if not settings.bill_vision_redaction:
+            return None, "image/jpeg", None
+        payload = await to_thread.run_sync(
+            partial(
+                ocr_redact.redact_for_vision,
+                content,
+                content_type,
+                max_pages=settings.bill_vision_max_pages,
+            )
+        )
         if payload is not None:
             return payload.images, payload.image_type, bills.redact_pii(payload.ocr_text)
     except Exception as exc:  # pragma: no cover - defensa; no debe tumbar la extracción

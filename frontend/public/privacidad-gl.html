@@ -75,8 +75,11 @@
           <strong>PDF con texto</strong>, ese texto <strong>anonimízase antes de envialo</strong> ao
           provedor de intelixencia artificial que realiza a extracción: elimínanse nome e apelidos,
           DNI/NIF/NIE/CIF e IBAN. Se é unha <strong>imaxe ou un PDF escaneado</strong> (sen capa de texto),
-          o documento envíase completo a dito provedor para poder lelo, polo que pode incluír eses
-          datos; utilízase unicamente para extraer o consumo. En ningún caso o arquivo orixinal se
+          antes do envío aplícase un recoñecemento óptico (OCR) <strong>no noso propio servidor</strong>
+          que tapa eses mesmos datos sobre a propia imaxe. Este tapado é automático e pode non ser
+          perfecto (un dato que o OCR non consiga ler, ou un nome sen etiqueta, podería non taparse;
+          e se o OCR non estivese dispoñible, a imaxe enviaríase tal cal), polo que a imaxe enviada
+          pode chegar a incluír algún deses datos; utilízase unicamente para extraer o consumo. En ningún caso o arquivo orixinal se
           almacena de forma permanente.
         </li>
         <li>

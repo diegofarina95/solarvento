@@ -16,10 +16,13 @@ best-effort: un nombre sin etiqueta, o un token que el OCR lea mal, pueden
 colarse; la política de privacidad lo declara así.
 
 Limitaciones conocidas (documentadas, no silenciosas):
-- HEIC/HEIF: PIL no los abre sin pillow-heif → fallback al original.
 - PII partida en dos cajas OCR (p.ej. IBAN a mitad) puede no detectarse.
 - Solo se procesan las primeras `max_pages` páginas de un PDF escaneado (los
   datos de consumo van al principio; se registra en el log si se recorta).
+- Coste: el OCR añade varios segundos por página y se SERIALIZA (_WORK_LOCK);
+  los límites de subida (10/IP y 100 global al día) acotan el abuso.
+- HEIC/HEIF no se aceptan en la subida (main._IMAGE_TYPES): al no anunciarlos
+  en el accept, iOS transcodifica a JPEG y la redacción aplica.
 """
 
 from __future__ import annotations
@@ -28,6 +31,7 @@ import io
 import logging
 import re
 import threading
+import time
 from dataclasses import dataclass
 
 from .bills import _CIF_RE, _DNI_RE, _IBAN_RE, _NAME_LABELS, _NIE_RE
@@ -39,11 +43,16 @@ logger = logging.getLogger(__name__)
 _WORK_LOCK = threading.Lock()
 _OCR_LOCK = threading.Lock()
 _ocr_engine = None
-_ocr_failed = False
+# Si la carga del OCR falla no se reintenta en cada factura (podría ser una dep
+# ausente) pero TAMPOCO se fija para siempre: un fallo transitorio (presión de
+# memoria al cargar ONNX) se reintenta pasado un rato.
+_ocr_failed_at: float | None = None
+_OCR_RETRY_SECONDS = 600.0
 
-# Lado mayor máximo antes de OCR/envío: acota el coste del OCR y del payload
-# (OpenAI reescala de todos modos las imágenes grandes).
-_MAX_SIDE = 2600
+# Lado mayor máximo antes de OCR/envío: acota el coste del OCR (~proporcional a
+# los píxeles) y del payload; OpenAI reescala de todos modos las imágenes
+# grandes, y a ~180 dpi el texto de una factura sigue siendo legible.
+_MAX_SIDE = 2000
 _JPEG_QUALITY = 88
 _BOX_PADDING = 3
 
@@ -76,19 +85,26 @@ class VisionPayload:
 
 def _get_ocr():
     """Carga perezosa del motor OCR (una sola instancia; ~1-2 s la primera vez)."""
-    global _ocr_engine, _ocr_failed
-    if _ocr_engine is not None or _ocr_failed:
+    global _ocr_engine, _ocr_failed_at
+    if _ocr_engine is not None:
         return _ocr_engine
     with _OCR_LOCK:
-        if _ocr_engine is not None or _ocr_failed:
+        if _ocr_engine is not None:
             return _ocr_engine
+        if _ocr_failed_at is not None and time.monotonic() - _ocr_failed_at < _OCR_RETRY_SECONDS:
+            return None
         try:
             from rapidocr_onnxruntime import RapidOCR
 
             _ocr_engine = RapidOCR()
+            _ocr_failed_at = None
         except Exception:  # pragma: no cover - depende del entorno
-            logger.warning("ocr_redact: RapidOCR no disponible; sin redacción de imágenes")
-            _ocr_failed = True
+            logger.warning(
+                "ocr_redact: RapidOCR no disponible; sin redacción de imágenes "
+                "(reintento en %.0f s)",
+                _OCR_RETRY_SECONDS,
+            )
+            _ocr_failed_at = time.monotonic()
     return _ocr_engine
 
 
@@ -204,7 +220,12 @@ def _redact_page(img) -> tuple[bytes, str, int]:
 
 
 def _pdf_pages(content: bytes, max_pages: int):
-    """Rasteriza un PDF (sin capa de texto) a imágenes PIL, ~200 DPI."""
+    """Rasteriza un PDF (sin capa de texto) a imágenes PIL, hasta ~200 DPI.
+
+    El scale se RECORTA por página para que el lado mayor renderizado no supere
+    _MAX_SIDE: un PDF con MediaBox gigante (hasta 14400×14400 pt permite el
+    spec) pediría gigas de RAM en el render si no; con el recorte, un PDF de
+    pocos KB no puede convertirse en una bomba de memoria."""
     import pypdfium2 as pdfium
 
     pdf = pdfium.PdfDocument(content)
@@ -215,7 +236,9 @@ def _pdf_pages(content: bytes, max_pages: int):
         for i in range(min(total, max_pages)):
             page = pdf[i]
             try:
-                yield page.render(scale=200 / 72).to_pil()
+                page_w, page_h = page.get_size()  # en puntos (1/72")
+                scale = min(200 / 72, _MAX_SIDE / max(page_w, page_h, 1.0))
+                yield page.render(scale=scale).to_pil()
             finally:
                 page.close()
     finally:

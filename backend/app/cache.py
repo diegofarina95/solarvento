@@ -41,6 +41,17 @@ class TTLCache:
         )
         self._conn.commit()
 
+    def purge_expired(self) -> None:
+        """Borra físicamente las filas caducadas (get() solo borra al leerlas).
+
+        Importante para la caché de facturas: sin esto, una sesión que nunca
+        dispara el beacon de purga dejaría sus entradas en el fichero SQLite
+        para siempre aunque el TTL las haga invisibles."""
+        self._conn.execute(
+            "DELETE FROM cache WHERE created_at < ?", (time.time() - self.ttl_seconds,)
+        )
+        self._conn.commit()
+
     def delete_prefix(self, prefix: str) -> None:
         """Borra todas las entradas cuya clave empieza por el prefijo dado."""
         escaped = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")

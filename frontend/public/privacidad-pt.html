@@ -75,8 +75,11 @@
           <strong>PDF com texto</strong>, esse texto é <strong>anonimizado antes de ser enviado</strong> ao
           fornecedor de inteligência artificial que realiza a extração: eliminam-se nome e apelidos,
           DNI/NIF/NIE/CIF e IBAN. Se for uma <strong>imagem ou um PDF digitalizado</strong> (sem camada de texto),
-          o documento é enviado completo a esse fornecedor para poder ser lido, pelo que pode incluir esses
-          dados; é utilizado unicamente para extrair o consumo. Em nenhum caso o ficheiro original é
+          antes do envio aplica-se um reconhecimento ótico (OCR) <strong>no nosso próprio servidor</strong> que
+          oculta esses mesmos dados sobre a própria imagem. Esta ocultação é automática e pode não ser perfeita
+          (um dado que o OCR não consiga ler, ou um nome sem etiqueta, poderia não ser ocultado; e se o OCR não
+          estiver disponível, a imagem é enviada tal como está), pelo que a imagem enviada pode chegar a incluir
+          algum desses dados; é utilizada unicamente para extrair o consumo. Em nenhum caso o ficheiro original é
           armazenado de forma permanente.
         </li>
         <li>
