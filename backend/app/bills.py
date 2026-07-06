@@ -1102,8 +1102,8 @@ _CIF_RE = re.compile(r"\b[ABCDEFGHJNPQRSUVW]\d{7}[0-9A-J]\b", re.IGNORECASE)
 # Galicia, C. Valenciana, Baleares o País Vasco pueden venir en su idioma. NO
 # incluye "Dirección/Adreça/Enderezo de suministro" (esa se conserva para geoloc).
 # El titular sin ":" (raro) no se toca, para no comerse por error la dirección.
-_NAME_LABEL_RE = re.compile(
-    r"(?im)^([ \t]*(?:"
+# Alternación compartida con ocr_redact (redacción en píxeles de la vía visión).
+_NAME_LABELS = (
     r"titular\w*(?:\s+(?:del?|d[oa]s?|de\s+la|de\s+l['’]|d['’])\s+"
     r"[\wàáâäçéèêíïñóòôöúùü·./-]+){0,4}"  # titular / titularra / titular del contrato / do subministro…
     r"|nombre\s+y\s+apellidos|nom\s+i\s+cognoms|nome\s+e\s+apelidos|izen[-\s]?abizenak"
@@ -1113,7 +1113,9 @@ _NAME_LABEL_RE = re.compile(
     r"|raz[oó]n\s+social|ra[oó]\s+social|sozietate[-\s]?izena"
     r"|pagador|ordaintzailea?"
     r"|a\s+l['’a]?\s*atenci[oó]n?\s+de|[aá]\s+a\s+atenci[oó]n\s+de"
-    r")\s*[:\-]\s*)(.+)$"
+)
+_NAME_LABEL_RE = re.compile(
+    r"(?im)^([ \t]*(?:" + _NAME_LABELS + r")\s*[:\-]\s*)(.+)$"
 )
 
 

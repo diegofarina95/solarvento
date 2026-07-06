@@ -49,14 +49,22 @@ class OpenAIBillParser:
         filename: str | None = None,
         content_type: str = "application/pdf",
         text_hint: str | None = None,
+        *,
+        page_images: list[bytes] | None = None,
+        page_image_type: str = "image/jpeg",
+        vision_hint: str | None = None,
     ) -> dict[str, Any]:
         """Extrae el CONTRATO tipado (bill_contract) de cualquier factura, blindado.
 
         Estrategia robusta:
           1) PDF con capa de texto → se analiza el TEXTO PLANO (más fiable y barato
              que subir el fichero; lo que pidió el usuario);
-          2) imagen/escaneo, o PDF sin texto, o si el texto falla → VISIÓN (el
-             fichero/imagen al modelo).
+          2) imagen/escaneo, o PDF sin texto, o si el texto falla → VISIÓN.
+        PRIVACIDAD: en la vía visión, si la llamada aporta `page_images` (páginas
+        ya redactadas por ocr_redact) se envían ESAS en lugar del documento
+        original; `vision_hint` es el texto OCR ya anonimizado. Si el texto de un
+        PDF falla y hay que degradar a visión sin páginas preparadas, se intenta
+        redactar aquí mismo antes de recurrir al original (último recurso).
         Structured outputs STRICT. Determinismo por caché de fichero (no por
         temperature: los modelos de razonamiento no aceptan ese parámetro)."""
         is_image = content_type.startswith("image/")
@@ -68,11 +76,21 @@ class OpenAIBillParser:
                 return await self._request(_text_user_content(text_hint), why="text")
             except BillParseError as exc:
                 logger.warning("bill extraction: text path failed (%s); trying vision", exc)
+            if page_images is None:
+                # Degradación rara (texto falló): redactar en píxeles AHORA para no
+                # mandar el PDF original con PII. Si tampoco se puede, original.
+                page_images, page_image_type, vision_hint = await _late_redaction(
+                    content, "application/pdf"
+                )
 
         # 2) Vía visión (imagen, escaneo, o PDF sin texto / con texto fallido).
-        return await self._request(
-            _file_user_content(content, filename, content_type, text_hint), why="vision"
-        )
+        if page_images:
+            user_content = _pages_user_content(
+                page_images, page_image_type, text_hint or vision_hint
+            )
+        else:
+            user_content = _file_user_content(content, filename, content_type, text_hint)
+        return await self._request(user_content, why="vision")
 
     async def _request(self, user_content: list[dict[str, Any]], *, why: str) -> dict[str, Any]:
         payload = {
@@ -125,6 +143,45 @@ def _text_user_content(text_hint: str) -> list[dict[str, Any]]:
             ),
         }
     ]
+
+
+async def _late_redaction(
+    content: bytes, content_type: str
+) -> tuple[list[bytes] | None, str, str | None]:
+    """Redacción tardía para el fallback texto→visión (import perezoso, en hilo)."""
+    try:
+        from anyio import to_thread
+
+        from . import bills, ocr_redact
+
+        payload = await to_thread.run_sync(ocr_redact.redact_for_vision, content, content_type)
+        if payload is not None:
+            return payload.images, payload.image_type, bills.redact_pii(payload.ocr_text)
+    except Exception as exc:  # pragma: no cover - defensa; no debe tumbar la extracción
+        logger.warning("bill extraction: late redaction failed (%s)", exc)
+    return None, "image/jpeg", None
+
+
+def _pages_user_content(
+    page_images: list[bytes], image_type: str, hint: str | None
+) -> list[dict[str, Any]]:
+    """Contenido de usuario con las PÁGINAS redactadas (una input_image por página)."""
+    parts: list[dict[str, Any]] = [
+        {
+            "type": "input_image",
+            "image_url": f"data:{image_type};base64,{base64.b64encode(img).decode('utf-8')}",
+        }
+        for img in page_images
+    ]
+    parts.append(
+        {"type": "input_text", "text": "Extract the electricity bill contract for SolarVento."}
+    )
+    if hint and hint.strip():
+        parts.append({
+            "type": "input_text",
+            "text": f"Auxiliary text layer (rendered pages are authoritative):\n{hint[:12000]}",
+        })
+    return parts
 
 
 def _file_user_content(

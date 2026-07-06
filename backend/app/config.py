@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     # para sesiones que nunca llegan a purgarse (pestaña muerta, red caída).
     bill_cache_ttl_seconds: int = 24 * 3600
     bill_cache_db_path: str = "bill_extraction_cache.db"
+    # PRIVACIDAD (vía visión): tapar PII en píxeles (OCR local) antes de enviar
+    # fotos/escaneos a OpenAI. Interruptor de emergencia por si el OCR diera
+    # problemas en producción (SOLVENTO_BILL_VISION_REDACTION=false).
+    bill_vision_redaction: bool = True
+    # Páginas máximas a rasterizar de un PDF escaneado (el consumo va delante).
+    bill_vision_max_pages: int = 4
 
     # Límite de subidas de factura: por equipo (IP) y global diario
     # (cada subida es una llamada de pago a OpenAI)

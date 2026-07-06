@@ -16,9 +16,14 @@
 #   6. Solo si todo va bien: commit del estado desplegado en prod.
 #
 # Uso:
-#   scripts/deploy.sh --dry-run   # solo muestra qué cambiaría (no toca prod)
-#   scripts/deploy.sh             # despliega (pide confirmación)
-#   scripts/deploy.sh --yes       # despliega sin preguntar
+#   scripts/deploy.sh --dry-run       # solo muestra qué cambiaría (no toca prod)
+#   scripts/deploy.sh                 # despliega (pide confirmación)
+#   scripts/deploy.sh --yes           # despliega sin preguntar
+#   scripts/deploy.sh --allow-dirty   # continúa aunque prod tenga ediciones directas
+#
+# Guarda anti-pisotones: si el árbol git de PROD tiene cambios sin commitear
+# (alguien editó en el servidor), el deploy ABORTA: ese trabajo no existe en
+# local y el rsync lo pisaría. Recupéralo a local primero.
 #
 set -euo pipefail
 
@@ -36,11 +41,12 @@ warn() { printf '%s!%s %s\n' "$C_Y" "$C_0" "$*"; }
 die()  { printf '%s✗ %s%s\n' "$C_R" "$*" "$C_0" >&2; exit 1; }
 
 # --- flags ---
-DRY_RUN=0; ASSUME_YES=0
+DRY_RUN=0; ASSUME_YES=0; ALLOW_DIRTY=0
 for a in "$@"; do
   case "$a" in
-    --dry-run) DRY_RUN=1 ;;
-    --yes|-y)  ASSUME_YES=1 ;;
+    --dry-run)     DRY_RUN=1 ;;
+    --yes|-y)      ASSUME_YES=1 ;;
+    --allow-dirty) ALLOW_DIRTY=1 ;;
     *) die "Flag desconocido: $a" ;;
   esac
 done
@@ -69,6 +75,25 @@ HEALTH="http://127.0.0.1:8000/api/health"
 EXCLUDES=(--exclude='.git' --exclude='.venv' --exclude='node_modules' --exclude='dist' \
           --exclude='__pycache__' --exclude='*.pyc' --exclude='.env' --exclude='*.db' \
           --exclude='.claude' --exclude='.pytest_cache' --exclude='*.egg-info' --exclude='.taller')
+
+# ============================================================
+# 0) GUARDA — ¿prod tiene ediciones directas sin commitear?
+#    (Incidente 2026-07-06: una feature de privacidad editada a mano en prod
+#    fue pisada por el rsync. Si el árbol de prod no está limpio, hay trabajo
+#    que NO existe en local: recupéralo antes de desplegar.)
+# ============================================================
+info "Comprobando que prod no tiene ediciones directas sin commitear"
+DIRTY="$(rsh "cd '$REMOTE_PATH' && git status --porcelain" 2>/dev/null || true)"
+if [ -n "$DIRTY" ]; then
+  printf '%s\n' "$DIRTY" | head -20
+  if [ "$ALLOW_DIRTY" -eq 1 ]; then
+    warn "Prod tiene ediciones directas; continúo por --allow-dirty (el snapshot pre-deploy las preservará en git)"
+  else
+    die "PROD tiene ediciones directas sin commitear (lista arriba). Tráelas a local antes de desplegar, o relanza con --allow-dirty para continuar (quedarán en el snapshot git de prod, pero el rsync puede pisarlas en el árbol)."
+  fi
+else
+  ok "Árbol de prod limpio"
+fi
 
 # ============================================================
 # 1) GATE LOCAL — si esto falla, prod ni se entera

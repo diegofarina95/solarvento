@@ -19,6 +19,7 @@ from starlette.concurrency import run_in_threadpool
 from . import bill_messages
 from . import bill_normalise
 from . import bills as bills_mod
+from . import ocr_redact
 from . import calculations, cashflow, simulation
 from .cache import TTLCache
 from .config import get_settings
@@ -310,7 +311,7 @@ async def parse_bill(
         if is_pdf:
             text_hint = await run_in_threadpool(bills_mod.extract_pdf_text_safe, content)
         try:
-            bill = await _extract_bill_contract(
+            bill, local_text = await _extract_bill_contract(
                 openai_parser, content, file.filename, parser_type, text_hint, session_id
             )
         except bills_mod.BillParseError as exc:
@@ -324,7 +325,8 @@ async def parse_bill(
             bill["warning_notes"] = [failed]
             bill["review_reasons"] = [bill_messages.text_es("extraction_failed")]
             bill["review_notes"] = [failed]
-        blocked = _non_spanish_bill_block(bill, text_hint)
+            local_text = text_hint
+        blocked = _non_spanish_bill_block(bill, local_text)
         if blocked is not None:
             return blocked
         return await _enrich_bill_location(bill)
@@ -349,30 +351,67 @@ async def _extract_bill_contract(
     parser_type: str,
     text_hint: str | None,
     session_id: str,
-) -> dict:
+) -> tuple[dict, str | None]:
     """Extrae el contrato (con caché por sesión + hash de fichero) y lo normaliza.
 
     La caché guarda el CONTRATO en crudo por hash DENTRO de la sesión del
     navegador: la misma factura devuelve siempre el mismo JSON y, tras la
     normalización determinista, los mismos euros (determinismo + sin repetir
     llamadas de pago al modelo). Al cerrar el navegador las entradas de la
-    sesión se purgan (beacon) o expiran por TTL."""
+    sesión se purgan (beacon) o expiran por TTL.
+
+    Devuelve (factura_normalizada, texto_local). El texto local es la capa de
+    texto del PDF o, para fotos/escaneos, el OCR local SIN redactar: nunca se
+    envía fuera; alimenta los refuerzos deterministas (bono, consumo anual,
+    bloqueo de facturas no españolas)."""
     cache: TTLCache = app.state.bill_cache
     key = f"billsess:{session_id}:{hashlib.sha256(content).hexdigest()}"
-    contract = cache.get(key)
+    cached = cache.get(key)
+    contract: dict | None = None
+    ocr_text: str | None = None
+    if isinstance(cached, dict) and set(cached) == {"contract", "ocr_text"}:
+        contract = cached["contract"]
+        ocr_text = cached["ocr_text"]
+    elif cached is not None:
+        contract = cached  # entrada del formato anterior (solo contrato)
     if contract is None:
-        # PRIVACIDAD: el texto que va a OpenAI se anonimiza (fuera nombre/apellidos,
-        # NIF/DNI/NIE/CIF, IBAN). En la vía de texto (PDF con capa) es lo único que
-        # se envía, así que la PII no sale de la máquina.
+        # PRIVACIDAD (vía texto): el texto que va a OpenAI se anonimiza (fuera
+        # nombre/apellidos, NIF/DNI/NIE/CIF, IBAN). En la vía de texto (PDF con
+        # capa) es lo único que se envía, así que la PII no sale de la máquina.
         redacted = bills_mod.redact_pii(text_hint)
-        contract = await parser.extract_contract(content, filename, parser_type, redacted)
-        cache.set(key, contract)
-    # Refuerzo determinista sobre el texto ORIGINAL del PDF (local, NO se envía a
-    # OpenAI): el modelo a veces no marca el bono social ni el "consumo acumulado
-    # del último año". Si están escritos en la factura, se rellenan.
-    if isinstance(contract, dict) and text_hint:
-        contract = bills_mod.augment_contract_from_text(contract, text_hint)
-    return bill_normalise.contract_to_bill(contract)
+        # PRIVACIDAD (vía visión): fotos y PDFs sin capa de texto se envían como
+        # imágenes con la PII TAPADA en píxeles (OCR local, ocr_redact). Si el
+        # OCR no está disponible o falla, se envía el original (best-effort,
+        # comportamiento previo) y queda en el log.
+        vision_kwargs: dict = {}
+        needs_vision = parser_type.startswith("image/") or not (text_hint and text_hint.strip())
+        if needs_vision and settings.bill_vision_redaction:
+            vision_payload = await run_in_threadpool(
+                ocr_redact.redact_for_vision,
+                content,
+                parser_type,
+                max_pages=settings.bill_vision_max_pages,
+            )
+            if vision_payload is not None:
+                ocr_text = vision_payload.ocr_text
+                vision_kwargs = {
+                    "page_images": vision_payload.images,
+                    "page_image_type": vision_payload.image_type,
+                    "vision_hint": bills_mod.redact_pii(vision_payload.ocr_text),
+                }
+        contract = await parser.extract_contract(
+            content, filename, parser_type, redacted, **vision_kwargs
+        )
+        # Se cachea también el texto OCR: en un cache-hit no se repite el OCR y
+        # los refuerzos deterministas siguen teniendo su texto.
+        cache.set(key, {"contract": contract, "ocr_text": ocr_text})
+    local_text = text_hint if (text_hint and text_hint.strip()) else ocr_text
+    # Refuerzo determinista sobre el texto local (capa del PDF u OCR; NO se envía
+    # a OpenAI): el modelo a veces no marca el bono social ni el "consumo
+    # acumulado del último año". Si están escritos en la factura, se rellenan.
+    if isinstance(contract, dict) and local_text:
+        contract = bills_mod.augment_contract_from_text(contract, local_text)
+    return bill_normalise.contract_to_bill(contract), local_text
 
 
 def _unreadable_bill(note: dict) -> dict:
