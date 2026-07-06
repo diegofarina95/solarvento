@@ -564,11 +564,11 @@ export default function App() {
       )}
 
       <footer className="mt-10 border-t border-stone-200 pt-4 text-center text-xs text-stone-500 print:hidden">
-        <a href="/faq.html" className="underline hover:text-stone-700">
+        <a href={`/faq${language === 'es' ? '' : `-${language}`}.html`} className="underline hover:text-stone-700">
           {t('app.faq')}
         </a>
         <span className="mx-2">·</span>
-        <a href="/privacidad.html" className="underline hover:text-stone-700">
+        <a href={`/privacidad${language === 'es' ? '' : `-${language}`}.html`} className="underline hover:text-stone-700">
           {t('app.privacyPolicy')}
         </a>
         <span className="mx-2">·</span>
