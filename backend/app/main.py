@@ -317,11 +317,15 @@ async def _extract_bill_contract(
     key = f"bill:{hashlib.sha256(content).hexdigest()}"
     contract = cache.get(key)
     if contract is None:
-        contract = await parser.extract_contract(content, filename, parser_type, text_hint)
+        # PRIVACIDAD: el texto que va a OpenAI se anonimiza (fuera nombre/apellidos,
+        # NIF/DNI/NIE/CIF, IBAN). En la vía de texto (PDF con capa) es lo único que
+        # se envía, así que la PII no sale de la máquina.
+        redacted = bills_mod.redact_pii(text_hint)
+        contract = await parser.extract_contract(content, filename, parser_type, redacted)
         cache.set(key, contract)
-    # Refuerzo determinista sobre el texto del PDF: el modelo a veces no marca el
-    # bono social ni el "consumo acumulado del último año". Si están escritos en
-    # la factura, se rellenan (sin pisar lo que el modelo sí detectó).
+    # Refuerzo determinista sobre el texto ORIGINAL del PDF (local, NO se envía a
+    # OpenAI): el modelo a veces no marca el bono social ni el "consumo acumulado
+    # del último año". Si están escritos en la factura, se rellenan.
     if isinstance(contract, dict) and text_hint:
         contract = bills_mod.augment_contract_from_text(contract, text_hint)
     return bill_normalise.contract_to_bill(contract)

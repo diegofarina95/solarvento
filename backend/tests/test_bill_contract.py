@@ -209,6 +209,55 @@ class TestSingleMonthResolution:
         assert res["single_month"] is False
 
 
+class TestRedactPii:
+    def test_removes_name_nif_iban_keeps_the_rest(self):
+        from app.bills import redact_pii
+        text = (
+            "Titular: JUAN PÉREZ GARCÍA\n"
+            "Nombre y apellidos: María López Ruiz\n"
+            "NIF: 12345678Z\n"
+            "IBAN: ES91 2100 0418 4502 0005 1332\n"
+            "Dirección suministro: LUG QUINTAS 0027, 36687 A Estrada (Pontevedra)\n"
+            "CUPS: ES0031405512345678XY\n"
+            "Consumo facturado: 3.450 kWh\n"
+        )
+        out = redact_pii(text)
+        # PII fuera
+        assert "JUAN PÉREZ GARCÍA" not in out
+        assert "María López Ruiz" not in out
+        assert "12345678Z" not in out
+        assert "ES91 2100 0418 4502 0005 1332" not in out
+        # Lo necesario se conserva
+        assert "LUG QUINTAS 0027" in out and "A Estrada" in out  # dirección
+        assert "ES0031405512345678XY" in out  # CUPS intacto
+        assert "3.450 kWh" in out  # consumo
+
+    def test_nie_and_cif(self):
+        from app.bills import redact_pii
+        out = redact_pii("NIE X1234567L y CIF B12345674 en la factura")
+        assert "X1234567L" not in out
+        assert "B12345674" not in out
+
+    def test_none_and_empty(self):
+        from app.bills import redact_pii
+        assert redact_pii(None) is None
+        assert redact_pii("") == ""
+
+    def test_multilingual_labels_catalan_galician_basque(self):
+        from app.bills import redact_pii
+        # Català
+        ca = redact_pii("Titular: Jordi Puig\nNom i cognoms: Marta Roca\nAdreça de subministrament: Carrer Gran 5")
+        assert "Jordi Puig" not in ca and "Marta Roca" not in ca
+        assert "Carrer Gran 5" in ca  # dirección conservada
+        # Galego
+        gl = redact_pii("Titular do contrato: Xoán Castro\nNome e apelidos: Uxía Vázquez\nEnderezo de subministro: Rúa Nova 3")
+        assert "Xoán Castro" not in gl and "Uxía Vázquez" not in gl
+        assert "Rúa Nova 3" in gl
+        # Euskara
+        eu = redact_pii("Titularra: Aitor Etxeberria\nIzen-abizenak: Nerea Agirre")
+        assert "Aitor Etxeberria" not in eu and "Nerea Agirre" not in eu
+
+
 class TestAugmentFromText:
     def test_detects_bono_social(self):
         from app.bills import augment_contract_from_text, detect_bono_social

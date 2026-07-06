@@ -1081,6 +1081,47 @@ def detect_rolling_annual_kwh(text: str | None) -> float | None:
     return None
 
 
+_PII_PLACEHOLDER = "[REDACTADO]"
+# IBAN español: ES + 2 dígitos de control + 20 dígitos (con o sin espacios). NO
+# colisiona con el CUPS (que acaba en letras), así que el CUPS se conserva.
+_IBAN_RE = re.compile(r"\bES\d{2}(?:[ \t]?\d{4}){5}\b", re.IGNORECASE)
+# NIF/DNI (8 dígitos + letra), NIE (X/Y/Z + 7 dígitos + letra), CIF (letra + 7 + control).
+_DNI_RE = re.compile(r"\b\d{8}[ -]?[A-Za-z]\b")
+_NIE_RE = re.compile(r"\b[XYZ][ -]?\d{7}[ -]?[A-Za-z]\b", re.IGNORECASE)
+_CIF_RE = re.compile(r"\b[ABCDEFGHJNPQRSUVW]\d{7}[0-9A-J]\b", re.IGNORECASE)
+# Nombre del titular: valor tras una etiqueta de titular/cliente (misma línea).
+# Cubre las 4 lenguas oficiales (es/ca/gl/eu) porque las facturas de Cataluña,
+# Galicia, C. Valenciana, Baleares o País Vasco pueden venir en su idioma. NO
+# incluye "Dirección/Adreça/Enderezo de suministro" (esa se conserva para geoloc).
+# El titular sin ":" (raro) no se toca, para no comerse por error la dirección.
+_NAME_LABEL_RE = re.compile(
+    r"(?im)^([ \t]*(?:"
+    r"titular\w*(?:\s+(?:del?|d[oa]s?|de\s+la|de\s+l['’]|d['’])\s+"
+    r"[\wàáâäçéèêíïñóòôöúùü·./-]+){0,4}"  # titular / titularra / titular del contrato / do subministro…
+    r"|nombre\s+y\s+apellidos|nom\s+i\s+cognoms|nome\s+e\s+apelidos|izen[-\s]?abizenak"
+    r"|apellidos|cognoms|apelidos|abizenak"
+    r"|nombre|nome|nom|izena"
+    r"|cliente|client|bezeroa?"
+    r"|raz[oó]n\s+social|ra[oó]\s+social|sozietate[-\s]?izena"
+    r"|pagador|ordaintzailea?"
+    r"|a\s+l['’a]?\s*atenci[oó]n?\s+de|[aá]\s+a\s+atenci[oó]n\s+de"
+    r")\s*[:\-]\s*)(.+)$"
+)
+
+
+def redact_pii(text: str | None) -> str | None:
+    """Anonimiza el texto que se enviará al modelo: quita nombre/apellidos, NIF/
+    DNI/NIE/CIF e IBAN. Conserva consumo, importes, CUPS y dirección de suministro
+    (necesaria para geolocalizar). No es garantía del 100% (un nombre sin etiqueta
+    podría colarse), pero elimina la PII etiquetada y por patrón."""
+    if not text:
+        return text
+    text = _NAME_LABEL_RE.sub(lambda m: m.group(1) + _PII_PLACEHOLDER, text)
+    for pattern in (_IBAN_RE, _NIE_RE, _DNI_RE, _CIF_RE):
+        text = pattern.sub(_PII_PLACEHOLDER, text)
+    return text
+
+
 def augment_contract_from_text(contract: dict, text: str | None) -> dict:
     """Rellena bono_social y rolling_annual_kwh desde el texto si el modelo los
     omitió (refuerzo determinista; no pisa lo que el modelo sí detectó)."""
