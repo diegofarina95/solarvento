@@ -351,6 +351,19 @@ class TestNotesAreCoded:
         bill = contract_to_bill(c)
         assert any(n["code"] == "existing_pv" for n in bill["review_notes"])
 
+    def test_bono_and_rolling_multilingual(self):
+        from app.bills import detect_bono_social, detect_rolling_annual_kwh
+        # Bono social en ca / gl
+        assert detect_bono_social("Descompte per bo social aplicat") is True  # ca
+        assert detect_bono_social("Desconto por bono social") is True  # gl
+        assert detect_bono_social("PVPC amb bo social") is True  # ca
+        # Consumo anual impreso en ca / gl
+        assert detect_rolling_annual_kwh("Consum acumulat de l'últim any: 3.450 kWh") == 3450.0  # ca
+        assert detect_rolling_annual_kwh("Consumo acumulado do último ano 4.120 kWh") == 4120.0  # gl
+        assert detect_rolling_annual_kwh("Consum anual 2.900 kWh") == 2900.0  # ca
+        # NO confundir el consumo del último PERIODO (mensual) con el anual
+        assert detect_rolling_annual_kwh("Consumo del último periodo: 300 kWh") is None
+
     def test_detects_rolling_annual(self):
         from app.bills import augment_contract_from_text, detect_rolling_annual_kwh
         assert detect_rolling_annual_kwh("Consumo acumulado del último año: 3.450 kWh") == 3450.0

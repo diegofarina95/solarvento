@@ -1050,16 +1050,24 @@ def extract_text(pdf_bytes: bytes) -> str:
         raise BillParseError(f"No se pudo leer el PDF: {exc}") from exc
 
 
+# Bono social en las 4 lenguas oficiales (es/ca/gl + euskera mejor esfuerzo).
 _BONO_SOCIAL_RE = re.compile(
-    r"bono\s+social|descuento\s+por\s+bono|pvpc\s+con\s+bono|consumidor\s+vulnerable",
+    r"bono\s+social|bo\s+social|gizarte[-\s]?bonu"
+    r"|descuento\s+por\s+bono|descompte\s+per\s+bo|desconto\s+por\s+bono"
+    r"|pvpc\s+(?:con|amb)\s+bo"
+    r"|consumidor[a]?\s+vulnerable|kontsumitzaile\s+ahul",
     re.IGNORECASE,
 )
-# "Consumo acumulado del último año: 3.450 kWh" y variantes.
+# "Consumo acumulado del último año: 3.450 kWh" y equivalentes en ca/gl/eu.
+# NO confunde "consumo del último PERIODO" (mensual) con el anual: exige año/any
+# o "12 meses/mesos".
 _ROLLING_ANNUAL_RE = re.compile(
-    r"(?:consumo\s+(?:acumulado|total)?\s*(?:del|de\s+los|en\s+los)?\s*"
-    r"(?:[úu]ltimo|últimos)\s+(?:12\s*meses|a[ñn]o)"
-    r"|consumo\s+anual"
-    r"|consumo\s+en\s+los\s+[úu]ltimos\s+12\s*meses)"
+    r"(?:"
+    r"consum[o]?\s+anual"
+    r"|consum[o]?\s+(?:acumulad[oa]|total)?[^\d\n]{0,25}?"
+    r"(?:[úu]ltim[oa]?s?)[^\d\n]{0,12}?(?:a[ñn]o|any|12\s*mes(?:es|os))"
+    r"|urteko\s+kontsumo\w*"
+    r")"
     r"[^\d]{0,40}?([\d][\d.\s]*\d|\d)\s*k?wh",
     re.IGNORECASE,
 )
