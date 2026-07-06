@@ -41,5 +41,13 @@ class TTLCache:
         )
         self._conn.commit()
 
+    def delete_prefix(self, prefix: str) -> None:
+        """Borra todas las entradas cuya clave empieza por el prefijo dado."""
+        escaped = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        self._conn.execute(
+            "DELETE FROM cache WHERE key LIKE ? ESCAPE '\\'", (escaped + "%",)
+        )
+        self._conn.commit()
+
     def close(self) -> None:
         self._conn.close()

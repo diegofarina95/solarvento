@@ -83,3 +83,9 @@ export function parseBill(file) {
   form.append('website', '')
   return request(`${API_BASE}/api/parse-bill`, { method: 'POST', body: form })
 }
+
+// Privacidad: borra en el servidor las facturas cacheadas de esta sesión de
+// navegador. sendBeacon llega de forma fiable aunque la página se esté cerrando.
+export function purgeBillSession() {
+  navigator.sendBeacon(`${API_BASE}/api/bill-session/purge`)
+}

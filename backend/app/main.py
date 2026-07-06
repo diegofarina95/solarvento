@@ -6,11 +6,12 @@ import ipaddress
 import logging
 import math
 import re
+import secrets
 from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
 
-from fastapi import FastAPI, Form, HTTPException, Query, Request, UploadFile
+from fastapi import FastAPI, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
@@ -62,6 +63,9 @@ async def lifespan(app: FastAPI):
     app.state.bill_cache = TTLCache(
         settings.bill_cache_db_path, settings.bill_cache_ttl_seconds
     )
+    # Migración: las entradas del formato antiguo ("bill:<hash>", sin sesión y
+    # con TTL de un año) contienen datos de factura que ya no deben retenerse.
+    app.state.bill_cache.delete_prefix("bill:")
     app.state.pvgis = PVGISClient(
         base_url=settings.pvgis_base_url,
         user_agent=settings.http_user_agent,
@@ -223,8 +227,37 @@ def _reject_invalid_upload(request: Request, detail: str) -> None:
     raise HTTPException(status_code=422, detail=detail)
 
 
+# PRIVACIDAD: la caché de facturas se liga a una cookie DE SESIÓN (sin
+# expiración: muere al cerrar el navegador). Al cerrar, el frontend manda un
+# beacon de purga que borra las entradas de esa sesión; el TTL corto del
+# servidor cubre los cierres sin beacon.
+_BILL_SESSION_COOKIE = "solvento_bill_session"
+_BILL_SESSION_RE = re.compile(r"^[A-Za-z0-9_-]{16,64}$")
+
+
+def _bill_session_id(request: Request) -> str | None:
+    value = request.cookies.get(_BILL_SESSION_COOKIE)
+    if value and _BILL_SESSION_RE.match(value):
+        return value
+    return None
+
+
+@app.post("/api/bill-session/purge", status_code=204)
+async def purge_bill_session(request: Request) -> Response:
+    """Borra las facturas cacheadas de la sesión (beacon al cerrar el navegador)."""
+    session_id = _bill_session_id(request)
+    if session_id:
+        app.state.bill_cache.delete_prefix(f"billsess:{session_id}:")
+    return Response(status_code=204)
+
+
 @app.post("/api/parse-bill", response_model=ParsedBill)
-async def parse_bill(request: Request, file: UploadFile, website: str | None = Form(None)):
+async def parse_bill(
+    request: Request,
+    response: Response,
+    file: UploadFile,
+    website: str | None = Form(None),
+):
     if website:
         _reject_invalid_upload(request, "Subida no válida")
     content_type = (file.content_type or "").lower()
@@ -264,13 +297,21 @@ async def parse_bill(request: Request, file: UploadFile, website: str | None = F
     # deterministas (bill_normalise). El parser posicional/regex queda RETIRADO de
     # la vía primaria: solo se usa como degradación cuando NO hay clave de OpenAI.
     if openai_parser:
+        session_id = _bill_session_id(request)
+        if session_id is None:
+            session_id = secrets.token_urlsafe(24)
+            # Cookie de sesión (sin max_age/expires): el navegador la descarta al
+            # cerrarse, y con ella el acceso a las facturas cacheadas.
+            response.set_cookie(
+                _BILL_SESSION_COOKIE, session_id, httponly=True, samesite="lax"
+            )
         parser_type = content_type if is_image else "application/pdf"
         text_hint = None
         if is_pdf:
             text_hint = await run_in_threadpool(bills_mod.extract_pdf_text_safe, content)
         try:
             bill = await _extract_bill_contract(
-                openai_parser, content, file.filename, parser_type, text_hint
+                openai_parser, content, file.filename, parser_type, text_hint, session_id
             )
         except bills_mod.BillParseError as exc:
             # Fallo duro del modelo (red/cuota/JSON): no se cae al regex en
@@ -307,14 +348,17 @@ async def _extract_bill_contract(
     filename: str | None,
     parser_type: str,
     text_hint: str | None,
+    session_id: str,
 ) -> dict:
-    """Extrae el contrato (con caché por hash de fichero) y lo normaliza a factura.
+    """Extrae el contrato (con caché por sesión + hash de fichero) y lo normaliza.
 
-    La caché guarda el CONTRATO en crudo por hash: la misma factura devuelve
-    siempre el mismo JSON y, tras la normalización determinista, los mismos euros
-    (determinismo + sin repetir llamadas de pago al modelo)."""
+    La caché guarda el CONTRATO en crudo por hash DENTRO de la sesión del
+    navegador: la misma factura devuelve siempre el mismo JSON y, tras la
+    normalización determinista, los mismos euros (determinismo + sin repetir
+    llamadas de pago al modelo). Al cerrar el navegador las entradas de la
+    sesión se purgan (beacon) o expiran por TTL."""
     cache: TTLCache = app.state.bill_cache
-    key = f"bill:{hashlib.sha256(content).hexdigest()}"
+    key = f"billsess:{session_id}:{hashlib.sha256(content).hexdigest()}"
     contract = cache.get(key)
     if contract is None:
         # PRIVACIDAD: el texto que va a OpenAI se anonimiza (fuera nombre/apellidos,

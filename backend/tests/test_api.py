@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from httpx import Response
 
 from app.config import get_settings
+from app.main import _BILL_SESSION_COOKIE
 from tests.fixtures import pvcalc_response, seriescalc_response
 
 PVGIS = "https://re.jrc.ec.europa.eu/api/v5_2"
@@ -962,6 +963,51 @@ def test_parse_bill_is_deterministic_same_file_cached(respx_mock, openai_client)
     assert first.json() == second.json()
     # Segunda subida servida desde caché: una sola llamada al modelo.
     assert respx_mock.calls.call_count == 1
+
+
+@respx.mock
+def test_parse_bill_cache_is_scoped_to_browser_session(respx_mock, openai_client):
+    # Privacidad: la caché es POR SESIÓN de navegador. Otra sesión (sin la
+    # cookie) no puede leer la factura cacheada de la primera: vuelve al modelo.
+    respx_mock.post("https://api.openai.com/v1/responses").mock(
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("3.500", "Consumo"),
+            total_amount_eur=_cf("820,00", "Total"),
+            currency="EUR", country_code="ES", language="es",
+        )
+    )
+    files = {"file": ("factura.pdf", b"%PDF-1.4 misma-factura\n%%EOF", "application/pdf")}
+    first = openai_client.post("/api/parse-bill", files=files)
+    assert first.status_code == 200
+    assert _BILL_SESSION_COOKIE in openai_client.cookies
+    openai_client.cookies.clear()  # "cerrar el navegador": la cookie de sesión muere
+    second = openai_client.post("/api/parse-bill", files=dict(files))
+    assert second.status_code == 200
+    assert respx_mock.calls.call_count == 2
+
+
+@respx.mock
+def test_bill_session_purge_deletes_cached_bills(respx_mock, openai_client):
+    # El beacon de cierre borra las facturas de la sesión en el servidor: la
+    # misma factura en la misma sesión vuelve a requerir el modelo.
+    respx_mock.post("https://api.openai.com/v1/responses").mock(
+        return_value=_contract_response(
+            annual_consumption_kwh=_cf("3.500", "Consumo"),
+            total_amount_eur=_cf("820,00", "Total"),
+            currency="EUR", country_code="ES", language="es",
+        )
+    )
+    files = {"file": ("factura.pdf", b"%PDF-1.4 misma-factura\n%%EOF", "application/pdf")}
+    assert openai_client.post("/api/parse-bill", files=files).status_code == 200
+    purge = openai_client.post("/api/bill-session/purge")
+    assert purge.status_code == 204
+    assert openai_client.post("/api/parse-bill", files=dict(files)).status_code == 200
+    assert respx_mock.calls.call_count == 2
+
+
+def test_bill_session_purge_without_cookie_is_noop(client):
+    # Sin cookie de sesión el beacon no hace nada (y no falla).
+    assert client.post("/api/bill-session/purge").status_code == 204
 
 
 @respx.mock
