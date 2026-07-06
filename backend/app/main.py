@@ -2010,10 +2010,22 @@ if FRONTEND_DIST.is_dir():
         """
         response = await call_next(request)
         path = request.url.path
+        # Este middleware es el EXTERNO: ve la ruta original, con el prefijo
+        # /solvento aún puesto. Sin quitarlo, /solvento/assets/... no casaba con
+        # /assets/ y los bundles con hash viajaban SIN caché (lo cazó Lighthouse).
+        if path.startswith(PUBLIC_PREFIX):
+            path = path[len(PUBLIC_PREFIX) :] or "/"
         if path.startswith("/api/"):
             return response
         if path.startswith("/assets/"):
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        elif path.endswith((".png", ".webp", ".ico", ".svg", ".jpg", ".jpeg", ".webmanifest")):
+            # Imágenes sin hash en el nombre: caché moderada (si cambian de
+            # verdad, se les cambia el nombre, como logo-mark-96.webp).
+            response.headers["Cache-Control"] = "public, max-age=604800"
+        elif path.endswith((".txt", ".xml")):
+            # robots/sitemap/ads.txt: frescura razonable para los crawlers.
+            response.headers["Cache-Control"] = "public, max-age=3600"
         elif response.headers.get("content-type", "").startswith("text/html"):
             response.headers["Cache-Control"] = "no-cache"
         return response

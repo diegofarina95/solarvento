@@ -31,7 +31,7 @@ function ScoreCard({ data, t }) {
       <div className="flex items-center gap-4">
         <div className="flex flex-col items-center">
           <span className={`text-3xl font-bold ${ring[qual]}`}>{score}</span>
-          <span className="text-[10px] font-medium uppercase tracking-wide text-stone-400">/ 100</span>
+          <span className="text-[10px] font-medium uppercase tracking-wide text-stone-500">/ 100</span>
         </div>
         <div>
           <p className="text-sm font-semibold text-stone-700">{t('basic.score.title')}</p>
@@ -134,7 +134,7 @@ function MonthlyChart({ production, consumption, locale, t }) {
                   />
                 )}
               </div>
-              <span className="mt-1 text-[10px] text-stone-400">{labels[i]}</span>
+              <span className="mt-1 text-[10px] text-stone-500">{labels[i]}</span>
             </div>
           )
         })}

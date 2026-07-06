@@ -369,7 +369,7 @@ export default function App() {
           <div>
             <div className="flex items-center gap-3">
               <img
-                src={`${import.meta.env.BASE_URL}logo-mark.png`}
+                src={`${import.meta.env.BASE_URL}logo-mark-96.webp`}
                 alt="SolarVento"
                 className="h-11 w-11 shrink-0 drop-shadow-sm"
                 width="44"
@@ -401,7 +401,7 @@ export default function App() {
         <AdSlot placement="top" />
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
+      <main className="grid gap-8 lg:grid-cols-[380px_1fr]">
         <section ref={formSectionRef} className="space-y-4">
           <div className="card-solar p-4">
             <h2 className="section-eyebrow mb-3">
@@ -551,7 +551,7 @@ export default function App() {
           <p className="mt-4 text-xs text-stone-500">{t('app.professionalDisclaimer')}</p>
           <AdSlot placement="footer" />
         </section>
-      </div>
+      </main>
 
       {pending && (
         <PrecheckModal
