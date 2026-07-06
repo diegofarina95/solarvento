@@ -61,6 +61,7 @@ export const translations = {
       empty: 'Elige una ubicación y pulsa “Calcular producción solar” para ver la estimación de tu instalación.',
       errorTitle: 'No se pudo completar el cálculo',
       privacyPolicy: 'Política de privacidad',
+      faq: 'Preguntas frecuentes',
     },
     errors: {
       invalidNumber: ({ label }) => `Valor no válido en ${label}.`,
@@ -627,6 +628,7 @@ export const translations = {
       empty: 'Choose a location and press “Calculate solar production” to see your estimate.',
       errorTitle: 'The calculation could not be completed',
       privacyPolicy: 'Privacy policy',
+      faq: 'FAQ',
     },
     errors: {
       invalidNumber: ({ label }) => `Invalid value for ${label}.`,
@@ -1193,6 +1195,7 @@ export const translations = {
       empty: 'Choisissez un emplacement puis lancez le calcul pour voir l’estimation.',
       errorTitle: 'Le calcul n’a pas pu être terminé',
       privacyPolicy: 'Politique de confidentialité',
+      faq: 'Questions fréquentes',
     },
     errors: {
       invalidNumber: ({ label }) => `Valeur non valide pour ${label}.`,
@@ -1762,6 +1765,7 @@ export const translations = {
       empty: 'Escolhe uma localização e carrega em “Calcular produção solar” para veres a estimativa.',
       errorTitle: 'Não foi possível concluir o cálculo',
       privacyPolicy: 'Política de privacidade',
+      faq: 'Perguntas frequentes',
     },
     errors: {
       invalidNumber: ({ label }) => `Valor inválido para ${label}.`,
@@ -2328,6 +2332,7 @@ export const translations = {
       empty: 'Elixe unha localización e preme “Calcular produción solar” para ver a estimación da túa instalación.',
       errorTitle: 'Non se puido completar o cálculo',
       privacyPolicy: 'Política de privacidade',
+      faq: 'Preguntas frecuentes',
     },
     errors: {
       invalidNumber: ({ label }) => `Valor non válido en ${label}.`,
@@ -2894,6 +2899,7 @@ export const translations = {
       empty: 'Tria una ubicació i prem “Calcular producció solar” per veure l’estimació de la teva instal·lació.',
       errorTitle: 'No s’ha pogut completar el càlcul',
       privacyPolicy: 'Política de privacitat',
+      faq: 'Preguntes freqüents',
     },
     errors: {
       invalidNumber: ({ label }) => `Valor no vàlid a ${label}.`,
@@ -3460,6 +3466,7 @@ export const translations = {
       empty: 'Aukeratu kokapen bat eta sakatu “Kalkulatu ekoizpen solarra” zure instalazioaren estimazioa ikusteko.',
       errorTitle: 'Ezin izan da kalkulua osatu',
       privacyPolicy: 'Pribatutasun-politika',
+      faq: 'Ohiko galderak',
     },
     errors: {
       invalidNumber: ({ label }) => `Balio baliogabea hemen: ${label}.`,
