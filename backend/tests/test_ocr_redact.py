@@ -113,8 +113,8 @@ def _ocr_text_of(jpeg_bytes: bytes) -> str:
     from PIL import Image
 
     engine = ocr_redact._get_ocr()
-    result, _ = engine(np.array(Image.open(io.BytesIO(jpeg_bytes))))
-    return "\n".join(text for _box, text, _score in (result or []))
+    result = engine(np.array(Image.open(io.BytesIO(jpeg_bytes))))
+    return "\n".join(getattr(result, "txts", None) or ())
 
 
 def _assert_redacted(payload: VisionPayload) -> None:
@@ -136,7 +136,7 @@ def _assert_redacted(payload: VisionPayload) -> None:
 
 @pytest.mark.ocr
 def test_redact_image_end_to_end():
-    pytest.importorskip("rapidocr_onnxruntime")
+    pytest.importorskip("rapidocr")
     buf = io.BytesIO()
     _synthetic_bill_image().save(buf, "PNG")
     payload = ocr_redact.redact_for_vision(buf.getvalue(), "image/png")
@@ -145,7 +145,7 @@ def test_redact_image_end_to_end():
 
 @pytest.mark.ocr
 def test_redact_scanned_pdf_end_to_end():
-    pytest.importorskip("rapidocr_onnxruntime")
+    pytest.importorskip("rapidocr")
     pytest.importorskip("pypdfium2")
     buf = io.BytesIO()
     _synthetic_bill_image().save(buf, "PDF")  # PDF de una imagen: sin capa de texto
@@ -286,7 +286,7 @@ async def test_late_redaction_on_text_fallback_sends_images_not_pdf(monkeypatch)
     Sin este test, una regresión en _late_redaction degradaría en silencio al
     PDF original con PII (el fallback al original es indistinguible del éxito
     para el resto de la suite)."""
-    pytest.importorskip("rapidocr_onnxruntime")
+    pytest.importorskip("rapidocr")
     pytest.importorskip("pypdfium2")
     from app.bills import BillParseError
     from app.openai_bills import OpenAIBillParser
@@ -319,7 +319,7 @@ async def test_late_redaction_on_text_fallback_sends_images_not_pdf(monkeypatch)
 def test_redact_multipage_pdf_and_max_pages():
     """PDF escaneado de 2 páginas: la PII de la página 2 también se tapa; y
     max_pages recorta de verdad."""
-    pytest.importorskip("rapidocr_onnxruntime")
+    pytest.importorskip("rapidocr")
     pytest.importorskip("pypdfium2")
     from PIL import Image, ImageDraw, ImageFont
 

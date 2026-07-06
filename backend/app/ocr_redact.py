@@ -94,7 +94,7 @@ def _get_ocr():
         if _ocr_failed_at is not None and time.monotonic() - _ocr_failed_at < _OCR_RETRY_SECONDS:
             return None
         try:
-            from rapidocr_onnxruntime import RapidOCR
+            from rapidocr import RapidOCR
 
             _ocr_engine = RapidOCR()
             _ocr_failed_at = None
@@ -181,11 +181,14 @@ def _redact_page(img) -> tuple[bytes, str, int]:
     ocr = _get_ocr()
     if ocr is None:
         raise RuntimeError("OCR no disponible")
-    result, _elapse = ocr(np.array(img))
-    lines = result or []
+    # rapidocr v3 devuelve un RapidOCROutput con .boxes (quads numpy) y .txts.
+    result = ocr(np.array(img))
+    boxes = getattr(result, "boxes", None)
+    txts = getattr(result, "txts", None)
+    pairs = list(zip(boxes, txts)) if boxes is not None and txts is not None else []
 
-    rects = [_quad_to_rect(box) for box, _text, _score in lines]
-    texts = [text for _box, text, _score in lines]
+    rects = [_quad_to_rect(box) for box, _text in pairs]
+    texts = [text for _box, text in pairs]
 
     to_redact: set[int] = set()
     for i, text in enumerate(texts):
@@ -211,7 +214,7 @@ def _redact_page(img) -> tuple[bytes, str, int]:
             )
 
     # Texto en orden de lectura aproximado (arriba→abajo, izquierda→derecha).
-    order = sorted(range(len(lines)), key=lambda i: (rects[i][1], rects[i][0]))
+    order = sorted(range(len(pairs)), key=lambda i: (rects[i][1], rects[i][0]))
     ocr_text = "\n".join(texts[i] for i in order)
 
     buf = io.BytesIO()
