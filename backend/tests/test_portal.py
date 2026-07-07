@@ -484,3 +484,125 @@ def test_tick_respeta_el_lock(monkeypatch):
     finally:
         portal.LOCK.release()
     assert blog_schedule.get("factura")["state"] == "pending"  # intacta: reintenta luego
+
+
+# --- Rutas de programación ---
+
+@pytest.fixture
+def grupo_con_borrador(monkeypatch, tmp_path):
+    content = tmp_path / "content"
+    content.mkdir()
+    (content / "factura.html").write_text(FM.format(t="Factura"))
+    monkeypatch.setattr(portal, "CONTENT_BLOG", content)
+    monkeypatch.setattr(portal, "draft_refs", lambda: {"factura"})
+    return content
+
+
+def test_schedule_crea_entrada(client, grupo_con_borrador):
+    r = client.post(
+        "/schedule/factura", data={"publish_at": "2030-01-01T09:00"}, follow_redirects=False
+    )
+    assert r.status_code == 303
+    assert blog_schedule.get("factura")["state"] == "pending"
+
+
+def test_schedule_sobrescribe(client, grupo_con_borrador):
+    client.post("/schedule/factura", data={"publish_at": "2030-01-01T09:00"})
+    client.post("/schedule/factura", data={"publish_at": "2030-02-02T10:00"})
+    assert blog_schedule.get("factura")["publish_at"] == "2030-02-02T10:00"
+
+
+def test_schedule_rechaza_hora_pasada(client, grupo_con_borrador):
+    r = client.post("/schedule/factura", data={"publish_at": "2020-01-01T09:00"})
+    assert r.status_code == 400
+    assert blog_schedule.get("factura") is None
+
+
+def test_schedule_rechaza_hora_invalida(client, grupo_con_borrador):
+    r = client.post("/schedule/factura", data={"publish_at": "mañana por la tarde"})
+    assert r.status_code == 400
+
+
+def test_schedule_rechaza_grupo_sin_borradores(client, grupo_con_borrador, monkeypatch):
+    monkeypatch.setattr(portal, "draft_refs", lambda: set())
+    r = client.post("/schedule/factura", data={"publish_at": "2030-01-01T09:00"})
+    assert r.status_code == 400
+
+
+def test_schedule_rechaza_grupo_inexistente(client, grupo_con_borrador):
+    r = client.post("/schedule/no-existe", data={"publish_at": "2030-01-01T09:00"})
+    assert r.status_code == 404
+
+
+def test_unschedule_elimina(client, grupo_con_borrador):
+    client.post("/schedule/factura", data={"publish_at": "2030-01-01T09:00"})
+    r = client.post("/unschedule/factura", follow_redirects=False)
+    assert r.status_code == 303
+    assert blog_schedule.get("factura") is None
+
+
+def test_publish_group_route_publica_y_limpia(client, grupo_con_borrador, monkeypatch):
+    blog_schedule.set_schedule("factura", "2026-07-08T09:00")
+    blog_schedule.mark_error("factura", "sync caído")
+    monkeypatch.setattr(
+        portal, "publish_group",
+        lambda stem, scheduled: (True, "publicado", [("Factura", "es", "factura")]),
+    )
+    monkeypatch.setattr(portal, "check_live_url", lambda url: f"✅ {url} responde 200")
+    r = client.post("/publish-group/factura")
+    assert r.status_code == 200
+    assert "https://solarvento.es/blog/factura/" in r.text
+    assert blog_schedule.get("factura") is None
+
+
+def test_publish_group_route_fallo_marca_error(client, grupo_con_borrador, monkeypatch):
+    blog_schedule.set_schedule("factura", "2030-01-01T09:00")
+    monkeypatch.setattr(
+        portal, "publish_group", lambda stem, scheduled: (False, "git commit: boom", [])
+    )
+    r = client.post("/publish-group/factura")
+    assert r.status_code == 502
+    assert blog_schedule.get("factura")["state"] == "error"
+
+
+def test_publish_group_route_sin_borradores_ni_entrada(client, grupo_con_borrador, monkeypatch):
+    monkeypatch.setattr(portal, "draft_refs", lambda: set())
+    r = client.post("/publish-group/factura")
+    assert r.status_code == 409
+
+
+def test_publish_group_route_reintento_sin_borradores(client, grupo_con_borrador, monkeypatch):
+    # commit hecho + sync fallido en el pasado: sin borradores pero CON entrada
+    monkeypatch.setattr(portal, "draft_refs", lambda: set())
+    blog_schedule.set_schedule("factura", "2026-07-08T09:00")
+    blog_schedule.mark_error("factura", "sync caído")
+    monkeypatch.setattr(
+        portal, "publish_group",
+        lambda stem, scheduled: (True, "publicado", [("Factura", "es", "factura")]),
+    )
+    monkeypatch.setattr(portal, "check_live_url", lambda url: f"✅ {url} responde 200")
+    r = client.post("/publish-group/factura")
+    assert r.status_code == 200
+    assert blog_schedule.get("factura") is None
+
+
+def test_discard_limpia_la_programacion(client, grupo_con_borrador, monkeypatch, tmp_path):
+    monkeypatch.setattr(portal, "PUBLIC_BLOG", tmp_path / "public")
+    monkeypatch.setattr(portal, "run_generate", lambda: (True, ""))
+    blog_schedule.set_schedule("factura", "2030-01-01T09:00")
+    r = client.post("/discard/factura", follow_redirects=False)
+    assert r.status_code == 303
+    assert blog_schedule.get("factura") is None
+
+
+def test_delete_limpia_la_programacion(client, grupo_con_borrador, monkeypatch, tmp_path):
+    content = grupo_con_borrador
+    (content / "segundo.html").write_text(FM.format(t="Segundo"))  # no es el último
+    monkeypatch.setattr(portal, "PUBLIC_BLOG", tmp_path / "public")
+    monkeypatch.setattr(portal, "run_generate", lambda: (True, ""))
+    monkeypatch.setattr(portal, "commit_paths", lambda msg: (True, "ok"))
+    monkeypatch.setattr(portal, "sync_to_prod", lambda: (True, "ok"))
+    blog_schedule.set_schedule("factura", "2030-01-01T09:00")
+    r = client.post("/delete/factura")
+    assert r.status_code == 200
+    assert blog_schedule.get("factura") is None

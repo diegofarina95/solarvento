@@ -31,7 +31,7 @@ from pathlib import Path
 
 from concurrent.futures import ThreadPoolExecutor
 
-from fastapi import FastAPI, Request, UploadFile
+from fastapi import FastAPI, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -759,6 +759,7 @@ def discard(ref: str):
         src = content_path(lang, stem)
         slug = public_slug(src)
         src.unlink()
+        blog_schedule.remove(stem)  # descartar un borrador anula su programación
         shutil.rmtree(generated_page(lang, slug).parent, ignore_errors=True)
         run_generate()  # índice/hreflang/sitemap vuelven al estado del último commit
     finally:
@@ -795,6 +796,7 @@ def delete(ref: str):
             slug = public_slug(vsrc)
             vsrc.unlink()
             shutil.rmtree(generated_page(vlang, slug).parent, ignore_errors=True)
+        blog_schedule.remove(stem)  # borrar el grupo anula su programación
         ok, out = run_generate()
         if not ok:
             return error_page("El generador falló tras borrar", out, 500)
@@ -875,6 +877,74 @@ def translate(stem: str):
 <p class="meta">Revisa cada preview y usa «Publicar todo lo pendiente» cuando estén bien.</p>
 <p><a href="/">← Volver al portal</a></p>""",
         200 if outcomes else 502,
+    )
+
+
+@app.post("/schedule/{stem}")
+def schedule(stem: str, publish_at: str = Form(...)):
+    """Programa (o reprograma) la publicación del grupo a una hora futura."""
+    if not valid_filename(f"{stem}.html") or not content_path("es", stem).exists():
+        return error_page("No encontrado", f"No existe el artículo «{stem}».", 404)
+    if not group_refs(stem):
+        return error_page(
+            "Nada que programar", "El grupo no tiene borradores pendientes.", 400
+        )
+    when = blog_schedule.parse_local(publish_at)
+    if when is None:
+        return error_page(
+            "Hora inválida", f"«{publish_at}» no tiene formato AAAA-MM-DDTHH:MM.", 400
+        )
+    if when <= datetime.now():
+        return error_page("Hora pasada", "La hora programada debe ser futura.", 400)
+    blog_schedule.set_schedule(stem, publish_at)
+    return RedirectResponse("/", status_code=303)
+
+
+@app.post("/unschedule/{stem}")
+def unschedule(stem: str):
+    blog_schedule.remove(stem)
+    return RedirectResponse("/", status_code=303)
+
+
+@app.post("/publish-group/{stem}", response_class=HTMLResponse)
+def publish_group_route(stem: str):
+    """«Publicar ahora»: dispara la publicación selectiva del grupo a mano.
+
+    Válido con borradores pendientes O con entrada en el JSON (stale/error):
+    tras un fallo de solo-sync el commit ya está hecho y no quedan borradores,
+    pero el reintento debe poder ejecutar el rsync."""
+    if not valid_filename(f"{stem}.html") or not content_path("es", stem).exists():
+        return error_page("No encontrado", f"No existe el artículo «{stem}».", 404)
+    entry = blog_schedule.get(stem)
+    if not group_refs(stem) and entry is None:
+        return error_page(
+            "Nada que publicar",
+            "El grupo no tiene borradores ni programación pendiente.",
+            409,
+        )
+    if not LOCK.acquire(blocking=False):
+        return error_page("Ocupado", "Hay otra operación en curso; reintenta.", 423)
+    try:
+        ok, detail, published = publish_group(stem, scheduled=False)
+    finally:
+        LOCK.release()
+    if not ok:
+        if entry is not None:
+            blog_schedule.mark_error(stem, detail)
+        return error_page("La publicación falló", detail, 502)
+    blog_schedule.remove(stem)
+    lives = [check_live_url(public_url(lang, slug)) for _, lang, slug in published]
+    items = "".join(
+        f'<li><a href="{public_url(lang, slug)}" target="_blank">{public_url(lang, slug)}</a>'
+        f" — {html.escape(live)}</li>"
+        for (_, lang, slug), live in zip(published, lives)
+    )
+    return page(
+        "Publicado",
+        f"""<h1 class="ok">Publicado ✅</h1>
+<ul>{items}</ul>
+<p class="meta">Commit en git hecho; el próximo deploy completo regenerará exactamente lo mismo.</p>
+<p><a href="/">← Volver al portal</a></p>""",
     )
 
 
