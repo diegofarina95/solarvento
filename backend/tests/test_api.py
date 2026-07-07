@@ -1350,7 +1350,7 @@ def test_solar_estimate_multiyear_economics(respx_mock, client):
     assert a["price_escalation_pct_per_year"] == 2.0
     assert a["inverter_replacement_year"] == 13
     assert a["inverter_replacement_cost_eur"] > 0
-    assert a["om_eur_per_year"] == pytest.approx(70.0)  # 1% de 7000
+    assert a["om_eur_per_year"] == pytest.approx(49.0)  # 0,7% de 7000
     # Precio manual: sin corrección fiscal
     assert eco["marginal_price_factor"] == 1.0
     assert eco["effective_price_eur_kwh"] == 0.20

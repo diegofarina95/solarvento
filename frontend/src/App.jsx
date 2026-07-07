@@ -84,7 +84,7 @@ export default function App() {
     peakPower: '5',
     tilt: '30',
     azimuth: '0',
-    losses: '14',
+    losses: '11',
     consumption: '',
     cost: '',
     price: '',

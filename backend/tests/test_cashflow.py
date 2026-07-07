@@ -211,9 +211,11 @@ def test_referencia_santiago_ajustado_una_decima_sobre_el_simple():
     )
     simple = round(investment / savings_year1, 1)
     assert simple == 4.7
-    assert analysis["payback_years"] == 4.8
-    # A paybacks cortos el O&M pesa más que la escalada acumulada: el ajustado
-    # queda (ligeramente) por encima del simple, nunca por debajo.
+    # Con O&M al 0,7% (ajuste jul-2026) la cancelación es exacta a una décima:
+    # escalada-degradación (~+1,5%/año) compensa el O&M en este horizonte.
+    # Con el O&M anterior (1%) daba 4,8. El inversor (año 13) sigue sin poder
+    # tocar un payback que llega antes.
+    assert analysis["payback_years"] == 4.7
     assert analysis["payback_years"] >= simple
 
 

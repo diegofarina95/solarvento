@@ -14,9 +14,9 @@ HEADLINE_YEARS = 25  # cifras titulares (ahorro total, VAN, TIR) a 25 años
 PANEL_DEGRADATION_PER_YEAR = 0.005  # garantías Tier-1: ~85-88% a los 25 años
 PRICE_ESCALATION_PER_YEAR = 0.02  # conservador frente al histórico europeo
 BATTERY_DEGRADATION_PER_YEAR = 0.02  # LFP: ~80% de capacidad a los 10 años
-OM_PCT_PER_YEAR = 0.01  # mantenimiento/seguro anual sobre el coste del sistema
+OM_PCT_PER_YEAR = 0.007  # mantenimiento/seguro anual sobre el coste del sistema
 INVERTER_REPLACEMENT_YEAR = 13  # vida típica de un inversor: 10-15 años
-DISCOUNT_RATE = 0.03  # tasa nominal para el VAN
+DISCOUNT_RATE = 0.035  # tasa nominal para el VAN
 
 
 def simple_yearly_savings(

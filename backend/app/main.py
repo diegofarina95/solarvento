@@ -181,7 +181,7 @@ async def optimal_angles(
         )
     try:
         result = await app.state.pvgis.pvcalc(
-            lat, lon, peakpower_kwp=1.0, loss_pct=14.0, optimal_angles=True
+            lat, lon, peakpower_kwp=1.0, loss_pct=11.0, optimal_angles=True
         )
     except PVGISError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc

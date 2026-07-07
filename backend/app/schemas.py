@@ -138,7 +138,9 @@ class SolarEstimateRequest(BaseModel):
     lat: float = Field(..., ge=-90, le=90, description="Latitud")
     lon: float = Field(..., ge=-180, le=180, description="Longitud")
     peak_power_kwp: float = Field(..., gt=0, le=10000, description="Potencia pico instalada (kWp)")
-    loss_pct: float = Field(14.0, ge=0, le=50, description="Pérdidas del sistema (%)")
+    # 11%: pérdidas típicas de una instalación moderna (8-12%); el 14% era el
+    # default heredado de PVGIS y sesgaba la producción a la baja.
+    loss_pct: float = Field(11.0, ge=0, le=50, description="Pérdidas del sistema (%)")
     tilt_deg: float | None = Field(
         None, ge=0, le=90, description="Inclinación real del tejado (°); si se omite se usa la óptima"
     )
