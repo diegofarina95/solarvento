@@ -433,3 +433,54 @@ def test_restore_aside_sin_restos_no_regenera(blog_fs, monkeypatch):
     monkeypatch.setattr(portal, "run_generate", lambda: (calls.append("gen"), (True, ""))[1])
     portal.restore_aside()  # aside/ ni siquiera existe
     assert calls == []
+
+
+# --- Planificador: tick sin hilo ni esperas ---
+
+from datetime import datetime
+
+from app import blog_schedule
+
+
+@pytest.fixture(autouse=True)
+def schedule_file(monkeypatch, tmp_path):
+    monkeypatch.setattr(blog_schedule, "SCHEDULE_FILE", tmp_path / "schedule.json")
+
+
+def test_tick_publica_lo_vencido_y_limpia(monkeypatch):
+    blog_schedule.set_schedule("factura", "2026-07-08T09:00")
+    blog_schedule.set_schedule("futura", "2030-01-01T09:00")
+    calls = []
+    monkeypatch.setattr(
+        portal, "publish_group",
+        lambda stem, scheduled: (calls.append((stem, scheduled)), (True, "publicado", []))[1],
+    )
+    portal.scheduler_tick(datetime(2026, 7, 8, 9, 0, 30))
+    assert calls == [("factura", True)]
+    assert blog_schedule.get("factura") is None  # publicada → fuera del JSON
+    assert blog_schedule.get("futura")["state"] == "pending"  # aún no toca
+
+
+def test_tick_fallo_marca_error_sin_reintentar(monkeypatch):
+    blog_schedule.set_schedule("factura", "2026-07-08T09:00")
+    monkeypatch.setattr(
+        portal, "publish_group", lambda stem, scheduled: (False, "sync a prod: caído", [])
+    )
+    portal.scheduler_tick(datetime(2026, 7, 8, 9, 1))
+    entry = blog_schedule.get("factura")
+    assert entry["state"] == "error"
+    assert "caído" in entry["error"]
+    # el siguiente tick NO reintenta (error no está en due)
+    monkeypatch.setattr(portal, "publish_group", lambda *a, **k: pytest.fail("no debe llamarse"))
+    portal.scheduler_tick(datetime(2026, 7, 8, 9, 2))
+
+
+def test_tick_respeta_el_lock(monkeypatch):
+    blog_schedule.set_schedule("factura", "2026-07-08T09:00")
+    monkeypatch.setattr(portal, "publish_group", lambda *a, **k: pytest.fail("no debe llamarse"))
+    assert portal.LOCK.acquire(blocking=False)
+    try:
+        portal.scheduler_tick(datetime(2026, 7, 8, 9, 1))
+    finally:
+        portal.LOCK.release()
+    assert blog_schedule.get("factura")["state"] == "pending"  # intacta: reintenta luego

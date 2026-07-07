@@ -18,12 +18,15 @@ from __future__ import annotations
 
 import html
 import ipaddress
+import logging
 import re
 import shutil
 import subprocess
 import threading
 import urllib.error
 import urllib.request
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from concurrent.futures import ThreadPoolExecutor
@@ -32,7 +35,7 @@ from fastapi import FastAPI, Request, UploadFile
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import translate_blog
+from . import blog_schedule, translate_blog
 from .config import get_settings
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -65,7 +68,58 @@ ALLOWED_NETS = (
 # Una operación de escritura (subir/publicar/borrar/sync) a la vez.
 LOCK = threading.Lock()
 
-app = FastAPI(title="SolarVento — portal del blog", docs_url=None, redoc_url=None)
+
+# --- planificador: publica a la hora programada con el portal en marcha -----
+# (referencia a publish_group/restore_aside definidas más abajo: Python las
+# resuelve en tiempo de llamada, siempre tras cargar el módulo entero)
+
+SCHEDULER_INTERVAL = 30  # segundos entre ticks
+
+
+def scheduler_tick(now: datetime) -> None:
+    """Un tick: publica los grupos pending cuya hora llegó.
+
+    Si el LOCK está ocupado (otra operación en curso) NO cambia nada: el
+    siguiente tick lo reintenta. Éxito → la entrada sale del JSON; fallo →
+    state=error y sin reintentos automáticos (confirmación manual)."""
+    for stem in blog_schedule.due(now):
+        if not LOCK.acquire(blocking=False):
+            return
+        try:
+            ok, detail, _ = publish_group(stem, scheduled=True)
+        finally:
+            LOCK.release()
+        if ok:
+            blog_schedule.remove(stem)
+        else:
+            blog_schedule.mark_error(stem, detail)
+
+
+def _scheduler_loop(stop: threading.Event) -> None:
+    while not stop.wait(SCHEDULER_INTERVAL):
+        try:
+            scheduler_tick(datetime.now())
+        except Exception:  # un fallo puntual no debe matar el hilo
+            logging.exception("planificador del blog")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Orden: primero recuperar borradores de un crash, luego marcar vencidas
+    # (regla de Diego: lo que venció con el portal caído espera confirmación).
+    restore_aside()
+    blog_schedule.mark_stale_before(datetime.now())
+    stop = threading.Event()
+    threading.Thread(
+        target=_scheduler_loop, args=(stop,), daemon=True, name="blog-scheduler"
+    ).start()
+    yield
+    stop.set()
+
+
+app = FastAPI(
+    title="SolarVento — portal del blog", docs_url=None, redoc_url=None, lifespan=lifespan
+)
 
 if (FRONTEND / "public" / "fonts").is_dir():  # tipografía de marca en el preview
     app.mount("/fonts", StaticFiles(directory=FRONTEND / "public" / "fonts"))
