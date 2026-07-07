@@ -349,6 +349,8 @@
       }
       [data-theme='night'] .callout strong { color: #fde68a; }
       [data-theme='night'] .cta, [data-theme='night'] .cta:hover { color: #1c1917; }
+      /* El border-color nocturno de .card machacaría el borde de categoría */
+      [data-theme='night'] .card[class*='cat-'] { border-left-color: var(--cat); }
     </style>
     <script type="application/ld+json">
 {
