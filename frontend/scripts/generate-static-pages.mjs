@@ -13,7 +13,7 @@ import { mkdirSync, readFileSync, writeFileSync, readdirSync, existsSync } from 
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { loadArticles, articlePage, blogIndexPage, blogSitemapEntries } from './blog.mjs'
+import { loadBlog, blogOutputs, blogSitemapEntries } from './blog.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const SRC = join(ROOT, 'content', 'src')
@@ -261,17 +261,15 @@ function main() {
     outputs.set(pagePath('privacidad', lang), privacyPage(content, privacyCss))
   }
 
-  // Blog: un HTML por artículo + índice, desde content/blog/.
+  // Blog: original es + traducciones agrupadas, índices por idioma, hreflang.
   const blogCss = readFileSync(join(STYLES, 'blog.css'), 'utf-8')
-  const articles = loadArticles(BLOG_SRC)
-  if (articles.length === 0) throw new Error('content/blog está vacío')
-  for (const article of articles) {
-    // URL limpia /blog/<slug>/: el artículo vive en blog/<slug>/index.html
-    outputs.set(join('blog', article.slug, 'index.html'), articlePage(article, blogCss))
+  const groups = loadBlog(BLOG_SRC)
+  if (groups.size === 0) throw new Error('content/blog está vacío')
+  for (const [path, html] of blogOutputs(groups, blogCss)) {
+    outputs.set(join('blog', path), html)
   }
-  outputs.set(join('blog', 'index.html'), blogIndexPage(articles, blogCss))
 
-  outputs.set('sitemap.xml', sitemap(blogSitemapEntries(articles)))
+  outputs.set('sitemap.xml', sitemap(blogSitemapEntries(groups)))
 
   // Paridad: mismas preguntas/secciones en todos los idiomas que en es.
   const ref = JSON.parse(readFileSync(join(SRC, 'es.json'), 'utf-8'))

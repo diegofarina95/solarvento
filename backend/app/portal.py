@@ -26,9 +26,14 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+from concurrent.futures import ThreadPoolExecutor
+
 from fastapi import FastAPI, Request, UploadFile
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+
+from . import translate_blog
+from .config import get_settings
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 FRONTEND = REPO_ROOT / "frontend"
@@ -40,6 +45,9 @@ ENV_FILE = REPO_ROOT / ".env"
 
 ORIGIN = "https://solarvento.es"
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024
+
+# Idiomas de traducción (el original siempre es es); mismo orden que el blog.
+TRANSLATION_LANGS = ("en", "ca", "gl", "eu")
 
 # Nombre de archivo = slug público: minúsculas/dígitos separados por guiones.
 FILENAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*\.html$")
@@ -144,16 +152,6 @@ def git(*args: str) -> subprocess.CompletedProcess:
     )
 
 
-def draft_slugs() -> set[str]:
-    """Borradores = archivos sin trackear en content/blog (sobreviven reinicios)."""
-    proc = git("status", "--porcelain", "--untracked-files=all", "--", str(CONTENT_BLOG))
-    slugs = set()
-    for line in proc.stdout.splitlines():
-        if line.startswith("??") and line.strip().endswith(".html"):
-            slugs.add(Path(line[3:].strip()).stem)
-    return slugs
-
-
 PUBLIC_SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
@@ -164,22 +162,77 @@ def public_slug(content_file: Path) -> str:
     return slug if PUBLIC_SLUG_RE.match(slug) else content_file.stem
 
 
-def list_articles() -> list[dict]:
-    drafts = draft_slugs()
-    items = []
+def parse_ref(ref: str) -> tuple[str, str] | None:
+    """Referencia de las rutas del portal → (lang, stem).
+
+    "factura" → ("es", "factura"); "en/factura" → ("en", "factura")."""
+    parts = ref.strip("/").split("/")
+    if len(parts) == 1:
+        lang, stem = "es", parts[0]
+    elif len(parts) == 2 and parts[0] in TRANSLATION_LANGS:
+        lang, stem = parts
+    else:
+        return None
+    return (lang, stem) if valid_filename(f"{stem}.html") else None
+
+
+def content_path(lang: str, stem: str) -> Path:
+    base = CONTENT_BLOG if lang == "es" else CONTENT_BLOG / lang
+    return base / f"{stem}.html"
+
+
+def public_url(lang: str, slug: str) -> str:
+    return f"{ORIGIN}/blog/{slug}/" if lang == "es" else f"{ORIGIN}/blog/{lang}/{slug}/"
+
+
+def generated_page(lang: str, slug: str) -> Path:
+    base = PUBLIC_BLOG if lang == "es" else PUBLIC_BLOG / lang
+    return base / slug / "index.html"
+
+
+def draft_refs() -> set[str]:
+    """Borradores = archivos sin trackear en content/blog (sobreviven reinicios).
+
+    Devuelve referencias del portal: "factura" (es) o "en/factura"."""
+    proc = git("status", "--porcelain", "--untracked-files=all", "--", str(CONTENT_BLOG))
+    refs = set()
+    for line in proc.stdout.splitlines():
+        if not line.startswith("??") or not line.strip().endswith(".html"):
+            continue
+        path = Path(line[3:].strip())
+        if not path.is_absolute():
+            path = REPO_ROOT / path
+        rel = path.resolve().relative_to(CONTENT_BLOG.resolve())
+        refs.add(str(rel.with_suffix("")))
+    return refs
+
+
+def list_groups() -> list[dict]:
+    """Artículos agrupados: original es + estado de cada traducción."""
+    drafts = draft_refs()
+    groups = []
     for f in sorted(CONTENT_BLOG.glob("*.html")):
         meta = parse_frontmatter(f.read_text())
-        items.append(
+        tr = {}
+        for lang in TRANSLATION_LANGS:
+            tf = content_path(lang, f.stem)
+            tr[lang] = (
+                {"slug": public_slug(tf), "draft": f"{lang}/{f.stem}" in drafts}
+                if tf.exists()
+                else None
+            )
+        groups.append(
             {
                 "stem": f.stem,  # nombre en disco: clave de las rutas del portal
-                "slug": public_slug(f),  # slug público: URL en prod
+                "slug": public_slug(f),  # slug público del original
                 "title": meta.get("title", f.stem),
                 "date": meta.get("date", "¿?"),
                 "draft": f.stem in drafts,
+                "tr": tr,
             }
         )
-    items.sort(key=lambda a: a["date"], reverse=True)
-    return items
+    groups.sort(key=lambda a: a["date"], reverse=True)
+    return groups
 
 
 def sync_to_prod() -> tuple[bool, str]:
@@ -212,8 +265,7 @@ def sync_to_prod() -> tuple[bool, str]:
     return True, "\n".join(filter(None, log)) or "sincronizado"
 
 
-def check_live(slug: str) -> str:
-    url = f"{ORIGIN}/blog/{slug}/"
+def check_live_url(url: str) -> str:
     try:
         with urllib.request.urlopen(url, timeout=10) as resp:
             return f"✅ {url} responde {resp.status}"
@@ -352,30 +404,53 @@ async def tailnet_only(request: Request, call_next):
 
 # --- rutas --------------------------------------------------------------------
 
+def lang_chips(g: dict) -> str:
+    """Estado por idioma de un artículo: publicado (enlace), borrador o «Traducir»."""
+    chips = []
+    for lang in TRANSLATION_LANGS:
+        t = g["tr"][lang]
+        label = lang.upper()
+        if t is None:
+            chips.append(f"<span>{label}: —</span>")
+        elif t["draft"]:
+            chips.append(f'<a href="/preview/{lang}/{g["stem"]}">{label}: borrador ✏️</a>')
+        else:
+            chips.append(f'<a href="{public_url(lang, t["slug"])}" target="_blank">{label} ✓</a>')
+    missing = [lang for lang in TRANSLATION_LANGS if g["tr"][lang] is None]
+    translate_btn = (
+        f"""<form class="inline" method="post" action="/translate/{g["stem"]}">
+    <button title="Traduce con OpenAI a: {", ".join(l.upper() for l in missing)}">Traducir ({len(missing)})</button>
+  </form>"""
+        if missing
+        else ""
+    )
+    return f'<div class="meta">{" · ".join(chips)}</div>{translate_btn}'
+
+
 @app.get("/", response_class=HTMLResponse)
 def index():
-    articles = list_articles()
-    drafts = [a for a in articles if a["draft"]]
-    published = [a for a in articles if not a["draft"]]
-
-    draft_html = "".join(
-        f"""<div class="card row">
-  <div><strong>{html.escape(a["title"])}</strong>
-    <div class="meta">borrador pendiente · {html.escape(a["date"])}</div></div>
-  <a href="/preview/{a["stem"]}"><button class="primary">Revisar y publicar</button></a>
-</div>"""
-        for a in drafts
-    )
-    pub_html = "".join(
-        f"""<div class="card row">
-  <div><a href="{ORIGIN}/blog/{a["slug"]}/" target="_blank">{html.escape(a["title"])}</a>
-    <div class="meta">{html.escape(a["date"])} · /blog/{a["slug"]}/</div></div>
-  <form class="inline" method="post" action="/delete/{a["stem"]}"
-        onsubmit="return confirm('¿Borrar «{html.escape(a["title"])}» del blog y de prod?')">
+    groups = list_groups()
+    drafts = sorted(draft_refs())
+    cards = "".join(
+        f"""<div class="card">
+  <div class="row">
+    <div>{"<strong>" + html.escape(g["title"]) + "</strong>" if g["draft"] else f'<a href="{public_url("es", g["slug"])}" target="_blank">{html.escape(g["title"])}</a>'}
+      <div class="meta">{html.escape(g["date"])} · /blog/{g["slug"]}/{" · borrador pendiente" if g["draft"] else ""}</div></div>
+    {f'<a href="/preview/{g["stem"]}"><button class="primary">Revisar y publicar</button></a>' if g["draft"] else f'''<form class="inline" method="post" action="/delete/{g["stem"]}"
+        onsubmit="return confirm('¿Borrar «{html.escape(g["title"])}» y TODAS sus traducciones del blog y de prod?')">
     <button class="danger">Borrar</button>
-  </form>
+  </form>'''}
+  </div>
+  <div class="row">{lang_chips(g)}</div>
 </div>"""
-        for a in published
+        for g in groups
+    )
+    publish_all = (
+        f"""<form class="inline" method="post" action="/publish">
+  <button class="primary">Publicar todo lo pendiente ({len(drafts)})</button>
+</form>"""
+        if drafts
+        else ""
     )
     return page(
         "Portal",
@@ -384,19 +459,22 @@ def index():
 <p class="meta">Sube un <code>.html</code> con el frontmatter del blog
 (<code>--- title/description/keywords/date/excerpt ---</code> + cuerpo HTML).
 La URL pública usa el campo opcional <code>slug:</code> del frontmatter; si no lo hay,
-el nombre del archivo (<code>minusculas-con-guiones.html</code>).</p>
+el nombre del archivo (<code>minusculas-con-guiones.html</code>). Las traducciones
+(EN/CA/GL/EU) se generan con el botón «Traducir» y se revisan antes de publicar.</p>
 <form class="card" method="post" action="/upload" enctype="multipart/form-data">
   <div class="row">
     <input type="file" name="file" accept=".html" required />
     <button class="primary">Subir y previsualizar</button>
   </div>
 </form>
-{f"<h2>Borradores</h2>{draft_html}" if drafts else ""}
-<h2>Publicados ({len(published)})</h2>
-{pub_html or '<p class="meta">Ningún artículo publicado todavía.</p>'}
+<h2>Artículos ({len(groups)})</h2>
+{cards or '<p class="meta">Ningún artículo todavía.</p>'}
+<div class="actions">
+{publish_all}
 <form class="inline" method="post" action="/sync">
   <button title="Vuelve a copiar blog+sitemap al dist de prod">Sincronizar con prod</button>
 </form>
+</div>
 """,
     )
 
@@ -442,103 +520,120 @@ async def upload(file: UploadFile):
     return RedirectResponse(f"/preview/{target.stem}", status_code=303)
 
 
-@app.get("/preview/{stem}", response_class=HTMLResponse)
-def preview(stem: str):
-    src = CONTENT_BLOG / f"{stem}.html"
-    if not valid_filename(f"{stem}.html") or not src.exists():
-        return error_page("No encontrado", f"No hay borrador «{stem}».", 404)
+@app.get("/preview/{ref:path}", response_class=HTMLResponse)
+def preview(ref: str):
+    parsed = parse_ref(ref)
+    if not parsed or not content_path(*parsed).exists():
+        return error_page("No encontrado", f"No hay borrador «{ref}».", 404)
+    lang, stem = parsed
+    src = content_path(lang, stem)
     title = parse_frontmatter(src.read_text()).get("title", stem)
-    pub = public_slug(src)
+    slug = public_slug(src)
     return page(
         f"Preview · {title}",
         f"""
 <h1>Preview: {html.escape(title)}</h1>
-<p class="meta">Así quedará en {ORIGIN}/blog/{pub}/ (índice y sitemap se actualizan solos).</p>
+<p class="meta">Así quedará en {public_url(lang, slug)} (índice, hreflang y sitemap se actualizan solos).</p>
 <div class="actions">
-  <form class="inline" method="post" action="/publish/{stem}">
-    <button class="primary">Publicar en solarvento.es</button>
+  <form class="inline" method="post" action="/publish">
+    <button class="primary">Publicar TODO lo pendiente en solarvento.es</button>
   </form>
-  <form class="inline" method="post" action="/discard/{stem}">
-    <button class="danger">Descartar borrador</button>
+  <form class="inline" method="post" action="/discard/{ref}">
+    <button class="danger">Descartar este borrador</button>
   </form>
 </div>
-<iframe src="/draft/{stem}"></iframe>
+<iframe src="/draft/{ref}"></iframe>
 """,
     )
 
 
-@app.get("/draft/{stem}", response_class=HTMLResponse)
-def draft(stem: str):
-    src = CONTENT_BLOG / f"{stem}.html"
-    if not valid_filename(f"{stem}.html") or not src.exists():
-        return error_page("No encontrado", f"No hay borrador «{stem}».", 404)
-    f = PUBLIC_BLOG / public_slug(src) / "index.html"
+@app.get("/draft/{ref:path}", response_class=HTMLResponse)
+def draft(ref: str):
+    parsed = parse_ref(ref)
+    if not parsed or not content_path(*parsed).exists():
+        return error_page("No encontrado", f"No hay borrador «{ref}».", 404)
+    lang, stem = parsed
+    f = generated_page(lang, public_slug(content_path(lang, stem)))
     if not f.exists():
-        return error_page("No encontrado", f"No hay página generada para «{stem}».", 404)
+        return error_page("No encontrado", f"No hay página generada para «{ref}».", 404)
     return HTMLResponse(f.read_text())
 
 
-@app.post("/publish/{stem}", response_class=HTMLResponse)
-def publish(stem: str):
-    src = CONTENT_BLOG / f"{stem}.html"
-    if not valid_filename(f"{stem}.html") or not src.exists():
-        return error_page("No encontrado", f"No hay borrador «{stem}».", 404)
+@app.post("/publish", response_class=HTMLResponse)
+def publish():
+    """Publica TODO lo pendiente de una vez (un commit, un sync).
+
+    El generador siempre regenera índices/hreflang/sitemap con todos los
+    borradores presentes, así que publicar por partes dejaría medias verdades:
+    aquí git y prod avanzan juntos al estado completo del árbol."""
+    refs = sorted(draft_refs())
+    if not refs:
+        return error_page("Nada que publicar", "No hay borradores pendientes.", 404)
     if not LOCK.acquire(blocking=False):
         return error_page("Ocupado", "Hay otra operación en curso; reintenta.", 423)
     try:
-        title = parse_frontmatter(src.read_text()).get("title", stem)
-        slug = public_slug(src)
-        ok, out = commit_paths(f"Blog: {title} (publicado desde el portal)")
+        published = []
+        for ref in refs:
+            lang, stem = parse_ref(ref)
+            src = content_path(lang, stem)
+            published.append((parse_frontmatter(src.read_text()).get("title", stem), lang, public_slug(src)))
+        titles = "; ".join(f"{t} [{lang}]" for t, lang, _ in published)
+        ok, out = commit_paths(f"Blog: publica {titles} (portal)")
         if not ok:
             return error_page("git commit falló", out, 500)
         synced, sync_out = sync_to_prod()
-        live = check_live(slug) if synced else ""
+        lives = [check_live_url(public_url(lang, slug)) for _, lang, slug in published] if synced else []
     finally:
         LOCK.release()
     if not synced:
         return page(
             "Commit hecho, sync pendiente",
             f"""<h1 class="bad">Commit hecho, pero el sync a prod falló</h1>
-<p>El artículo está en git (fuente de verdad); solo falta copiarlo a prod.</p>
+<p>Los artículos están en git (fuente de verdad); solo falta copiarlos a prod.</p>
 <pre>{html.escape(sync_out)}</pre>
 <form class="inline" method="post" action="/sync"><button class="primary">Reintentar sincronización</button></form>
 <p><a href="/">← Volver al portal</a></p>""",
             502,
         )
+    items = "".join(
+        f'<li><a href="{public_url(lang, slug)}" target="_blank">{public_url(lang, slug)}</a> — {html.escape(live)}</li>'
+        for (_, lang, slug), live in zip(published, lives)
+    )
     return page(
         "Publicado",
         f"""<h1 class="ok">Publicado ✅</h1>
-<p><strong>{html.escape(title)}</strong> ya está en
-<a href="{ORIGIN}/blog/{slug}/" target="_blank">{ORIGIN}/blog/{slug}/</a></p>
-<p>{html.escape(live)}</p>
+<ul>{items}</ul>
 <p class="meta">Commit en git hecho; el próximo deploy completo regenerará exactamente lo mismo.</p>
 <p><a href="/">← Volver al portal</a></p>""",
     )
 
 
-@app.post("/discard/{stem}")
-def discard(stem: str):
-    src = CONTENT_BLOG / f"{stem}.html"
-    if not valid_filename(f"{stem}.html") or not src.exists():
-        return error_page("No encontrado", f"No hay borrador «{stem}».", 404)
+@app.post("/discard/{ref:path}")
+def discard(ref: str):
+    parsed = parse_ref(ref)
+    if not parsed or not content_path(*parsed).exists():
+        return error_page("No encontrado", f"No hay borrador «{ref}».", 404)
+    lang, stem = parsed
     if not LOCK.acquire(blocking=False):
         return error_page("Ocupado", "Hay otra operación en curso; reintenta.", 423)
     try:
-        pub = public_slug(src)
+        src = content_path(lang, stem)
+        slug = public_slug(src)
         src.unlink()
-        shutil.rmtree(PUBLIC_BLOG / pub, ignore_errors=True)
-        run_generate()  # índice/sitemap vuelven al estado del último commit
+        shutil.rmtree(generated_page(lang, slug).parent, ignore_errors=True)
+        run_generate()  # índice/hreflang/sitemap vuelven al estado del último commit
     finally:
         LOCK.release()
     return RedirectResponse("/", status_code=303)
 
 
-@app.post("/delete/{stem}", response_class=HTMLResponse)
-def delete(stem: str):
-    src = CONTENT_BLOG / f"{stem}.html"
-    if not valid_filename(f"{stem}.html") or not src.exists():
-        return error_page("No encontrado", f"No existe el artículo «{stem}».", 404)
-    if len(list(CONTENT_BLOG.glob("*.html"))) <= 1:
+@app.post("/delete/{ref:path}", response_class=HTMLResponse)
+def delete(ref: str):
+    parsed = parse_ref(ref)
+    if not parsed or not content_path(*parsed).exists():
+        return error_page("No encontrado", f"No existe el artículo «{ref}».", 404)
+    lang, stem = parsed
+    if lang == "es" and len(list(CONTENT_BLOG.glob("*.html"))) <= 1:
         return error_page(
             "No se puede borrar el último artículo",
             "El blog necesita al menos un artículo (el generador lo exige). "
@@ -548,14 +643,23 @@ def delete(stem: str):
     if not LOCK.acquire(blocking=False):
         return error_page("Ocupado", "Hay otra operación en curso; reintenta.", 423)
     try:
+        src = content_path(lang, stem)
         title = parse_frontmatter(src.read_text()).get("title", stem)
-        pub = public_slug(src)
-        src.unlink()
-        shutil.rmtree(PUBLIC_BLOG / pub, ignore_errors=True)
+        # Borrar el original arrastra sus traducciones (una traducción huérfana
+        # rompería el generador y dejaría hreflang colgando).
+        victims = [(lang, src)] if lang != "es" else [
+            (l, content_path(l, stem))
+            for l in ("es", *TRANSLATION_LANGS)
+            if content_path(l, stem).exists()
+        ]
+        for vlang, vsrc in victims:
+            slug = public_slug(vsrc)
+            vsrc.unlink()
+            shutil.rmtree(generated_page(vlang, slug).parent, ignore_errors=True)
         ok, out = run_generate()
         if not ok:
             return error_page("El generador falló tras borrar", out, 500)
-        ok, out = commit_paths(f"Blog: retira «{title}» (borrado desde el portal)")
+        ok, out = commit_paths(f"Blog: retira «{title}» [{', '.join(v for v, _ in victims)}] (portal)")
         if not ok:
             return error_page("git commit falló", out, 500)
         synced, sync_out = sync_to_prod()
@@ -565,9 +669,73 @@ def delete(stem: str):
     return page(
         "Borrado",
         f"""<h1>Artículo borrado</h1>
-<p><strong>{html.escape(title)}</strong> se ha retirado del blog.</p>
+<p><strong>{html.escape(title)}</strong> se ha retirado del blog ({len(victims)} versión(es)).</p>
 <pre>{html.escape(status)}</pre>
 <p><a href="/">← Volver al portal</a></p>""",
+    )
+
+
+@app.post("/translate/{stem}", response_class=HTMLResponse)
+def translate(stem: str):
+    """Genera con OpenAI los borradores de los idiomas que falten."""
+    src = content_path("es", stem)
+    if not valid_filename(f"{stem}.html") or not src.exists():
+        return error_page("No encontrado", f"No existe el artículo «{stem}».", 404)
+    missing = [lang for lang in TRANSLATION_LANGS if not content_path(lang, stem).exists()]
+    if not missing:
+        return error_page("Nada que traducir", "Ya existe en todos los idiomas.", 409)
+    settings = get_settings()
+    api_key = settings.resolved_openai_api_key
+    if not api_key:
+        return error_page("Sin clave de OpenAI", "No hay OPENAI_API_KEY en backend/.env.", 500)
+    if not LOCK.acquire(blocking=False):
+        return error_page("Ocupado", "Hay otra operación en curso; reintenta.", 423)
+    try:
+        raw = src.read_text()
+        meta = parse_frontmatter(raw)
+        body = re.sub(r"^---\r?\n[\s\S]*?\r?\n---\r?\n", "", raw).strip()
+
+        def one(lang: str):
+            result = translate_blog.translate_article(
+                meta, body, lang, api_key=api_key, base_url=settings.openai_base_url
+            )
+            return lang, translate_blog.compose_file(meta, result, lang)
+
+        outcomes: dict[str, str] = {}
+        errors: dict[str, str] = {}
+        with ThreadPoolExecutor(max_workers=len(missing)) as pool:
+            for future in [pool.submit(one, lang) for lang in missing]:
+                try:
+                    lang, content = future.result()
+                    outcomes[lang] = content
+                except translate_blog.BlogTranslationError as exc:
+                    errors[str(exc).split(":", 1)[0]] = str(exc)
+        written = []
+        for lang, content in outcomes.items():
+            path = content_path(lang, stem)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+            written.append(path)
+        ok, out = run_generate()
+        if not ok:
+            for path in written:
+                path.unlink(missing_ok=True)
+            run_generate()
+            return error_page("El generador rechazó las traducciones", out, 422)
+    finally:
+        LOCK.release()
+    chips = " · ".join(
+        f'<a href="/preview/{lang}/{stem}">{lang.upper()} ✏️</a>' for lang in outcomes
+    )
+    fails = "".join(f"<pre>{html.escape(e)}</pre>" for e in errors.values())
+    return page(
+        "Traducciones generadas",
+        f"""<h1>Traducciones generadas</h1>
+<p>Borradores listos para revisar: {chips or "ninguno"}</p>
+{fails}
+<p class="meta">Revisa cada preview y usa «Publicar todo lo pendiente» cuando estén bien.</p>
+<p><a href="/">← Volver al portal</a></p>""",
+        200 if outcomes else 502,
     )
 
 

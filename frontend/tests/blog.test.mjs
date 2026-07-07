@@ -6,25 +6,39 @@
 // 3) El índice y el sitemap se regeneran leyendo la carpeta de artículos.
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
-import { articlePage, loadArticles } from '../scripts/blog.mjs'
+import { articlePage, blogOutputs, blogSitemapEntries, loadArticles, loadBlog } from '../scripts/blog.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const BLOG_SRC = join(ROOT, 'content', 'blog')
 const ORIGIN = 'https://solarvento.es'
+const BLOG_LANGS = ['es', 'en', 'ca', 'gl', 'eu']
 
 const readPublic = (name) => readFileSync(join(ROOT, 'public', name), 'utf-8')
 // Slug público de un artículo fuente: campo «slug» del frontmatter o, si
 // falta, el nombre del archivo (mismo contrato que scripts/blog.mjs).
-const slugOf = (file) => {
-  const src = readFileSync(join(BLOG_SRC, file), 'utf-8')
+const slugOf = (dir, file) => {
+  const src = readFileSync(join(dir, file), 'utf-8')
   return src.match(/^slug:\s*(\S+)/m)?.[1] ?? file.replace(/\.html$/, '')
 }
+// Todas las fuentes del blog: es en la raíz, traducciones en subcarpetas.
+const allSources = () => {
+  const out = []
+  for (const lang of BLOG_LANGS) {
+    const dir = lang === 'es' ? BLOG_SRC : join(BLOG_SRC, lang)
+    if (!existsSync(dir)) continue
+    for (const file of readdirSync(dir).filter((f) => f.endsWith('.html'))) {
+      out.push({ lang, dir, file, slug: slugOf(dir, file) })
+    }
+  }
+  return out
+}
+const urlPath = (lang, slug) => (lang === 'es' ? `blog/${slug}/` : `blog/${lang}/${slug}/`)
 const ldBlocks = (html) =>
   [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) =>
     JSON.parse(m[1]),
@@ -36,15 +50,16 @@ test('public/blog está sincronizado con content/blog (generador --check)', () =
   })
 })
 
-test('cada artículo lleva metadatos SEO completos y su contenido íntegro', () => {
-  const sources = readdirSync(BLOG_SRC).filter((f) => f.endsWith('.html'))
+test('cada artículo (todos los idiomas) lleva metadatos SEO completos y su contenido íntegro', () => {
+  const sources = allSources()
   assert.ok(sources.length >= 1, 'no hay artículos en content/blog')
-  for (const file of sources) {
-    const slug = slugOf(file)
-    const html = readPublic(join('blog', slug, 'index.html'))
+  for (const { lang, dir, file, slug } of sources) {
+    const path = urlPath(lang, slug)
+    const html = readPublic(join('blog', ...(lang === 'es' ? [slug] : [lang, slug]), 'index.html'))
 
-    // Canonical exacto (URL limpia, sin .html) y robots indexable
-    assert.match(html, new RegExp(`rel="canonical" href="${ORIGIN}/blog/${slug}/"`))
+    // Canonical exacto (URL limpia, sin .html), idioma y robots indexable
+    assert.match(html, new RegExp(`rel="canonical" href="${ORIGIN}/${path}"`))
+    assert.ok(html.includes(`<html lang="${lang}">`), `${path}: <html lang> incorrecto`)
     assert.match(html, /name="robots" content="index, follow/)
 
     // OG de artículo coherente con el canonical
@@ -60,7 +75,7 @@ test('cada artículo lleva metadatos SEO completos y su contenido íntegro', () 
     const lds = ldBlocks(html)
     const article = lds.find((ld) => ld['@type'] === 'Article')
     assert.ok(article, `${slug}: falta JSON-LD Article`)
-    assert.equal(article.mainEntityOfPage, `${ORIGIN}/blog/${slug}/`)
+    assert.equal(article.mainEntityOfPage, `${ORIGIN}/${path}`)
     assert.ok(article.headline && article.datePublished, `${slug}: Article incompleto`)
     const crumbs = lds.find((ld) => ld['@type'] === 'BreadcrumbList')
     assert.ok(crumbs, `${slug}: falta BreadcrumbList`)
@@ -69,7 +84,7 @@ test('cada artículo lleva metadatos SEO completos y su contenido íntegro', () 
     // El contenido de la fuente viaja entero en el HTML servido (SEO crítico):
     // todos los párrafos del cuerpo deben estar en la página (la indentación
     // que añade el generador no cuenta: se compara con espacios normalizados).
-    const src = readFileSync(join(BLOG_SRC, file), 'utf-8')
+    const src = readFileSync(join(dir, file), 'utf-8')
     const body = src.split(/^---$/m)[2] ?? ''
     const paragraphs = [...body.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)].map((m) => m[1])
     assert.ok(paragraphs.length > 0, `${slug}: la fuente no tiene párrafos`)
@@ -79,10 +94,11 @@ test('cada artículo lleva metadatos SEO completos y su contenido íntegro', () 
       assert.ok(servedText.includes(squash(p)), `${slug}: falta contenido en el HTML servido`)
     }
 
-    // Embudo: CTA hacia la calculadora y footer con las páginas del sitio
+    // Embudo: CTA hacia la calculadora y footer con las páginas del sitio EN SU IDIOMA
     assert.match(html, /class="cta-block"/)
-    for (const target of ['/faq.html', '/ayudas.html', '/privacidad.html']) {
-      assert.ok(html.includes(`href="${target}"`), `${slug}: falta enlace a ${target}`)
+    const suffix = lang === 'es' ? '' : `-${lang}`
+    for (const target of [`/faq${suffix}.html`, '/ayudas.html', `/privacidad${suffix}.html`]) {
+      assert.ok(html.includes(`href="${target}"`), `${path}: falta enlace a ${target}`)
     }
   }
 })
@@ -92,11 +108,15 @@ test('el tema día/noche sigue al sol de España, no al modo del sistema', () =>
   // por ecuación solar en Europe/Madrid. Si el blog escuchara
   // prefers-color-scheme podría verse oscuro mientras la calculadora está en
   // claro (o al revés).
+  const sources = allSources()
+  const langsWithArticles = BLOG_LANGS.filter((l) => sources.some((s) => s.lang === l))
   const pages = [
-    join('blog', 'index.html'),
-    ...readdirSync(BLOG_SRC)
-      .filter((f) => f.endsWith('.html'))
-      .map((f) => join('blog', slugOf(f), 'index.html')),
+    ...langsWithArticles.map((l) =>
+      join('blog', ...(l === 'es' ? [] : [l]), 'index.html'),
+    ),
+    ...sources.map(({ lang, slug }) =>
+      join('blog', ...(lang === 'es' ? [slug] : [lang, slug]), 'index.html'),
+    ),
   ]
   for (const page of pages) {
     const html = readPublic(page)
@@ -109,20 +129,26 @@ test('el tema día/noche sigue al sol de España, no al modo del sistema', () =>
   }
 })
 
-test('el índice /blog/ lista todos los artículos con título, fecha y extracto', () => {
-  const html = readPublic(join('blog', 'index.html'))
-  assert.match(html, new RegExp(`rel="canonical" href="${ORIGIN}/blog/"`))
-  assert.match(html, /name="robots" content="index, follow/)
+test('cada idioma con artículos tiene su índice con enlaces y extractos', () => {
+  const sources = allSources()
+  for (const lang of BLOG_LANGS) {
+    const ofLang = sources.filter((s) => s.lang === lang)
+    if (!ofLang.length) continue
+    const home = lang === 'es' ? 'blog/' : `blog/${lang}/`
+    const html = readPublic(join('blog', ...(lang === 'es' ? [] : [lang]), 'index.html'))
+    assert.match(html, new RegExp(`rel="canonical" href="${ORIGIN}/${home}"`))
+    assert.match(html, /name="robots" content="index, follow/)
+    assert.ok(html.includes(`<html lang="${lang}">`), `índice ${lang}: <html lang> incorrecto`)
 
-  const lds = ldBlocks(html)
-  assert.ok(lds.some((ld) => ld['@type'] === 'Blog'), 'falta JSON-LD Blog')
+    const lds = ldBlocks(html)
+    assert.ok(lds.some((ld) => ld['@type'] === 'Blog'), `índice ${lang}: falta JSON-LD Blog`)
 
-  for (const file of readdirSync(BLOG_SRC).filter((f) => f.endsWith('.html'))) {
-    const slug = slugOf(file)
-    assert.ok(html.includes(`href="/blog/${slug}/"`), `índice sin enlace a ${slug}`)
-    const src = readFileSync(join(BLOG_SRC, file), 'utf-8')
-    const excerpt = src.match(/^excerpt:\s*(.+)$/m)?.[1]?.trim()
-    assert.ok(excerpt && html.includes(excerpt), `índice sin extracto de ${slug}`)
+    for (const { dir, file, slug } of ofLang) {
+      assert.ok(html.includes(`href="/${urlPath(lang, slug)}"`), `índice ${lang} sin enlace a ${slug}`)
+      const src = readFileSync(join(dir, file), 'utf-8')
+      const excerpt = src.match(/^excerpt:\s*(.+)$/m)?.[1]?.trim()
+      assert.ok(excerpt && html.includes(excerpt), `índice ${lang} sin extracto de ${slug}`)
+    }
   }
 })
 
@@ -183,14 +209,87 @@ test('dos artículos con el mismo slug público se rechazan', () => {
   assert.throws(() => loadArticles(dir), /repetido/)
 })
 
-test('el sitemap incluye el índice del blog y cada artículo con su lastmod', () => {
+test('el sitemap incluye los índices del blog y cada artículo (todos los idiomas)', () => {
   const xml = readPublic('sitemap.xml')
   assert.ok(xml.includes(`<loc>${ORIGIN}/blog/</loc>`), 'sitemap sin /blog/')
-  for (const file of readdirSync(BLOG_SRC).filter((f) => f.endsWith('.html'))) {
-    const slug = slugOf(file)
-    assert.ok(xml.includes(`<loc>${ORIGIN}/blog/${slug}/</loc>`), `sitemap sin ${slug}`)
-    const date = readFileSync(join(BLOG_SRC, file), 'utf-8').match(/^date:\s*(\S+)/m)?.[1]
-    const entry = xml.split(`<loc>${ORIGIN}/blog/${slug}/</loc>`)[1]?.split('</url>')[0] ?? ''
-    assert.ok(entry.includes(`<lastmod>${date}</lastmod>`), `${slug}: lastmod ≠ date del artículo`)
+  for (const { lang, dir, file, slug } of allSources()) {
+    const loc = `<loc>${ORIGIN}/${urlPath(lang, slug)}</loc>`
+    assert.ok(xml.includes(loc), `sitemap sin ${lang}/${slug}`)
+    if (lang !== 'es')
+      assert.ok(xml.includes(`<loc>${ORIGIN}/blog/${lang}/</loc>`), `sitemap sin índice /blog/${lang}/`)
+    const date = readFileSync(join(dir, file), 'utf-8').match(/^date:\s*(\S+)/m)?.[1]
+    const entry = xml.split(loc)[1]?.split('</url>')[0] ?? ''
+    assert.ok(entry.includes(`<lastmod>${date}</lastmod>`), `${lang}/${slug}: lastmod ≠ date`)
   }
+})
+
+// --- Multiidioma: agrupado, hreflang e índices ---
+
+const FM = (extra) =>
+  `---\ntitle: T\ndescription: d\nkeywords: k\ndate: 2026-07-07\nexcerpt: e\n${extra}---\n<p>x</p>\n`
+
+function tmpBlog() {
+  const dir = mkdtempSync(join(tmpdir(), 'blog-'))
+  writeFileSync(join(dir, 'factura.html'), FM('slug: como-leer-la-factura\n'))
+  mkdirSync(join(dir, 'en'))
+  writeFileSync(join(dir, 'en', 'factura.html'), FM('slug: how-to-read-your-bill\nlang: en\n'))
+  return dir
+}
+
+test('loadBlog agrupa el original con sus traducciones por nombre de archivo', () => {
+  const groups = loadBlog(tmpBlog())
+  const g = groups.get('factura')
+  assert.equal(g.es.slug, 'como-leer-la-factura')
+  assert.equal(g.tr.en.slug, 'how-to-read-your-bill')
+})
+
+test('una traducción huérfana o con lang equivocado se rechaza', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'blog-'))
+  writeFileSync(join(dir, 'a.html'), FM(''))
+  mkdirSync(join(dir, 'en'))
+  writeFileSync(join(dir, 'en', 'otro.html'), FM('lang: en\n'))
+  assert.throws(() => loadBlog(dir), /huérfana/)
+
+  const dir2 = mkdtempSync(join(tmpdir(), 'blog-'))
+  writeFileSync(join(dir2, 'a.html'), FM(''))
+  mkdirSync(join(dir2, 'en'))
+  writeFileSync(join(dir2, 'en', 'a.html'), FM('lang: ca\n'))
+  assert.throws(() => loadBlog(dir2), /no coincide/)
+})
+
+test('blogOutputs emite páginas por idioma, hreflang recíproco e índices', () => {
+  const out = blogOutputs(loadBlog(tmpBlog()), '')
+  const es = out.get(join('como-leer-la-factura', 'index.html'))
+  const en = out.get(join('en', 'how-to-read-your-bill', 'index.html'))
+  assert.ok(es && en, 'faltan páginas de artículo')
+  for (const html of [es, en]) {
+    assert.ok(html.includes(`hreflang="es" href="${ORIGIN}/blog/como-leer-la-factura/"`))
+    assert.ok(html.includes(`hreflang="en" href="${ORIGIN}/blog/en/how-to-read-your-bill/"`))
+    assert.ok(html.includes(`hreflang="x-default" href="${ORIGIN}/blog/como-leer-la-factura/"`))
+  }
+  // Índices: /blog/ (es) y /blog/en/, enlazados por hreflang
+  const idxEs = out.get('index.html')
+  const idxEn = out.get(join('en', 'index.html'))
+  assert.ok(idxEs.includes('href="/blog/como-leer-la-factura/"'))
+  assert.ok(idxEn.includes('href="/blog/en/how-to-read-your-bill/"'))
+  assert.ok(idxEn.includes('<html lang="en">'))
+  assert.ok(idxEn.includes(`hreflang="es" href="${ORIGIN}/blog/"`))
+  // La carcasa del artículo EN va traducida (CTA del template)
+  assert.ok(en.includes('Calculate my savings'))
+})
+
+test('sin traducciones no se emite hreflang ni índices extra', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'blog-'))
+  writeFileSync(join(dir, 'solo.html'), FM(''))
+  const out = blogOutputs(loadBlog(dir), '')
+  assert.equal([...out.keys()].length, 2) // artículo + índice es
+  assert.ok(!out.get(join('solo', 'index.html')).includes('hreflang'))
+})
+
+test('el sitemap multiidioma lista índices y artículos de cada lengua', () => {
+  const lines = blogSitemapEntries(loadBlog(tmpBlog())).join('\n')
+  assert.ok(lines.includes(`<loc>${ORIGIN}/blog/</loc>`))
+  assert.ok(lines.includes(`<loc>${ORIGIN}/blog/en/</loc>`))
+  assert.ok(lines.includes(`<loc>${ORIGIN}/blog/como-leer-la-factura/</loc>`))
+  assert.ok(lines.includes(`<loc>${ORIGIN}/blog/en/how-to-read-your-bill/</loc>`))
 })

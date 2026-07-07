@@ -137,12 +137,14 @@ def client(monkeypatch):
 
 def test_index_lista_articulos(client, monkeypatch):
     # stem = nombre en disco (clave del portal); slug = URL pública (frontmatter)
+    monkeypatch.setattr(portal, "draft_refs", lambda: set())
     monkeypatch.setattr(
         portal,
-        "list_articles",
+        "list_groups",
         lambda: [
             {"stem": "uno", "slug": "uno-largo-seo", "title": "Uno",
-             "date": "2026-07-01", "draft": False},
+             "date": "2026-07-01", "draft": False,
+             "tr": {"en": {"slug": "one-long", "draft": True}, "ca": None, "gl": None, "eu": None}},
         ],
     )
     r = client.get("/")
@@ -150,6 +152,67 @@ def test_index_lista_articulos(client, monkeypatch):
     assert "Uno" in r.text
     assert "https://solarvento.es/blog/uno-largo-seo/" in r.text  # URL limpia, sin .html
     assert 'action="/delete/uno"' in r.text  # las rutas del portal van por stem
+    assert 'href="/preview/en/uno"' in r.text  # borrador EN enlazado
+    assert 'action="/translate/uno"' in r.text  # faltan ca/gl/eu → botón Traducir
+
+
+# --- Referencias (idioma, archivo) de las rutas del portal ---
+
+@pytest.mark.parametrize(
+    ("ref", "expected"),
+    [
+        ("factura", ("es", "factura")),
+        ("en/factura", ("en", "factura")),
+        ("eu/otro-articulo", ("eu", "otro-articulo")),
+        ("fr/factura", None),  # idioma no soportado
+        ("en/Sub/x", None),
+        ("en/../../etc", None),
+        ("", None),
+    ],
+)
+def test_parse_ref(ref, expected):
+    assert portal.parse_ref(ref) == expected
+
+
+def test_content_path_y_public_url(monkeypatch, tmp_path):
+    monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
+    assert portal.content_path("es", "x") == tmp_path / "x.html"
+    assert portal.content_path("en", "x") == tmp_path / "en" / "x.html"
+    assert portal.public_url("es", "mi-slug") == "https://solarvento.es/blog/mi-slug/"
+    assert portal.public_url("en", "my-slug") == "https://solarvento.es/blog/en/my-slug/"
+
+
+def test_translate_escribe_borradores(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
+    monkeypatch.setattr(portal, "run_generate", lambda: (True, ""))
+
+    class FakeSettings:
+        resolved_openai_api_key = "sk-test"
+        openai_base_url = "https://test/v1"
+
+    monkeypatch.setattr(portal, "get_settings", lambda: FakeSettings())
+    (tmp_path / "factura.html").write_text(
+        "---\ntitle: T\ndescription: d\nkeywords: k\ndate: 2026-07-07\nexcerpt: e\n---\n<p>x</p>"
+    )
+
+    def fake_translate(meta, body, lang, **kwargs):
+        return {"title": f"T {lang}", "description": "d", "keywords": "k",
+                "excerpt": "e", "slug": f"slug-{lang}", "body_html": "<p>tr</p>"}
+
+    monkeypatch.setattr(portal.translate_blog, "translate_article", fake_translate)
+    r = client.post("/translate/factura")
+    assert r.status_code == 200
+    for lang in ("en", "ca", "gl", "eu"):
+        text = (tmp_path / lang / "factura.html").read_text()
+        assert f"lang: {lang}" in text
+        assert f"slug: slug-{lang}" in text
+    assert 'href="/preview/en/factura"' in r.text
+
+
+def test_translate_sin_original_da_404(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
+    r = client.post("/translate/no-existe")
+    assert r.status_code == 404
 
 
 def test_public_slug_frontmatter_y_fallback(tmp_path):
@@ -235,7 +298,7 @@ def test_upload_crea_directorio_si_falta(client, monkeypatch, tmp_path):
 
 def test_error_inesperado_da_pagina_legible(monkeypatch):
     monkeypatch.setattr(portal, "client_allowed", lambda ip: True)
-    monkeypatch.setattr(portal, "list_articles", lambda: 1 / 0)
+    monkeypatch.setattr(portal, "list_groups", lambda: 1 / 0)
     client = TestClient(portal.app, raise_server_exceptions=False)
     r = client.get("/")
     assert r.status_code == 500
