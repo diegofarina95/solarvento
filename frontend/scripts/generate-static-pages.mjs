@@ -20,7 +20,18 @@ const PUBLIC = join(ROOT, 'public')
 const ORIGIN = 'https://solarvento.es'
 // Orden de idiomas: fija el orden de los hreflang (es primero, luego el resto).
 const LANGS = ['es', 'en', 'gl', 'ca', 'eu', 'fr', 'pt']
-const LASTMOD = '2026-07-06' // actualizar al cambiar el contenido de las páginas
+const LASTMOD = '2026-07-07' // actualizar al cambiar el contenido de las páginas
+
+// Locales Open Graph por idioma (territorio España salvo en/fr/pt).
+const OG_LOCALES = {
+  es: 'es_ES',
+  en: 'en_GB',
+  gl: 'gl_ES',
+  ca: 'ca_ES',
+  eu: 'eu_ES',
+  fr: 'fr_FR',
+  pt: 'pt_PT',
+}
 
 const BANNER =
   '<!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/src/*.json — NO EDITAR A MANO -->'
@@ -35,6 +46,36 @@ function hreflangBlock(base) {
     `    <link rel="alternate" hreflang="x-default" href="${ORIGIN}/${pagePath(base, 'es')}" />`,
   )
   return lines.join('\n')
+}
+
+// Meta Open Graph + Twitter Card para compartir en redes. La imagen es la
+// misma og-image global del sitio (no hay imágenes por página).
+function socialBlock(lang, path, title, description) {
+  return `    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="${OG_LOCALES[lang]}" />
+    <meta property="og:url" content="${ORIGIN}/${path}" />
+    <meta property="og:title" content="${title}" />
+    <meta property="og:description" content="${description}" />
+    <meta property="og:image" content="${ORIGIN}/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${title}" />
+    <meta name="twitter:description" content="${description}" />
+    <meta name="twitter:image" content="${ORIGIN}/og-image.png" />`
+}
+
+// BreadcrumbList: portada (nombre de marca, sin traducir) → página actual (su h1).
+function breadcrumbLd(path, pageName) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'SolarVento', item: `${ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: pageName, item: `${ORIGIN}/${path}` },
+    ],
+  }
 }
 
 function indentCss(css) {
@@ -70,12 +111,16 @@ ${BANNER}
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <link rel="canonical" href="${ORIGIN}/${path}" />
 ${hreflangBlock('faq')}
+${socialBlock(lang, path, faq.title, faq.description)}
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <style>
 ${indentCss(css)}
     </style>
     <script type="application/ld+json">
 ${JSON.stringify(ld, null, 2)}
+    </script>
+    <script type="application/ld+json">
+${JSON.stringify(breadcrumbLd(path, faq.h1), null, 2)}
     </script>
   </head>
   <body>
@@ -115,10 +160,14 @@ ${BANNER}
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="${ORIGIN}/${path}" />
 ${hreflangBlock('privacidad')}
+${socialBlock(lang, path, privacy.title, privacy.description)}
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <style>
 ${indentCss(css)}
     </style>
+    <script type="application/ld+json">
+${JSON.stringify(breadcrumbLd(path, privacy.h1), null, 2)}
+    </script>
   </head>
   <body>
     <main class="wrap">

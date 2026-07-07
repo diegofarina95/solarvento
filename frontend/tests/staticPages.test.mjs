@@ -44,3 +44,35 @@ test('las 14 páginas llevan hreflang completo (7 idiomas + x-default)', () => {
     }
   }
 })
+
+test('las 14 páginas llevan Open Graph coherente y Twitter Card', () => {
+  for (const base of ['faq', 'privacidad']) {
+    for (const lang of LANGS) {
+      const page = pagePath(base, lang)
+      const html = readFileSync(join(ROOT, 'public', page), 'utf-8')
+      const canonical = html.match(/rel="canonical" href="([^"]+)"/)?.[1]
+      const ogUrl = html.match(/property="og:url" content="([^"]+)"/)?.[1]
+      assert.equal(ogUrl, canonical, `${page}: og:url debe coincidir con el canonical`)
+      for (const prop of ['og:title', 'og:description', 'og:image', 'og:locale']) {
+        assert.match(html, new RegExp(`property="${prop}" content="[^"]+"`), `${page}: falta ${prop}`)
+      }
+      assert.match(html, /name="twitter:card" content="summary_large_image"/, `${page}: falta twitter:card`)
+    }
+  }
+})
+
+test('las 14 páginas llevan BreadcrumbList con 2 niveles', () => {
+  for (const base of ['faq', 'privacidad']) {
+    for (const lang of LANGS) {
+      const page = pagePath(base, lang)
+      const html = readFileSync(join(ROOT, 'public', page), 'utf-8')
+      const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
+      const breadcrumb = blocks
+        .map((m) => JSON.parse(m[1]))
+        .find((ld) => ld['@type'] === 'BreadcrumbList')
+      assert.ok(breadcrumb, `${page}: falta el BreadcrumbList`)
+      assert.equal(breadcrumb.itemListElement.length, 2, `${page}: breadcrumb con niveles inesperados`)
+      assert.equal(breadcrumb.itemListElement[1].item, `https://solarvento.es/${page}`, page)
+    }
+  }
+})

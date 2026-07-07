@@ -44,6 +44,12 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="SolarVento" />
     <meta property="og:locale" content="es_ES" />
+    <meta property="og:locale:alternate" content="en_GB" />
+    <meta property="og:locale:alternate" content="gl_ES" />
+    <meta property="og:locale:alternate" content="ca_ES" />
+    <meta property="og:locale:alternate" content="eu_ES" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta property="og:locale:alternate" content="pt_PT" />
     <meta property="og:url" content="https://solarvento.es/" />
     <meta property="og:title" content="Calculadora de placas y baterías con tu factura | SolarVento" />
     <meta
@@ -77,6 +83,19 @@
       {
         "@context": "https://schema.org",
         "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://solarvento.es/#website",
+            "name": "SolarVento",
+            "url": "https://solarvento.es/",
+            "inLanguage": ["es", "en", "gl", "ca", "eu", "fr", "pt"],
+            "publisher": {
+              "@type": "Organization",
+              "name": "SolarVento",
+              "url": "https://solarvento.es/",
+              "logo": "https://solarvento.es/android-chrome-512x512.png"
+            }
+          },
           {
             "@type": "WebApplication",
             "name": "SolarVento",
@@ -124,7 +143,7 @@
           Sin registro y con datos de radiación solar de PVGIS.
         </p>
         <p>Esta herramienta necesita JavaScript activado para funcionar. Activa JavaScript en tu navegador para usar la calculadora.</p>
-        <p><a href="/faq.html">Preguntas frecuentes</a> · <a href="/privacidad.html">Política de privacidad</a></p>
+        <p><a href="/faq.html">Preguntas frecuentes</a> · <a href="/ayudas.html">Ayudas por comunidad</a> · <a href="/privacidad.html">Política de privacidad</a></p>
       </div>
     </noscript>
     <script type="module" src="/src/main.jsx"></script>
