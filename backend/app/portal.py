@@ -546,6 +546,7 @@ description: Meta-descripción para Google (una frase)
 keywords: palabra1, palabra2, palabra3
 date: 2026-07-07
 excerpt: Extracto para la tarjeta del índice del blog.
+category: guia
 ---
 <p class="lead">Primer párrafo…</p>
 <h2>Primera sección</h2>
@@ -561,7 +562,9 @@ metadatos y otra línea <code>---</code>; debajo va el cuerpo del artículo en H
 Un documento HTML completo (con <code>&lt;!doctype&gt;</code>, <code>&lt;head&gt;</code>,
 <code>&lt;body&gt;</code>…) no vale: pega solo el contenido del artículo bajo el frontmatter.</p>
 <p>Plantilla exacta (además admite <code>slug: url-para-seo</code> opcional para que
-la URL pública no dependa del nombre del archivo):</p>
+la URL pública no dependa del nombre del archivo, y <code>category:
+guia | analisis | divulgacion</code> opcional para la etiqueta y el color de la
+categoría):</p>
 <pre>{html.escape(FRONTMATTER_TEMPLATE)}</pre>
 <p><a href="/">← Volver al portal</a></p>""",
         422,
@@ -708,9 +711,10 @@ def index():
 <p class="meta">Sube un <code>.html</code> con el frontmatter del blog
 (<code>--- title/description/keywords/date/excerpt ---</code> + cuerpo HTML).
 La URL pública usa el campo opcional <code>slug:</code> del frontmatter; si no lo hay,
-el nombre del archivo (<code>minusculas-con-guiones.html</code>). Al subir se
-generan solas las traducciones (EN/CA/GL/EU) — tarda un minuto —; si alguna
-falla, el botón «Traducir» la reintenta.</p>
+el nombre del archivo (<code>minusculas-con-guiones.html</code>). El campo opcional
+<code>category</code> (<code>guia | analisis | divulgacion</code>) pone etiqueta y color
+al artículo. Al subir se generan solas las traducciones (EN/CA/GL/EU) — tarda un
+minuto —; si alguna falla, el botón «Traducir» la reintenta.</p>
 <form class="card" method="post" action="/upload" enctype="multipart/form-data">
   <div class="row">
     <input type="file" name="file" accept=".html" required />

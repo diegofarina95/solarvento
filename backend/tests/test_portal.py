@@ -809,6 +809,13 @@ def test_upload_rollback_si_generador_rechaza_traducciones(client, monkeypatch, 
     assert not (tmp_path / "en" / "nuevo.html").exists()  # traducciones revertidas
 
 
+def test_ayuda_menciona_category(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
+    r = client.post("/upload", files={"file": ("x.html", b"<p>sin frontmatter</p>")})
+    assert r.status_code == 422
+    assert "category" in r.text
+
+
 def test_preview_muestra_chips_de_idiomas(client, monkeypatch, tmp_path):
     content = tmp_path / "content"
     (content / "en").mkdir(parents=True)
