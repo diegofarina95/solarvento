@@ -2,7 +2,8 @@
 
 - PVcalc: producción fotovoltaica (con optimalangles=1 devuelve también los
   ángulos óptimos de inclinación y azimut).
-- seriescalc: producción horaria (se promedia a un día tipo 12x24).
+- seriescalc: producción horaria (se promedia a un día tipo 12x24 y se
+  convierte de UTC a hora local de reloj; ver to_local_clock).
 
 Convención de azimut de PVGIS: 0 = Sur, 90 = Oeste, -90 = Este, ±180 = Norte.
 Las coordenadas se redondean a 2 decimales para la caché (~1 km, misma celda
@@ -116,8 +117,9 @@ class PVGISClient:
     ) -> list[list[float]]:
         """Producción horaria media por mes (seriescalc, año de referencia 2020).
 
-        Devuelve una matriz 12x24: kWh producidos en la hora h de un día medio
-        del mes m. Se usa para simular autoconsumo y baterías.
+        Devuelve una matriz 12x24 en HORA LOCAL de reloj: kWh producidos en la
+        hora h de un día medio del mes m. Se usa para simular autoconsumo y
+        baterías contra el perfil de consumo (que está en hora de reloj).
         """
         params = {
             "lat": round(lat, 2),
@@ -132,7 +134,7 @@ class PVGISClient:
             "outputformat": "json",
         }
         raw = await self._get("seriescalc", params)
-        return parse_seriescalc(raw)
+        return to_local_clock(parse_seriescalc(raw), lat, lon)
 
 
 
@@ -170,6 +172,44 @@ def parse_pvcalc(raw: dict[str, Any]) -> dict[str, Any]:
         "hsp_daily_avg": totals["H(i)_d"],
         "elevation_m": raw["inputs"]["location"].get("elevation"),
     }
+
+
+# Caja geográfica de Canarias (huso WET: UTC+0 invierno / UTC+1 verano).
+# El resto de España (península, Baleares, Ceuta y Melilla) va en CET/CEST.
+_CANARIAS_LAT = (27.0, 29.6)
+_CANARIAS_LON = (-18.5, -13.0)
+# Meses (0-11) en horario de verano. El cambio real cae en los últimos domingos
+# de marzo y octubre; a resolución de mes, abril-octubre es la mejor aproximación
+# (marzo es casi todo invierno; octubre, casi todo verano).
+_DST_MONTHS = set(range(3, 10))
+
+
+def spain_utc_offset_hours(lat: float, lon: float, month0: int) -> int:
+    """Horas que van del UTC a la hora de reloj española en el mes dado (0-11)."""
+    canarias = (
+        _CANARIAS_LAT[0] <= lat <= _CANARIAS_LAT[1]
+        and _CANARIAS_LON[0] <= lon <= _CANARIAS_LON[1]
+    )
+    base = 0 if canarias else 1
+    return base + (1 if month0 in _DST_MONTHS else 0)
+
+
+def to_local_clock(
+    profile: list[list[float]], lat: float, lon: float
+) -> list[list[float]]:
+    """Rota la matriz 12x24 de UTC a hora local de reloj.
+
+    La serie de PVGIS viene en UTC y el perfil de consumo está en hora de
+    reloj; sin esta rotación la producción queda 1-2 h "antes" que el consumo.
+    El desfase solar por longitud (Santiago más tarde que Madrid) ya viene
+    dentro de la serie UTC, así que basta con sumar el huso del mes. La
+    rotación es cíclica dentro del día medio: la energía mensual se conserva.
+    """
+    local = []
+    for month0, row in enumerate(profile):
+        offset = spain_utc_offset_hours(lat, lon, month0)
+        local.append([row[(h - offset) % 24] for h in range(24)])
+    return local
 
 
 def parse_seriescalc(raw: dict[str, Any]) -> list[list[float]]:
