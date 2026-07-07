@@ -81,6 +81,23 @@ test('cada artículo lleva metadatos SEO completos y su contenido íntegro', () 
   }
 })
 
+test('el tema día/noche sigue al sol de España, no al modo del sistema', () => {
+  // Mismo criterio que la portada (App.jsx + SunArc.jsx): data-theme="night"
+  // por ecuación solar en Europe/Madrid. Si el blog escuchara
+  // prefers-color-scheme podría verse oscuro mientras la calculadora está en
+  // claro (o al revés).
+  const pages = ['index.html', ...readdirSync(BLOG_SRC).filter((f) => f.endsWith('.html'))]
+  for (const page of pages) {
+    const html = readPublic(join('blog', page))
+    assert.ok(!html.includes('prefers-color-scheme'), `${page}: usa el modo del sistema`)
+    assert.match(html, /\[data-theme='night'\]/, `${page}: falta la paleta de noche`)
+    assert.match(html, /setAttribute\('data-theme', ?'night'\)/, `${page}: falta el cálculo solar`)
+    for (const token of ['Europe/Madrid', '40.4168', '2451545']) {
+      assert.ok(html.includes(token), `${page}: la ecuación solar no es la de la portada (${token})`)
+    }
+  }
+})
+
 test('el índice /blog/ lista todos los artículos con título, fecha y extracto', () => {
   const html = readPublic(join('blog', 'index.html'))
   assert.match(html, new RegExp(`rel="canonical" href="${ORIGIN}/blog/"`))

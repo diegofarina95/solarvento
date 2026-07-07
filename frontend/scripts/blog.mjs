@@ -89,6 +89,40 @@ const SITE_HEADER = `      <header class="site">
 const FONT_PRELOAD =
   '    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />'
 
+// Tema día/noche IGUAL que la portada: de noche cuando el sol se ha puesto en
+// España (misma ecuación del amanecer que SunArc.jsx, Madrid, Europe/Madrid),
+// NO según el modo claro/oscuro del sistema. Síncrono en el <head> para que no
+// haya destello de tema equivocado; sin JS queda el tema claro (contenido y
+// SEO intactos).
+const THEME_SCRIPT = `    <script>
+      (function () {
+        var RAD = Math.PI / 180, TZ = 'Europe/Madrid', LAT = 40.4168, LON = -3.7038
+        function hourInTZ(date) {
+          var p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)
+          function v(t) { return Number(p.find(function (x) { return x.type === t }).value) }
+          return v('hour') + v('minute') / 60
+        }
+        var now = new Date()
+        var jd = now.getTime() / 86400000 + 2440587.5
+        var n = Math.round(jd - 2451545.0 + 0.0008)
+        var jStar = n + -LON / 360
+        var M = (357.5291 + 0.98560028 * jStar) % 360
+        var Mr = M * RAD
+        var C = 1.9148 * Math.sin(Mr) + 0.02 * Math.sin(2 * Mr) + 0.0003 * Math.sin(3 * Mr)
+        var lambda = ((M + C + 180 + 102.9372) % 360) * RAD
+        var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(Mr) - 0.0069 * Math.sin(2 * lambda)
+        var sinDec = Math.sin(lambda) * Math.sin(23.4397 * RAD)
+        var cosDec = Math.cos(Math.asin(sinDec))
+        var cosOmega = (Math.sin(-0.833 * RAD) - Math.sin(LAT * RAD) * sinDec) / (Math.cos(LAT * RAD) * cosDec)
+        var omega = Math.acos(Math.min(1, Math.max(-1, cosOmega))) / RAD
+        function jToDate(j) { return new Date((j - 2440587.5) * 86400000) }
+        var sunrise = hourInTZ(jToDate(jTransit - omega / 360))
+        var sunset = hourInTZ(jToDate(jTransit + omega / 360))
+        var hour = hourInTZ(now)
+        if (!(hour >= sunrise && hour < sunset)) document.documentElement.setAttribute('data-theme', 'night')
+      })()
+    </script>`
+
 const SITE_FOOTER = `      <footer>
         <a href="/">Calculadora solar</a>
         <span> · </span>
@@ -176,6 +210,7 @@ export function articlePage(a, css) {
 ${socialBlock(path, `${a.title} | SolarVento`, a.description, published)}
     <link rel="icon" href="/favicon.ico" sizes="any" />
 ${FONT_PRELOAD}
+${THEME_SCRIPT}
     <style>
 ${indentCss(css)}
     </style>
@@ -244,6 +279,7 @@ export function blogIndexPage(articles, css) {
 ${socialBlock('blog/', title, description)}
     <link rel="icon" href="/favicon.ico" sizes="any" />
 ${FONT_PRELOAD}
+${THEME_SCRIPT}
     <style>
 ${indentCss(css)}
     </style>

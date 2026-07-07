@@ -23,6 +23,34 @@
     <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      (function () {
+        var RAD = Math.PI / 180, TZ = 'Europe/Madrid', LAT = 40.4168, LON = -3.7038
+        function hourInTZ(date) {
+          var p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)
+          function v(t) { return Number(p.find(function (x) { return x.type === t }).value) }
+          return v('hour') + v('minute') / 60
+        }
+        var now = new Date()
+        var jd = now.getTime() / 86400000 + 2440587.5
+        var n = Math.round(jd - 2451545.0 + 0.0008)
+        var jStar = n + -LON / 360
+        var M = (357.5291 + 0.98560028 * jStar) % 360
+        var Mr = M * RAD
+        var C = 1.9148 * Math.sin(Mr) + 0.02 * Math.sin(2 * Mr) + 0.0003 * Math.sin(3 * Mr)
+        var lambda = ((M + C + 180 + 102.9372) % 360) * RAD
+        var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(Mr) - 0.0069 * Math.sin(2 * lambda)
+        var sinDec = Math.sin(lambda) * Math.sin(23.4397 * RAD)
+        var cosDec = Math.cos(Math.asin(sinDec))
+        var cosOmega = (Math.sin(-0.833 * RAD) - Math.sin(LAT * RAD) * sinDec) / (Math.cos(LAT * RAD) * cosDec)
+        var omega = Math.acos(Math.min(1, Math.max(-1, cosOmega))) / RAD
+        function jToDate(j) { return new Date((j - 2440587.5) * 86400000) }
+        var sunrise = hourInTZ(jToDate(jTransit - omega / 360))
+        var sunset = hourInTZ(jToDate(jTransit + omega / 360))
+        var hour = hourInTZ(now)
+        if (!(hour >= sunrise && hour < sunset)) document.documentElement.setAttribute('data-theme', 'night')
+      })()
+    </script>
     <style>
       /* Tema del blog = tema de la portada (src/index.css): papel cálido con
          amanecer, marca en Bricolage Grotesque, botón solar y cards en capas.
@@ -36,7 +64,7 @@
       }
 
       :root {
-        color-scheme: light dark;
+        color-scheme: light;
         /* Tema solar (mismos tokens que la app) */
         --page: #fbfaf6;
         --sky-dawn: #fff4de;
@@ -45,6 +73,15 @@
         --sun-600: #d97706;
         --ember: #b45309;
         --gridline: #ece6d9;
+      }
+      /* Modo noche: mismas variables que :root[data-theme='night'] en la app.
+         Lo activa el script solar del <head> (se pone el sol en España → noche),
+         igual que la portada; el modo claro/oscuro del sistema NO interviene. */
+      :root[data-theme='night'] {
+        color-scheme: dark;
+        --page: #10131a;
+        --sky-dawn: #1b2436; /* resplandor de cielo nocturno en la cabecera */
+        --gridline: #2a2f3a;
       }
       * { box-sizing: border-box; }
       body {
@@ -244,20 +281,47 @@
         color: #78716c;
       }
 
-      @media (prefers-color-scheme: dark) {
-        :root { --gridline: #44403c; }
-        body { color: #e7e5e4; background: #1c1917; }
-        a { color: var(--sun-400); }
-        a:hover { color: #fcd34d; }
-        .brand, .card h2 a { color: #e7e5e4; }
-        .lead, .meta, .eyebrow, .anatomy .hint, .card p.excerpt, .cta-block p, .brand small { color: #a8a29e; }
-        .anatomy, .card, .cta-block { background: #292524; box-shadow: none; }
-        .card:hover { box-shadow: 0 8px 24px -12px rgba(0, 0, 0, .5); }
-        .card h2 a:hover { color: var(--sun-400); }
-        .callout { background: rgba(146, 64, 14, .2); border-color: #92400e; border-left-color: var(--sun-600); color: #fef3c7; }
-        .callout strong { color: #fde68a; }
-        .cta, .cta:hover { color: #1c1917; }
+      /* Noche: la página se asienta en el azul nocturno de la app y las cards usan
+         la superficie/bordes/sombras de .card-solar en modo noche. */
+      [data-theme='night'] body {
+        color: #e7e5e4;
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(27, 36, 54, 0) 420px),
+          var(--page);
       }
+      [data-theme='night'] a { color: var(--sun-400); }
+      [data-theme='night'] a:hover { color: #fcd34d; }
+      [data-theme='night'] .brand, [data-theme='night'] .card h2 a { color: #e7e5e4; }
+      [data-theme='night'] .lead,
+      [data-theme='night'] .meta,
+      [data-theme='night'] .eyebrow,
+      [data-theme='night'] .anatomy .hint,
+      [data-theme='night'] .card p.excerpt,
+      [data-theme='night'] .cta-block p,
+      [data-theme='night'] .brand small { color: #a8a29e; }
+      [data-theme='night'] .anatomy,
+      [data-theme='night'] .card,
+      [data-theme='night'] .cta-block {
+        background: #171b23;
+        border-color: #2a2f3a;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, .3),
+          0 6px 16px -8px rgba(0, 0, 0, .5);
+      }
+      [data-theme='night'] .card:hover {
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, .35),
+          0 16px 32px -12px rgba(0, 0, 0, .6);
+      }
+      [data-theme='night'] .card h2 a:hover { color: var(--sun-400); }
+      [data-theme='night'] .callout {
+        background: rgba(245, 158, 11, .12);
+        border-color: rgba(245, 158, 11, .4);
+        border-left-color: var(--sun-500);
+        color: #fde68a;
+      }
+      [data-theme='night'] .callout strong { color: #fde68a; }
+      [data-theme='night'] .cta, [data-theme='night'] .cta:hover { color: #1c1917; }
     </style>
     <script type="application/ld+json">
 {
