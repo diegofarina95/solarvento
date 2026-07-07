@@ -357,4 +357,10 @@ test('las variables de categoría existen en día y en noche en las páginas ser
     assert.ok(night.includes(v), `falta ${v} (noche)`)
   }
   assert.ok(html.includes('.cat-label'), 'faltan las reglas de la etiqueta')
+  // El bloque nocturno redefine border-color de .card: el borde de categoría
+  // necesita su propia regla nocturna o desaparece de noche.
+  assert.ok(
+    night.includes("[data-theme='night'] .card[class*='cat-']"),
+    'el borde de categoría no sobrevive al modo noche',
+  )
 })
