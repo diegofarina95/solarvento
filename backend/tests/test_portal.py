@@ -193,6 +193,27 @@ def test_upload_con_bom_se_normaliza(client, monkeypatch, tmp_path):
     assert saved.startswith("---\n")  # sin BOM
 
 
+def test_upload_crea_directorio_si_falta(client, monkeypatch, tmp_path):
+    # git rm del último artículo borra también content/blog/ (git no guarda
+    # directorios vacíos): la subida debe recrearlo, no dar un 500.
+    dest = tmp_path / "content" / "blog"
+    monkeypatch.setattr(portal, "CONTENT_BLOG", dest)
+    monkeypatch.setattr(portal, "run_generate", lambda: (True, ""))
+    raw = b"---\ntitle: x\ndescription: d\nkeywords: k\ndate: 2026-07-07\nexcerpt: e\n---\n<p>x</p>"
+    r = client.post("/upload", files={"file": ("nuevo.html", raw)}, follow_redirects=False)
+    assert r.status_code == 303
+    assert (dest / "nuevo.html").exists()
+
+
+def test_error_inesperado_da_pagina_legible(monkeypatch):
+    monkeypatch.setattr(portal, "client_allowed", lambda ip: True)
+    monkeypatch.setattr(portal, "list_articles", lambda: 1 / 0)
+    client = TestClient(portal.app, raise_server_exceptions=False)
+    r = client.get("/")
+    assert r.status_code == 500
+    assert "ZeroDivisionError" in r.text
+
+
 def test_upload_rechaza_archivo_grande(client, monkeypatch, tmp_path):
     monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
     big = b"x" * (portal.MAX_UPLOAD_BYTES + 1)

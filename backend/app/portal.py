@@ -322,6 +322,12 @@ def generator_error_summary(out: str) -> str:
     return ""
 
 
+@app.exception_handler(Exception)
+async def unexpected_error(request: Request, exc: Exception):
+    """Cualquier fallo no previsto sale como página legible, no un 500 pelado."""
+    return error_page("Error inesperado del portal", f"{type(exc).__name__}: {exc}", 500)
+
+
 # --- middleware: solo tailnet -------------------------------------------------
 
 @app.middleware("http")
@@ -408,6 +414,8 @@ async def upload(file: UploadFile):
     if not LOCK.acquire(blocking=False):
         return error_page("Ocupado", "Hay otra operación en curso; reintenta.", 423)
     try:
+        # git rm del último artículo poda también el directorio: recréalo.
+        CONTENT_BLOG.mkdir(parents=True, exist_ok=True)
         target.write_text(text, encoding="utf-8")
         ok, out = run_generate()
         if not ok:
