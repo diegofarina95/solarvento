@@ -13,6 +13,10 @@ frontend/dist/
 .env
 *.db
 
+# Portal del blog: programaciones y borradores apartados durante publish_group
+.blog-schedule.json
+.drafts-aside/
+
 # Editor/OS
 .DS_Store
 
