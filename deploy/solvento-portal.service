@@ -1,0 +1,19 @@
+# Portal de publicación del blog de SolarVento — SOLO máquina de dev.
+# Instalación (como unidad de usuario, sin sudo):
+#   mkdir -p ~/.config/systemd/user
+#   cp deploy/solvento-portal.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now solvento-portal
+#   loginctl enable-linger diego   # para que sobreviva sin sesión abierta
+[Unit]
+Description=SolarVento — portal del blog (solo Tailscale)
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/diego/taller-projects/solvento/deploy/solvento-portal.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
