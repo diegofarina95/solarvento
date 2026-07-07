@@ -16,12 +16,17 @@ from .profiles import DAYS_PER_MONTH
 
 ROUND_TRIP_EFFICIENCY = 0.90
 BATTERY_CYCLES_PER_MONTH_CHAIN = 3  # días encadenados para estabilizar el estado de carga
+# Las baterías residenciales limitan la potencia a ~0,5-1C: una de 5 kWh no
+# absorbe/suelta más de 2,5-5 kW. Sin este tope, el paso horario deja que una
+# batería pequeña se trague todo el excedente de una hora e infla su ahorro.
+BATTERY_C_RATE = 0.5
 
 
 def simulate_self_consumption(
     production: list[list[float]],
     consumption: list[list[float]],
     battery_kwh: float = 0.0,
+    c_rate: float = BATTERY_C_RATE,
 ) -> dict:
     """Balance energético anual de la instalación.
 
@@ -40,6 +45,8 @@ def simulate_self_consumption(
         "consumption_kwh": 0.0,
     }
     monthly = []
+    # Tope de potencia por hora (kWh en paso horario): capacidad × C.
+    hourly_power_cap = battery_kwh * c_rate
 
     for m in range(12):
         days = DAYS_PER_MONTH[m]
@@ -58,11 +65,11 @@ def simulate_self_consumption(
 
                 if surplus > 0 and battery_kwh > 0:
                     room = (battery_kwh - soc) / ROUND_TRIP_EFFICIENCY
-                    charged = min(surplus, room)
+                    charged = min(surplus, room, hourly_power_cap)
                     soc += charged * ROUND_TRIP_EFFICIENCY
                     surplus -= charged
                 if deficit > 0 and soc > 0:
-                    discharged = min(deficit, soc)
+                    discharged = min(deficit, soc, hourly_power_cap)
                     soc -= discharged
                     deficit -= discharged
                     day["battery"] += discharged

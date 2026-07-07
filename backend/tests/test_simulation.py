@@ -47,6 +47,39 @@ class TestSimulateSelfConsumption:
         # Con eficiencia 0.9 no puede descargar más del 90% de lo producido
         assert result["battery_kwh"] <= result["production_kwh"] * 0.9 + 1e-6
 
+    def test_charge_capped_by_c_rate(self):
+        # Bloque 3: pico de excedente de 10 kWh en UNA hora con batería de 4 kWh.
+        # Sin tope, absorbía hasta 4/0,9 = 4,4 kWh en esa hora (una residencial
+        # real de 4 kWh a 0,5C solo admite 2 kW). Con el tope, en la única hora
+        # de sol solo entran 2 kWh (1,8 útiles tras pérdidas de carga).
+        production = flat_profile(10.0, range(12, 13))
+        consumption = flat_profile(1.0, range(20, 24))
+        result = simulate_self_consumption(production, consumption, battery_kwh=4)
+        assert result["battery_kwh"] == pytest.approx(1.8 * 365, rel=0.01)
+
+    def test_discharge_capped_by_c_rate(self):
+        # Dos horas de sol cargan la batería; TODO el consumo cae en una sola
+        # hora. A 0,5C una batería de 4 kWh no puede soltar más de 2 kWh/h por
+        # mucho déficit que haya (régimen estacionario del día encadenado).
+        production = flat_profile(10.0, range(10, 12))
+        consumption = flat_profile(10.0, range(20, 21))
+        result = simulate_self_consumption(production, consumption, battery_kwh=4)
+        assert result["battery_kwh"] == pytest.approx(2.0 * 365, rel=0.01)
+
+    def test_c_rate_configurable(self):
+        # Con C=1 la misma batería admite 4 kWh/h: el pico de una hora carga
+        # hasta el techo de capacidad, como antes del tope.
+        production = flat_profile(10.0, range(12, 13))
+        consumption = flat_profile(1.0, range(20, 24))
+        capped = simulate_self_consumption(production, consumption, battery_kwh=4)
+        relaxed = simulate_self_consumption(
+            production, consumption, battery_kwh=4, c_rate=1.0
+        )
+        assert relaxed["battery_kwh"] > capped["battery_kwh"]
+        # A 1C entran 4 kWh en la hora de sol; tras la pérdida de carga (0,9)
+        # quedan 3,6 almacenados, que el consumo nocturno vacía enteros.
+        assert relaxed["battery_kwh"] == pytest.approx(3.6 * 365, rel=0.01)
+
     def test_energy_balance_conserved(self):
         production = flat_profile(0.8, range(8, 18))
         consumption = consumption_profile(3500)
