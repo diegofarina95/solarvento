@@ -543,6 +543,76 @@ async def tailnet_only(request: Request, call_next):
 
 # --- rutas --------------------------------------------------------------------
 
+# Nombres en español hardcodeados: la locale del servicio systemd no es fiable.
+DIAS = ("lun", "mar", "mié", "jue", "vie", "sáb", "dom")
+MESES = ("ene", "feb", "mar", "abr", "may", "jun",
+         "jul", "ago", "sep", "oct", "nov", "dic")
+
+
+def format_local(dtstr: str) -> str:
+    dt = blog_schedule.parse_local(dtstr)
+    return f"{DIAS[dt.weekday()]} {dt.day} {MESES[dt.month - 1]}, {dt:%H:%M}"
+
+
+def schedule_widget(stem: str, entry: dict | None, has_drafts: bool) -> str:
+    """Programar / pendiente / vencida / error, según el estado del grupo."""
+    cancel = (
+        f'<form class="inline" method="post" action="/unschedule/{stem}">'
+        "<button>Cancelar programación</button></form>"
+    )
+    publish_now = (
+        f'<form class="inline" method="post" action="/publish-group/{stem}">'
+        '<button class="primary">Publicar ahora</button></form>'
+    )
+    if entry is None:
+        if not has_drafts:
+            return ""
+        default = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%dT09:00")
+        return (
+            f'<form class="inline" method="post" action="/schedule/{stem}">'
+            f'<input type="datetime-local" name="publish_at" value="{default}" required /> '
+            "<button>Programar</button></form>"
+        )
+    when = format_local(entry["publish_at"])
+    if entry["state"] == "pending":
+        return f'<span class="meta">⏰ sale el {when}</span> {cancel}'
+    if entry["state"] == "stale":
+        return (
+            f'<span class="bad">⏰ venció el {when} con el portal parado</span> '
+            f"{publish_now} {cancel}"
+        )
+    reason = html.escape(entry.get("error") or "error desconocido")
+    return f'<span class="bad">⚠️ falló al publicar: {reason}</span> {publish_now} {cancel}'
+
+
+def group_card(g: dict, entry: dict | None) -> str:
+    has_drafts = g["draft"] or any(t and t["draft"] for t in g["tr"].values())
+    head = (
+        "<strong>" + html.escape(g["title"]) + "</strong>"
+        if g["draft"]
+        else f'<a href="{public_url("es", g["slug"])}" target="_blank">{html.escape(g["title"])}</a>'
+    )
+    action = (
+        f'<a href="/preview/{g["stem"]}"><button class="primary">Revisar y publicar</button></a>'
+        if g["draft"]
+        else f'''<form class="inline" method="post" action="/delete/{g["stem"]}"
+        onsubmit="return confirm('¿Borrar «{html.escape(g["title"])}» y TODAS sus traducciones del blog y de prod?')">
+    <button class="danger">Borrar</button>
+  </form>'''
+    )
+    widget = schedule_widget(g["stem"], entry, has_drafts)
+    schedule_row = f'<div class="row">{widget}</div>' if widget else ""
+    return f"""<div class="card">
+  <div class="row">
+    <div>{head}
+      <div class="meta">{html.escape(g["date"])} · /blog/{g["slug"]}/{" · borrador pendiente" if g["draft"] else ""}</div></div>
+    {action}
+  </div>
+  <div class="row">{lang_chips(g)}</div>
+  {schedule_row}
+</div>"""
+
+
 def lang_chips(g: dict) -> str:
     """Estado por idioma de un artículo: publicado (enlace), borrador o «Traducir»."""
     chips = []
@@ -570,20 +640,8 @@ def lang_chips(g: dict) -> str:
 def index():
     groups = list_groups()
     drafts = sorted(draft_refs())
-    cards = "".join(
-        f"""<div class="card">
-  <div class="row">
-    <div>{"<strong>" + html.escape(g["title"]) + "</strong>" if g["draft"] else f'<a href="{public_url("es", g["slug"])}" target="_blank">{html.escape(g["title"])}</a>'}
-      <div class="meta">{html.escape(g["date"])} · /blog/{g["slug"]}/{" · borrador pendiente" if g["draft"] else ""}</div></div>
-    {f'<a href="/preview/{g["stem"]}"><button class="primary">Revisar y publicar</button></a>' if g["draft"] else f'''<form class="inline" method="post" action="/delete/{g["stem"]}"
-        onsubmit="return confirm('¿Borrar «{html.escape(g["title"])}» y TODAS sus traducciones del blog y de prod?')">
-    <button class="danger">Borrar</button>
-  </form>'''}
-  </div>
-  <div class="row">{lang_chips(g)}</div>
-</div>"""
-        for g in groups
-    )
+    sched = blog_schedule.load()
+    cards = "".join(group_card(g, sched.get(g["stem"])) for g in groups)
     publish_all = (
         f"""<form class="inline" method="post" action="/publish">
   <button class="primary">Publicar todo lo pendiente ({len(drafts)})</button>
@@ -681,6 +739,7 @@ def preview(ref: str):
     <button class="danger">Descartar este borrador</button>
   </form>
 </div>
+<div class="actions">{schedule_widget(stem, blog_schedule.get(stem), True)}</div>
 <iframe src="/draft/{ref}"></iframe>
 """,
     )

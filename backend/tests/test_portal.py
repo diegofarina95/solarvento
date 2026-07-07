@@ -606,3 +606,76 @@ def test_delete_limpia_la_programacion(client, grupo_con_borrador, monkeypatch, 
     r = client.post("/delete/factura")
     assert r.status_code == 200
     assert blog_schedule.get("factura") is None
+
+
+# --- Widget de programación en la UI ---
+
+def test_format_local():
+    assert portal.format_local("2026-07-09T09:00") == "jue 9 jul, 09:00"
+    assert portal.format_local("2026-12-01T18:30") == "mar 1 dic, 18:30"
+
+
+GRUPO_BORRADOR = {
+    "stem": "uno", "slug": "uno", "title": "Uno", "date": "2026-07-01",
+    "draft": True, "tr": {"en": None, "ca": None, "gl": None, "eu": None},
+}
+
+
+def test_index_borrador_sin_programar_ofrece_programar(client, monkeypatch):
+    monkeypatch.setattr(portal, "draft_refs", lambda: {"uno"})
+    monkeypatch.setattr(portal, "list_groups", lambda: [dict(GRUPO_BORRADOR)])
+    r = client.get("/")
+    assert 'action="/schedule/uno"' in r.text
+    assert 'type="datetime-local"' in r.text
+
+
+def test_index_pendiente_muestra_hora_y_cancelar(client, monkeypatch):
+    monkeypatch.setattr(portal, "draft_refs", lambda: {"uno"})
+    monkeypatch.setattr(portal, "list_groups", lambda: [dict(GRUPO_BORRADOR)])
+    blog_schedule.set_schedule("uno", "2026-07-09T09:00")
+    r = client.get("/")
+    assert "⏰ sale el jue 9 jul, 09:00" in r.text
+    assert 'action="/unschedule/uno"' in r.text
+    assert 'action="/schedule/uno"' not in r.text  # programado: sin selector
+
+
+def test_index_vencida_ofrece_publicar_ahora(client, monkeypatch):
+    monkeypatch.setattr(portal, "draft_refs", lambda: {"uno"})
+    monkeypatch.setattr(portal, "list_groups", lambda: [dict(GRUPO_BORRADOR)])
+    blog_schedule.set_schedule("uno", "2026-07-01T09:00")
+    blog_schedule.mark_stale_before(datetime(2026, 7, 2, 0, 0))
+    r = client.get("/")
+    assert "venció" in r.text
+    assert 'action="/publish-group/uno"' in r.text
+    assert 'action="/unschedule/uno"' in r.text
+
+
+def test_index_error_muestra_motivo(client, monkeypatch):
+    monkeypatch.setattr(portal, "draft_refs", lambda: {"uno"})
+    monkeypatch.setattr(portal, "list_groups", lambda: [dict(GRUPO_BORRADOR)])
+    blog_schedule.set_schedule("uno", "2026-07-01T09:00")
+    blog_schedule.mark_error("uno", "sync a prod: <caído>")
+    r = client.get("/")
+    assert "falló al publicar" in r.text
+    assert "&lt;caído&gt;" in r.text  # el motivo va escapado
+    assert 'action="/publish-group/uno"' in r.text
+
+
+def test_index_publicado_sin_borradores_no_ofrece_programar(client, monkeypatch):
+    publicado = dict(GRUPO_BORRADOR, draft=False)
+    monkeypatch.setattr(portal, "draft_refs", lambda: set())
+    monkeypatch.setattr(portal, "list_groups", lambda: [publicado])
+    r = client.get("/")
+    assert 'action="/schedule/uno"' not in r.text
+
+
+def test_preview_muestra_el_widget(client, monkeypatch, tmp_path):
+    content, public = tmp_path / "content", tmp_path / "public"
+    content.mkdir()
+    (content / "factura.html").write_text(FM.format(t="Factura"))
+    monkeypatch.setattr(portal, "CONTENT_BLOG", content)
+    monkeypatch.setattr(portal, "PUBLIC_BLOG", public)
+    monkeypatch.setattr(portal, "draft_refs", lambda: {"factura"})
+    r = client.get("/preview/factura")
+    assert r.status_code == 200
+    assert 'action="/schedule/factura"' in r.text
