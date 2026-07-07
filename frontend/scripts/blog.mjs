@@ -134,9 +134,9 @@ const THEME_SCRIPT = `    <script>
       })()
     </script>`
 
+// Sin enlace a la calculadora: el cta-block del artículo y el CTA de la
+// cabecera ya cubren ese camino; repetirlo en el footer era ruido.
 const SITE_FOOTER = `      <footer>
-        <a href="/">Calculadora solar</a>
-        <span> · </span>
         <a href="/blog/">Blog</a>
         <span> · </span>
         <a href="/faq.html">Preguntas frecuentes</a>
