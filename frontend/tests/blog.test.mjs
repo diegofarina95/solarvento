@@ -293,3 +293,54 @@ test('el sitemap multiidioma lista índices y artículos de cada lengua', () => 
   assert.ok(lines.includes(`<loc>${ORIGIN}/blog/como-leer-la-factura/</loc>`))
   assert.ok(lines.includes(`<loc>${ORIGIN}/blog/en/how-to-read-your-bill/</loc>`))
 })
+
+// --- Categorías: parse tolerante, herencia y presentación ---
+
+import { CATEGORIES, blogIndexPage } from '../scripts/blog.mjs'
+
+test('category válida se parsea; inválida o ausente queda undefined sin romper', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'blog-'))
+  writeFileSync(join(dir, 'a.html'), article('category: analisis\n'))
+  writeFileSync(join(dir, 'b.html'), article('category: Otra Cosa\n'))
+  writeFileSync(join(dir, 'c.html'), article(''))
+  const byStem = new Map(loadArticles(dir).map((a) => [a.stem, a]))
+  assert.equal(byStem.get('a').category, 'analisis')
+  assert.equal(byStem.get('b').category, undefined)
+  assert.equal(byStem.get('c').category, undefined)
+  assert.equal(CATEGORIES.analisis, 'ANÁLISIS')
+})
+
+test('la traducción hereda la categoría del original español', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'blog-'))
+  writeFileSync(join(dir, 'factura.html'), FM('category: guia\n'))
+  mkdirSync(join(dir, 'en'))
+  writeFileSync(join(dir, 'en', 'factura.html'), FM('lang: en\n'))
+  const g = loadBlog(dir).get('factura')
+  assert.equal(g.es.category, 'guia')
+  assert.equal(g.tr.en.category, 'guia')
+})
+
+const BASE_ART = {
+  slug: 's', title: 't', description: 'd', keywords: 'k',
+  date: '2026-07-07', updated: '2026-07-07', excerpt: 'e', lang: 'es',
+  bodyHtml: '<p>x</p>',
+}
+
+test('el artículo categorizado lleva clase y etiqueta sobre el título; el neutro no', () => {
+  const con = articlePage({ ...BASE_ART, category: 'divulgacion' }, '')
+  assert.ok(con.includes('<article class="cat-divulgacion">'))
+  const label = con.indexOf('<p class="eyebrow cat-label">DIVULGACIÓN</p>')
+  const h1 = con.indexOf('<h1>')
+  assert.ok(label !== -1 && label < h1, 'la etiqueta debe ir sobre el título')
+  const sin = articlePage(BASE_ART, '')
+  assert.ok(sin.includes('<article>'))
+  assert.ok(!sin.includes('cat-label'))
+})
+
+test('la card del índice lleva clase y etiqueta junto a la fecha; la neutra queda intacta', () => {
+  const html = blogIndexPage(
+    [{ ...BASE_ART, category: 'guia' }, { ...BASE_ART, slug: 'otro' }], '', 'es', '')
+  assert.ok(html.includes('<article class="card cat-guia">'))
+  assert.match(html, /<time[^>]*>[^<]+<\/time><span class="cat-label">GUÍA<\/span>/)
+  assert.ok(html.includes('<article class="card">'))  // la neutra, sin clase extra
+})

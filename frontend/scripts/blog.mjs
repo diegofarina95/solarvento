@@ -33,6 +33,10 @@ const ORIGIN = 'https://solarvento.es'
 export const TRANSLATION_LANGS = ['en', 'ca', 'gl', 'eu']
 export const BLOG_LANGS = ['es', ...TRANSLATION_LANGS]
 
+// Categorías del blog: clave del frontmatter → etiqueta visible (idéntica en
+// todos los idiomas). Valor no reconocido = sin categoría (render neutro).
+export const CATEGORIES = { guia: 'GUÍA', analisis: 'ANÁLISIS', divulgacion: 'DIVULGACIÓN' }
+
 // Cadenas de la carcasa del blog por idioma (el contenido llega ya traducido).
 const STRINGS = {
   es: {
@@ -181,6 +185,9 @@ function parseArticle(dir, file) {
     updated: meta.updated || meta.date,
     excerpt: meta.excerpt,
     lang: meta.lang || 'es',
+    category: CATEGORIES[(meta.category || '').trim().toLowerCase()]
+      ? (meta.category || '').trim().toLowerCase()
+      : undefined,
     bodyHtml: m[2].trim(),
   }
 }
@@ -227,6 +234,7 @@ export function loadBlog(dir) {
           `${lang}/${a.stem}.html: traducción huérfana, no existe content/blog/${a.stem}.html`,
         )
       g.tr[lang] = a
+      a.category = g.es.category // la categoría es del grupo: manda el original
     }
   }
   return groups
@@ -404,6 +412,10 @@ export function articlePage(a, css, hreflang = '') {
     [s.blogLabel, `${ORIGIN}/${blogHome(a.lang)}`],
     [a.title, `${ORIGIN}/${path}`],
   ])
+  const catClass = a.category ? ` class="cat-${a.category}"` : ''
+  const catLabel = a.category
+    ? `        <p class="eyebrow cat-label">${CATEGORIES[a.category]}</p>\n`
+    : ''
   return `<!doctype html>
 <!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/blog/ — NO EDITAR A MANO -->
 <html lang="${a.lang}">
@@ -432,8 +444,8 @@ ${JSON.stringify(crumbs, null, 2)}
   <body>
     <main class="wrap">
 ${siteHeader(a.lang)}
-      <article>
-        <h1>${a.title}</h1>
+      <article${catClass}>
+${catLabel}        <h1>${a.title}</h1>
         <p class="meta"><time datetime="${a.date}">${humanDate(a.date, a.lang)}</time></p>
 ${bodyHtml.replace(/^/gm, '        ')}
       </article>
@@ -466,9 +478,11 @@ export function blogIndexPage(articles, css, lang = 'es', hreflang = '') {
   ])
   const cards = articles
     .map(
-      (a) => `        <article class="card">
+      (a) => `        <article class="card${a.category ? ` cat-${a.category}` : ''}">
           <h2><a href="/${articleUrl(a)}">${a.title}</a></h2>
-          <p class="meta"><time datetime="${a.date}">${humanDate(a.date, lang)}</time></p>
+          <p class="meta"><time datetime="${a.date}">${humanDate(a.date, lang)}</time>${
+            a.category ? `<span class="cat-label">${CATEGORIES[a.category]}</span>` : ''
+          }</p>
           <p class="excerpt">${a.excerpt}</p>
         </article>`,
     )
