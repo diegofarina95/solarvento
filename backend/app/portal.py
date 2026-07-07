@@ -88,6 +88,13 @@ def read_env(path: Path) -> dict[str, str]:
     return out
 
 
+def normalize_upload(data: bytes) -> str:
+    """Tolera BOM y líneas en blanco iniciales delante del frontmatter."""
+    text = data.decode("utf-8", errors="replace")
+    stripped = text.lstrip("\ufeff \t\r\n")
+    return stripped if stripped.startswith("---") else text
+
+
 def parse_frontmatter(text: str) -> dict[str, str]:
     """Frontmatter mínimo para listar (la validación real la hace el generador)."""
     m = re.match(r"^---\r?\n([\s\S]*?)\r?\n---\r?\n", text)
@@ -280,6 +287,41 @@ def error_page(title: str, detail: str, status: int) -> HTMLResponse:
     )
 
 
+FRONTMATTER_TEMPLATE = """---
+title: Título SEO del artículo
+description: Meta-descripción para Google (una frase)
+keywords: palabra1, palabra2, palabra3
+date: 2026-07-07
+excerpt: Extracto para la tarjeta del índice del blog.
+---
+<p class="lead">Primer párrafo…</p>
+<h2>Primera sección</h2>
+<p>Cuerpo del artículo en HTML plano.</p>"""
+
+
+def frontmatter_help_page(name: str) -> HTMLResponse:
+    return page(
+        "Falta el frontmatter",
+        f"""<h1>«{html.escape(name)}» no empieza por el frontmatter</h1>
+<p>La <strong>primera línea</strong> del archivo debe ser <code>---</code>, seguida de los
+metadatos y otra línea <code>---</code>; debajo va el cuerpo del artículo en HTML plano.
+Un documento HTML completo (con <code>&lt;!doctype&gt;</code>, <code>&lt;head&gt;</code>,
+<code>&lt;body&gt;</code>…) no vale: pega solo el contenido del artículo bajo el frontmatter.</p>
+<p>Plantilla exacta:</p>
+<pre>{html.escape(FRONTMATTER_TEMPLATE)}</pre>
+<p><a href="/">← Volver al portal</a></p>""",
+        422,
+    )
+
+
+def generator_error_summary(out: str) -> str:
+    """Primera línea «Error: …» del generador, para no enseñar solo un stack trace."""
+    for line in out.splitlines():
+        if "Error:" in line:
+            return line.strip()
+    return ""
+
+
 # --- middleware: solo tailnet -------------------------------------------------
 
 @app.middleware("http")
@@ -353,6 +395,9 @@ async def upload(file: UploadFile):
         )
     if len(data) > MAX_UPLOAD_BYTES:
         return error_page("Archivo demasiado grande", "Máximo 2 MB.", 413)
+    text = normalize_upload(data)
+    if not parse_frontmatter(text):
+        return frontmatter_help_page(name)
     target = CONTENT_BLOG / name
     if target.exists():
         return error_page(
@@ -363,12 +408,14 @@ async def upload(file: UploadFile):
     if not LOCK.acquire(blocking=False):
         return error_page("Ocupado", "Hay otra operación en curso; reintenta.", 423)
     try:
-        target.write_bytes(data)
+        target.write_text(text, encoding="utf-8")
         ok, out = run_generate()
         if not ok:
             target.unlink(missing_ok=True)
             run_generate()  # restaura índice/sitemap del estado anterior
-            return error_page("El generador rechazó el artículo", out, 422)
+            summary = generator_error_summary(out)
+            detail = f"{summary}\n\n— salida completa —\n{out}" if summary else out
+            return error_page("El generador rechazó el artículo", detail, 422)
     finally:
         LOCK.release()
     return RedirectResponse(f"/preview/{target.stem}", status_code=303)

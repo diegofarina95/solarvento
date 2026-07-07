@@ -113,6 +113,20 @@ def test_parse_frontmatter_invalido():
     assert portal.parse_frontmatter("<p>sin frontmatter</p>") == {}
 
 
+# --- Normalización de subidas: BOM y líneas en blanco iniciales ---
+
+def test_normalize_quita_bom_y_blancos():
+    raw = "﻿\n  \n---\ntitle: x\n---\n<p>x</p>".encode("utf-8")
+    text = portal.normalize_upload(raw)
+    assert text.startswith("---\n")
+    assert portal.parse_frontmatter(text)["title"] == "x"
+
+
+def test_normalize_no_toca_lo_que_no_es_frontmatter():
+    raw = "<!doctype html><p>x</p>".encode("utf-8")
+    assert portal.normalize_upload(raw) == "<!doctype html><p>x</p>"
+
+
 # --- Rutas con cliente permitido y efectos secundarios sustituidos ---
 
 @pytest.fixture
@@ -153,6 +167,30 @@ def test_upload_rechaza_slug_existente(client, monkeypatch, tmp_path):
     )
     assert r.status_code == 409
     assert "existe" in r.text.lower()
+
+
+def test_upload_sin_frontmatter_da_ayuda(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
+    r = client.post(
+        "/upload",
+        files={"file": ("blog-factura.html", b"<!doctype html><p>articulo</p>")},
+    )
+    assert r.status_code == 422
+    assert "frontmatter" in r.text
+    assert "title: T" in r.text  # la plantilla aparece en la ayuda
+    assert list(tmp_path.iterdir()) == []  # no se escribió nada
+
+
+def test_upload_con_bom_se_normaliza(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
+    monkeypatch.setattr(portal, "run_generate", lambda: (True, ""))
+    raw = "﻿---\ntitle: x\ndescription: d\nkeywords: k\ndate: 2026-07-07\nexcerpt: e\n---\n<p>x</p>".encode("utf-8")
+    r = client.post(
+        "/upload", files={"file": ("con-bom.html", raw)}, follow_redirects=False
+    )
+    assert r.status_code == 303
+    saved = (tmp_path / "con-bom.html").read_text(encoding="utf-8")
+    assert saved.startswith("---\n")  # sin BOM
 
 
 def test_upload_rechaza_archivo_grande(client, monkeypatch, tmp_path):
