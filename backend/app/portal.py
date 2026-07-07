@@ -154,6 +154,16 @@ def draft_slugs() -> set[str]:
     return slugs
 
 
+PUBLIC_SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+
+
+def public_slug(content_file: Path) -> str:
+    """Slug público (URL) = campo «slug» del frontmatter; si falta o no es
+    válido, el nombre del archivo (mismo contrato que scripts/blog.mjs)."""
+    slug = parse_frontmatter(content_file.read_text()).get("slug", "")
+    return slug if PUBLIC_SLUG_RE.match(slug) else content_file.stem
+
+
 def list_articles() -> list[dict]:
     drafts = draft_slugs()
     items = []
@@ -161,7 +171,8 @@ def list_articles() -> list[dict]:
         meta = parse_frontmatter(f.read_text())
         items.append(
             {
-                "slug": f.stem,
+                "stem": f.stem,  # nombre en disco: clave de las rutas del portal
+                "slug": public_slug(f),  # slug público: URL en prod
                 "title": meta.get("title", f.stem),
                 "date": meta.get("date", "¿?"),
                 "draft": f.stem in drafts,
@@ -307,7 +318,8 @@ def frontmatter_help_page(name: str) -> HTMLResponse:
 metadatos y otra línea <code>---</code>; debajo va el cuerpo del artículo en HTML plano.
 Un documento HTML completo (con <code>&lt;!doctype&gt;</code>, <code>&lt;head&gt;</code>,
 <code>&lt;body&gt;</code>…) no vale: pega solo el contenido del artículo bajo el frontmatter.</p>
-<p>Plantilla exacta:</p>
+<p>Plantilla exacta (además admite <code>slug: url-para-seo</code> opcional para que
+la URL pública no dependa del nombre del archivo):</p>
 <pre>{html.escape(FRONTMATTER_TEMPLATE)}</pre>
 <p><a href="/">← Volver al portal</a></p>""",
         422,
@@ -350,15 +362,15 @@ def index():
         f"""<div class="card row">
   <div><strong>{html.escape(a["title"])}</strong>
     <div class="meta">borrador pendiente · {html.escape(a["date"])}</div></div>
-  <a href="/preview/{a["slug"]}"><button class="primary">Revisar y publicar</button></a>
+  <a href="/preview/{a["stem"]}"><button class="primary">Revisar y publicar</button></a>
 </div>"""
         for a in drafts
     )
     pub_html = "".join(
         f"""<div class="card row">
   <div><a href="{ORIGIN}/blog/{a["slug"]}.html" target="_blank">{html.escape(a["title"])}</a>
-    <div class="meta">{html.escape(a["date"])} · {a["slug"]}.html</div></div>
-  <form class="inline" method="post" action="/delete/{a["slug"]}"
+    <div class="meta">{html.escape(a["date"])} · /blog/{a["slug"]}.html</div></div>
+  <form class="inline" method="post" action="/delete/{a["stem"]}"
         onsubmit="return confirm('¿Borrar «{html.escape(a["title"])}» del blog y de prod?')">
     <button class="danger">Borrar</button>
   </form>
@@ -371,7 +383,8 @@ def index():
 <h1>Publicar un artículo</h1>
 <p class="meta">Sube un <code>.html</code> con el frontmatter del blog
 (<code>--- title/description/keywords/date/excerpt ---</code> + cuerpo HTML).
-El nombre del archivo será el slug público: <code>minusculas-con-guiones.html</code>.</p>
+La URL pública usa el campo opcional <code>slug:</code> del frontmatter; si no lo hay,
+el nombre del archivo (<code>minusculas-con-guiones.html</code>).</p>
 <form class="card" method="post" action="/upload" enctype="multipart/form-data">
   <div class="row">
     <input type="file" name="file" accept=".html" required />
@@ -429,47 +442,52 @@ async def upload(file: UploadFile):
     return RedirectResponse(f"/preview/{target.stem}", status_code=303)
 
 
-@app.get("/preview/{slug}", response_class=HTMLResponse)
-def preview(slug: str):
-    if not valid_filename(f"{slug}.html") or not (CONTENT_BLOG / f"{slug}.html").exists():
-        return error_page("No encontrado", f"No hay borrador «{slug}».", 404)
-    meta = parse_frontmatter((CONTENT_BLOG / f"{slug}.html").read_text())
-    title = meta.get("title", slug)
+@app.get("/preview/{stem}", response_class=HTMLResponse)
+def preview(stem: str):
+    src = CONTENT_BLOG / f"{stem}.html"
+    if not valid_filename(f"{stem}.html") or not src.exists():
+        return error_page("No encontrado", f"No hay borrador «{stem}».", 404)
+    title = parse_frontmatter(src.read_text()).get("title", stem)
+    pub = public_slug(src)
     return page(
         f"Preview · {title}",
         f"""
 <h1>Preview: {html.escape(title)}</h1>
-<p class="meta">Así quedará en {ORIGIN}/blog/{slug}.html (índice y sitemap se actualizan solos).</p>
+<p class="meta">Así quedará en {ORIGIN}/blog/{pub}.html (índice y sitemap se actualizan solos).</p>
 <div class="actions">
-  <form class="inline" method="post" action="/publish/{slug}">
+  <form class="inline" method="post" action="/publish/{stem}">
     <button class="primary">Publicar en solarvento.es</button>
   </form>
-  <form class="inline" method="post" action="/discard/{slug}">
+  <form class="inline" method="post" action="/discard/{stem}">
     <button class="danger">Descartar borrador</button>
   </form>
 </div>
-<iframe src="/draft/{slug}"></iframe>
+<iframe src="/draft/{stem}"></iframe>
 """,
     )
 
 
-@app.get("/draft/{slug}", response_class=HTMLResponse)
-def draft(slug: str):
-    f = PUBLIC_BLOG / f"{slug}.html"
-    if not valid_filename(f"{slug}.html") or not f.exists():
-        return error_page("No encontrado", f"No hay página generada para «{slug}».", 404)
+@app.get("/draft/{stem}", response_class=HTMLResponse)
+def draft(stem: str):
+    src = CONTENT_BLOG / f"{stem}.html"
+    if not valid_filename(f"{stem}.html") or not src.exists():
+        return error_page("No encontrado", f"No hay borrador «{stem}».", 404)
+    f = PUBLIC_BLOG / f"{public_slug(src)}.html"
+    if not f.exists():
+        return error_page("No encontrado", f"No hay página generada para «{stem}».", 404)
     return HTMLResponse(f.read_text())
 
 
-@app.post("/publish/{slug}", response_class=HTMLResponse)
-def publish(slug: str):
-    src = CONTENT_BLOG / f"{slug}.html"
-    if not valid_filename(f"{slug}.html") or not src.exists():
-        return error_page("No encontrado", f"No hay borrador «{slug}».", 404)
+@app.post("/publish/{stem}", response_class=HTMLResponse)
+def publish(stem: str):
+    src = CONTENT_BLOG / f"{stem}.html"
+    if not valid_filename(f"{stem}.html") or not src.exists():
+        return error_page("No encontrado", f"No hay borrador «{stem}».", 404)
     if not LOCK.acquire(blocking=False):
         return error_page("Ocupado", "Hay otra operación en curso; reintenta.", 423)
     try:
-        title = parse_frontmatter(src.read_text()).get("title", slug)
+        title = parse_frontmatter(src.read_text()).get("title", stem)
+        slug = public_slug(src)
         ok, out = commit_paths(f"Blog: {title} (publicado desde el portal)")
         if not ok:
             return error_page("git commit falló", out, 500)
@@ -498,27 +516,28 @@ def publish(slug: str):
     )
 
 
-@app.post("/discard/{slug}")
-def discard(slug: str):
-    src = CONTENT_BLOG / f"{slug}.html"
-    if not valid_filename(f"{slug}.html") or not src.exists():
-        return error_page("No encontrado", f"No hay borrador «{slug}».", 404)
+@app.post("/discard/{stem}")
+def discard(stem: str):
+    src = CONTENT_BLOG / f"{stem}.html"
+    if not valid_filename(f"{stem}.html") or not src.exists():
+        return error_page("No encontrado", f"No hay borrador «{stem}».", 404)
     if not LOCK.acquire(blocking=False):
         return error_page("Ocupado", "Hay otra operación en curso; reintenta.", 423)
     try:
+        pub = public_slug(src)
         src.unlink()
-        (PUBLIC_BLOG / f"{slug}.html").unlink(missing_ok=True)
+        (PUBLIC_BLOG / f"{pub}.html").unlink(missing_ok=True)
         run_generate()  # índice/sitemap vuelven al estado del último commit
     finally:
         LOCK.release()
     return RedirectResponse("/", status_code=303)
 
 
-@app.post("/delete/{slug}", response_class=HTMLResponse)
-def delete(slug: str):
-    src = CONTENT_BLOG / f"{slug}.html"
-    if not valid_filename(f"{slug}.html") or not src.exists():
-        return error_page("No encontrado", f"No existe el artículo «{slug}».", 404)
+@app.post("/delete/{stem}", response_class=HTMLResponse)
+def delete(stem: str):
+    src = CONTENT_BLOG / f"{stem}.html"
+    if not valid_filename(f"{stem}.html") or not src.exists():
+        return error_page("No encontrado", f"No existe el artículo «{stem}».", 404)
     if len(list(CONTENT_BLOG.glob("*.html"))) <= 1:
         return error_page(
             "No se puede borrar el último artículo",
@@ -529,9 +548,10 @@ def delete(slug: str):
     if not LOCK.acquire(blocking=False):
         return error_page("Ocupado", "Hay otra operación en curso; reintenta.", 423)
     try:
-        title = parse_frontmatter(src.read_text()).get("title", slug)
+        title = parse_frontmatter(src.read_text()).get("title", stem)
+        pub = public_slug(src)
         src.unlink()
-        (PUBLIC_BLOG / f"{slug}.html").unlink(missing_ok=True)
+        (PUBLIC_BLOG / f"{pub}.html").unlink(missing_ok=True)
         ok, out = run_generate()
         if not ok:
             return error_page("El generador falló tras borrar", out, 500)

@@ -19,6 +19,12 @@ const BLOG_SRC = join(ROOT, 'content', 'blog')
 const ORIGIN = 'https://solarvento.es'
 
 const readPublic = (name) => readFileSync(join(ROOT, 'public', name), 'utf-8')
+// Slug público de un artículo fuente: campo «slug» del frontmatter o, si
+// falta, el nombre del archivo (mismo contrato que scripts/blog.mjs).
+const slugOf = (file) => {
+  const src = readFileSync(join(BLOG_SRC, file), 'utf-8')
+  return src.match(/^slug:\s*(\S+)/m)?.[1] ?? file.replace(/\.html$/, '')
+}
 const ldBlocks = (html) =>
   [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) =>
     JSON.parse(m[1]),
@@ -34,7 +40,7 @@ test('cada artículo lleva metadatos SEO completos y su contenido íntegro', () 
   const sources = readdirSync(BLOG_SRC).filter((f) => f.endsWith('.html'))
   assert.ok(sources.length >= 1, 'no hay artículos en content/blog')
   for (const file of sources) {
-    const slug = file.replace(/\.html$/, '')
+    const slug = slugOf(file)
     const html = readPublic(join('blog', `${slug}.html`))
 
     // Canonical exacto y robots indexable
@@ -107,7 +113,7 @@ test('el índice /blog/ lista todos los artículos con título, fecha y extracto
   assert.ok(lds.some((ld) => ld['@type'] === 'Blog'), 'falta JSON-LD Blog')
 
   for (const file of readdirSync(BLOG_SRC).filter((f) => f.endsWith('.html'))) {
-    const slug = file.replace(/\.html$/, '')
+    const slug = slugOf(file)
     assert.ok(html.includes(`href="/blog/${slug}.html"`), `índice sin enlace a ${slug}`)
     const src = readFileSync(join(BLOG_SRC, file), 'utf-8')
     const excerpt = src.match(/^excerpt:\s*(.+)$/m)?.[1]?.trim()
@@ -133,11 +139,34 @@ test('loadArticles ordena por fecha descendente y deriva el slug del archivo', (
   assert.equal(articles[0].title, 'T nuevo.html')
 })
 
+const article = (extra) =>
+  `---\ntitle: T\ndescription: d\nkeywords: k\ndate: 2026-07-07\nexcerpt: e\n${extra}---\n<p>x</p>\n`
+
+test('el slug del frontmatter manda sobre el nombre del archivo', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'blog-'))
+  writeFileSync(join(dir, 'corto.html'), article('slug: url-descriptiva-para-seo\n'))
+  const [a] = loadArticles(dir)
+  assert.equal(a.slug, 'url-descriptiva-para-seo')
+})
+
+test('un slug inválido en el frontmatter se rechaza', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'blog-'))
+  writeFileSync(join(dir, 'a.html'), article('slug: Con Mayúsculas\n'))
+  assert.throws(() => loadArticles(dir), /slug/)
+})
+
+test('dos artículos con el mismo slug público se rechazan', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'blog-'))
+  writeFileSync(join(dir, 'uno.html'), article('slug: repetido\n'))
+  writeFileSync(join(dir, 'repetido.html'), article(''))
+  assert.throws(() => loadArticles(dir), /repetido/)
+})
+
 test('el sitemap incluye el índice del blog y cada artículo con su lastmod', () => {
   const xml = readPublic('sitemap.xml')
   assert.ok(xml.includes(`<loc>${ORIGIN}/blog/</loc>`), 'sitemap sin /blog/')
   for (const file of readdirSync(BLOG_SRC).filter((f) => f.endsWith('.html'))) {
-    const slug = file.replace(/\.html$/, '')
+    const slug = slugOf(file)
     assert.ok(xml.includes(`<loc>${ORIGIN}/blog/${slug}.html</loc>`), `sitemap sin ${slug}`)
     const date = readFileSync(join(BLOG_SRC, file), 'utf-8').match(/^date:\s*(\S+)/m)?.[1]
     const entry = xml.split(`<loc>${ORIGIN}/blog/${slug}.html</loc>`)[1]?.split('</url>')[0] ?? ''

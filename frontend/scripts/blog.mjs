@@ -7,12 +7,14 @@
 //   keywords: coma, separadas
 //   date: 2026-07-07
 //   excerpt: Extracto para la tarjeta del índice.
+//   slug: url-para-seo  (opcional; si falta, el nombre del archivo)
 //   lang: es            (opcional; preparado para PT futuro)
 //   updated: 2026-07-08 (opcional; si no, date)
 //   ---
 //   <p>Cuerpo en HTML…</p>
 //
-// El slug es el nombre del archivo. Para publicar: añadir el archivo y
+// El slug público (URL, índice, sitemap) es el campo «slug» del frontmatter
+// si existe; si no, el nombre del archivo. Para publicar: añadir el archivo y
 // regenerar (npm run generate); el índice y el sitemap se rehacen solos.
 // Este módulo lo consume generate-static-pages.mjs, que aporta el modo
 // --check anti-deriva y escribe en public/blog/.
@@ -47,8 +49,10 @@ function parseArticle(dir, file) {
     if (!meta[key]) throw new Error(`${file}: falta "${key}" en el frontmatter`)
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(meta.date)) throw new Error(`${file}: date debe ser AAAA-MM-DD`)
+  if (meta.slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(meta.slug))
+    throw new Error(`${file}: slug inválido "${meta.slug}" (minúsculas, dígitos y guiones)`)
   return {
-    slug: file.replace(/\.html$/, ''),
+    slug: meta.slug || file.replace(/\.html$/, ''),
     title: meta.title,
     description: meta.description,
     keywords: meta.keywords,
@@ -62,7 +66,14 @@ function parseArticle(dir, file) {
 
 export function loadArticles(dir) {
   const files = readdirSync(dir).filter((f) => f.endsWith('.html'))
-  const articles = files.map((f) => parseArticle(dir, f))
+  const seen = new Map() // slug público → archivo (dos archivos, misma URL = error)
+  const articles = files.map((f) => {
+    const a = parseArticle(dir, f)
+    if (seen.has(a.slug))
+      throw new Error(`slug "${a.slug}" duplicado en ${seen.get(a.slug)} y ${f}`)
+    seen.set(a.slug, f)
+    return a
+  })
   articles.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug < b.slug ? -1 : 1))
   return articles
 }

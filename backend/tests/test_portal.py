@@ -136,17 +136,44 @@ def client(monkeypatch):
 
 
 def test_index_lista_articulos(client, monkeypatch):
+    # stem = nombre en disco (clave del portal); slug = URL pública (frontmatter)
     monkeypatch.setattr(
         portal,
         "list_articles",
         lambda: [
-            {"slug": "uno", "title": "Uno", "date": "2026-07-01", "draft": False},
+            {"stem": "uno", "slug": "uno-largo-seo", "title": "Uno",
+             "date": "2026-07-01", "draft": False},
         ],
     )
     r = client.get("/")
     assert r.status_code == 200
     assert "Uno" in r.text
-    assert "https://solarvento.es/blog/uno.html" in r.text
+    assert "https://solarvento.es/blog/uno-largo-seo.html" in r.text
+    assert 'action="/delete/uno"' in r.text  # las rutas del portal van por stem
+
+
+def test_public_slug_frontmatter_y_fallback(tmp_path):
+    con = tmp_path / "corto.html"
+    con.write_text("---\ntitle: t\nslug: url-larga-seo\n---\n<p>x</p>")
+    assert portal.public_slug(con) == "url-larga-seo"
+    sin = tmp_path / "sin-slug.html"
+    sin.write_text("---\ntitle: t\n---\n<p>x</p>")
+    assert portal.public_slug(sin) == "sin-slug"
+    malo = tmp_path / "malo.html"
+    malo.write_text("---\ntitle: t\nslug: ../fuera\n---\n<p>x</p>")
+    assert portal.public_slug(malo) == "malo"  # slug inválido no sale del dir
+
+
+def test_draft_resuelve_slug_del_frontmatter(client, monkeypatch, tmp_path):
+    content, public = tmp_path / "content", tmp_path / "public"
+    content.mkdir(), public.mkdir()
+    (content / "corto.html").write_text("---\ntitle: t\nslug: url-larga-seo\n---\n<p>x</p>")
+    (public / "url-larga-seo.html").write_text("<html>GENERADO</html>")
+    monkeypatch.setattr(portal, "CONTENT_BLOG", content)
+    monkeypatch.setattr(portal, "PUBLIC_BLOG", public)
+    r = client.get("/draft/corto")
+    assert r.status_code == 200
+    assert "GENERADO" in r.text
 
 
 def test_upload_rechaza_nombre_invalido(client):
