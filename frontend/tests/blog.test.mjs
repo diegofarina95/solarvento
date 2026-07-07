@@ -344,3 +344,17 @@ test('la card del índice lleva clase y etiqueta junto a la fecha; la neutra que
   assert.match(html, /<time[^>]*>[^<]+<\/time><span class="cat-label">GUÍA<\/span>/)
   assert.ok(html.includes('<article class="card">'))  // la neutra, sin clase extra
 })
+
+test('las variables de categoría existen en día y en noche en las páginas servidas', () => {
+  const html = readPublic(join('blog', 'index.html'))
+  // Día (en :root)
+  for (const v of ['--cat-guia: #f59e0b', '--cat-analisis: #3f7f8f', '--cat-divulgacion: #c2703d']) {
+    assert.ok(html.includes(v), `falta ${v} (día)`)
+  }
+  // Noche (dentro del bloque [data-theme='night'])
+  const night = html.slice(html.indexOf("[data-theme='night']"))
+  for (const v of ['--cat-guia: #f0b95d', '--cat-analisis: #6bb0be', '--cat-divulgacion: #d99668']) {
+    assert.ok(night.includes(v), `falta ${v} (noche)`)
+  }
+  assert.ok(html.includes('.cat-label'), 'faltan las reglas de la etiqueta')
+})

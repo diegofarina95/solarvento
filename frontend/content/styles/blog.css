@@ -19,6 +19,10 @@
   --sun-600: #d97706;
   --ember: #b45309;
   --gridline: #ece6d9;
+  /* Categorías del blog (acento; el ámbar de marca sigue dominando) */
+  --cat-guia: #f59e0b;
+  --cat-analisis: #3f7f8f;
+  --cat-divulgacion: #c2703d;
 }
 /* Modo noche: mismas variables que :root[data-theme='night'] en la app.
    Lo activa el script solar del <head> (se pone el sol en España → noche),
@@ -28,6 +32,10 @@
   --page: #10131a;
   --sky-dawn: #1b2436; /* resplandor de cielo nocturno en la cabecera */
   --gridline: #2a2f3a;
+  /* De noche, más claras y desaturadas: los vivos cansan sobre fondo oscuro */
+  --cat-guia: #f0b95d;
+  --cat-analisis: #6bb0be;
+  --cat-divulgacion: #d99668;
 }
 * { box-sizing: border-box; }
 body {
@@ -218,6 +226,19 @@ header.site {
   color: #52514e;
   font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
 }
+
+/* Categorías: la clase solo fija --cat; etiqueta, punto del eyebrow y borde
+   de card la usan. Sin categoría no existe la clase y nada de esto aplica. */
+.cat-guia { --cat: var(--cat-guia); }
+.cat-analisis { --cat: var(--cat-analisis); }
+.cat-divulgacion { --cat: var(--cat-divulgacion); }
+.cat-label { color: var(--cat); }
+article[class*='cat-'] .eyebrow::before {
+  background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--cat) 75%, #fff), var(--cat));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 18%, transparent);
+}
+article[class*='cat-'] > .eyebrow.cat-label { margin: 1.6rem 0 -0.6rem; }
+.card[class*='cat-'] { border-left: 4px solid var(--cat); }
 
 footer {
   margin-top: 3rem;
