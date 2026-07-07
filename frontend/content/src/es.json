@@ -74,10 +74,28 @@
         "aHtml": "Tu factura se procesa solo para estimar tu instalación y no se conserva más allá de tu sesión. Tienes el detalle en la <a href=\"/privacidad.html\">política de privacidad</a>.",
         "ldQ": "¿Qué pasa con mi factura y mis datos?",
         "ldA": "Tu factura se procesa solo para estimar tu instalación y no se conserva más allá de tu sesión. Puedes consultar el detalle en la política de privacidad de SolarVento."
+      },
+      {
+        "q": "¿Qué ayudas y subvenciones hay para instalar placas solares?",
+        "aHtml": "En España hay cuatro vías principales: las <strong>subvenciones autonómicas</strong> (convocatorias con presupuesto limitado que gestiona cada comunidad), la <strong>deducción del IRPF</strong> de hasta el 60% ligada a la mejora energética acreditada de la vivienda, la <strong>bonificación del IBI</strong> (hasta el 50% durante varios años, según el ayuntamiento) y la <strong>bonificación del ICIO</strong> de la licencia de obras (hasta el 95%). La calculadora estima la ayuda autonómica vigente según tu código postal, y en <a href=\"/ayudas.html\">ayudas por comunidad</a> tienes los enlaces oficiales para confirmar plazos y requisitos antes de firmar.",
+        "ldQ": "¿Qué ayudas y subvenciones hay para instalar placas solares?",
+        "ldA": "En España hay cuatro vías principales: las subvenciones autonómicas (convocatorias con presupuesto limitado que gestiona cada comunidad), la deducción del IRPF de hasta el 60% ligada a la mejora energética acreditada de la vivienda, la bonificación del IBI (hasta el 50% durante varios años, según el ayuntamiento) y la bonificación del ICIO de la licencia de obras (hasta el 95%). La calculadora estima la ayuda autonómica vigente según tu código postal, y en ayudas por comunidad tienes los enlaces oficiales para confirmar plazos y requisitos antes de firmar."
+      },
+      {
+        "q": "¿Cuánto tarda una instalación de placas solares?",
+        "aHtml": "El montaje en el tejado dura <strong>uno o dos días</strong> en una vivienda tipo. Lo que más tarda es el papeleo: licencia o declaración responsable, legalización de la instalación, comunicación a la distribuidora y alta de la compensación de excedentes, que puede llevar de unas semanas a unos pocos meses según la zona. Normalmente lo gestiona el instalador; hasta que la compensación está activa, los excedentes se vierten a la red sin compensar.",
+        "ldQ": "¿Cuánto tarda una instalación de placas solares?",
+        "ldA": "El montaje en el tejado dura uno o dos días en una vivienda tipo. Lo que más tarda es el papeleo: licencia o declaración responsable, legalización de la instalación, comunicación a la distribuidora y alta de la compensación de excedentes, que puede llevar de unas semanas a unos pocos meses según la zona. Normalmente lo gestiona el instalador; hasta que la compensación está activa, los excedentes se vierten a la red sin compensar."
+      },
+      {
+        "q": "¿Qué mantenimiento y vida útil tienen las placas solares?",
+        "aHtml": "Muy poco mantenimiento: una <strong>limpieza</strong> una o dos veces al año y una revisión periódica. Los paneles pierden en torno a un <strong>0,5% de producción al año</strong> (las garantías típicas cubren 25 años), el <strong>inversor</strong> se suele sustituir una vez hacia los 10–15 años y una batería de litio tiene unos 10 años de garantía. La calculadora ya descuenta la degradación y el cambio de inversor en la amortización plurianual.",
+        "ldQ": "¿Qué mantenimiento y vida útil tienen las placas solares?",
+        "ldA": "Muy poco mantenimiento: una limpieza una o dos veces al año y una revisión periódica. Los paneles pierden en torno a un 0,5% de producción al año (las garantías típicas cubren 25 años), el inversor se suele sustituir una vez hacia los 10–15 años y una batería de litio tiene unos 10 años de garantía. La calculadora ya descuenta la degradación y el cambio de inversor en la amortización plurianual."
       }
     ],
     "disclaimer": "Todas las cifras de esta página son orientativas y no sustituyen un estudio técnico profesional ni una oferta de un instalador.",
-    "footerHtml": "SolarVento · <a href=\"/\">Calculadora</a> · <a href=\"/privacidad.html\">Política de privacidad</a>"
+    "footerHtml": "SolarVento · <a href=\"/\">Calculadora</a> · <a href=\"/ayudas.html\">Ayudas por comunidad</a> · <a href=\"/privacidad.html\">Política de privacidad</a>"
   },
   "privacy": {
     "title": "Política de privacidad | SolarVento",

@@ -74,10 +74,28 @@
         "aHtml": "La teva factura es processa només per estimar la teva instal·lació i no es conserva més enllà de la teva sessió. Tens el detall a la <a href=\"/privacidad-ca.html\">política de privadesa</a>.",
         "ldQ": "Què passa amb la meva factura i les meves dades?",
         "ldA": "La teva factura es processa només per estimar la teva instal·lació i no es conserva més enllà de la teva sessió. Pots consultar el detall a la política de privadesa de SolarVento."
+      },
+      {
+        "q": "Quins ajuts i subvencions hi ha per instal·lar plaques solars?",
+        "aHtml": "A Espanya hi ha quatre vies principals: les <strong>subvencions autonòmiques</strong> (convocatòries amb pressupost limitat que gestiona cada comunitat), la <strong>deducció de l'IRPF</strong> de fins al 60% lligada a la millora energètica acreditada de l'habitatge, la <strong>bonificació de l'IBI</strong> (fins al 50% durant diversos anys, segons l'ajuntament) i la <strong>bonificació de l'ICIO</strong> de la llicència d'obres (fins al 95%). La calculadora estima l'ajut autonòmic vigent segons el teu codi postal, i a <a href=\"/ayudas.html\">ajuts per comunitat</a> (en castellà) tens els enllaços oficials per confirmar terminis i requisits abans de signar.",
+        "ldQ": "Quins ajuts i subvencions hi ha per instal·lar plaques solars?",
+        "ldA": "A Espanya hi ha quatre vies principals: les subvencions autonòmiques (convocatòries amb pressupost limitat que gestiona cada comunitat), la deducció de l'IRPF de fins al 60% lligada a la millora energètica acreditada de l'habitatge, la bonificació de l'IBI (fins al 50% durant diversos anys, segons l'ajuntament) i la bonificació de l'ICIO de la llicència d'obres (fins al 95%). La calculadora estima l'ajut autonòmic vigent segons el teu codi postal, i a ajuts per comunitat (en castellà) tens els enllaços oficials per confirmar terminis i requisits abans de signar."
+      },
+      {
+        "q": "Quant triga una instal·lació de plaques solars?",
+        "aHtml": "El muntatge a la teulada dura <strong>un o dos dies</strong> en un habitatge tipus. El que triga més és la paperassa: llicència o declaració responsable, legalització de la instal·lació, comunicació a la distribuïdora i alta de la compensació d'excedents, que pot portar d'unes setmanes a uns pocs mesos segons la zona. Normalment ho gestiona l'instal·lador; fins que la compensació està activa, els excedents s'aboquen a la xarxa sense compensar.",
+        "ldQ": "Quant triga una instal·lació de plaques solars?",
+        "ldA": "El muntatge a la teulada dura un o dos dies en un habitatge tipus. El que triga més és la paperassa: llicència o declaració responsable, legalització de la instal·lació, comunicació a la distribuïdora i alta de la compensació d'excedents, que pot portar d'unes setmanes a uns pocs mesos segons la zona. Normalment ho gestiona l'instal·lador; fins que la compensació està activa, els excedents s'aboquen a la xarxa sense compensar."
+      },
+      {
+        "q": "Quin manteniment i vida útil tenen les plaques solars?",
+        "aHtml": "Molt poc manteniment: una <strong>neteja</strong> un o dos cops l'any i una revisió periòdica. Els panells perden al voltant d'un <strong>0,5% de producció l'any</strong> (les garanties típiques cobreixen 25 anys), l'<strong>inversor</strong> se sol substituir un cop cap als 10–15 anys i una bateria de liti té uns 10 anys de garantia. La calculadora ja descompta la degradació i el canvi d'inversor en l'amortització pluriennal.",
+        "ldQ": "Quin manteniment i vida útil tenen les plaques solars?",
+        "ldA": "Molt poc manteniment: una neteja un o dos cops l'any i una revisió periòdica. Els panells perden al voltant d'un 0,5% de producció l'any (les garanties típiques cobreixen 25 anys), l'inversor se sol substituir un cop cap als 10–15 anys i una bateria de liti té uns 10 anys de garantia. La calculadora ja descompta la degradació i el canvi d'inversor en l'amortització pluriennal."
       }
     ],
     "disclaimer": "Totes les xifres d'aquesta pàgina són orientatives i no substitueixen un estudi tècnic professional ni una oferta d'un instal·lador.",
-    "footerHtml": "SolarVento · <a href=\"/\">Calculadora</a> · <a href=\"/privacidad-ca.html\">Política de privadesa</a>"
+    "footerHtml": "SolarVento · <a href=\"/\">Calculadora</a> · <a href=\"/ayudas.html\">Ajuts per comunitat</a> · <a href=\"/privacidad-ca.html\">Política de privadesa</a>"
   },
   "privacy": {
     "title": "Política de privadesa | SolarVento",

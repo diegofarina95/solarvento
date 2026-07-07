@@ -74,10 +74,28 @@
         "aHtml": "Zure faktura zure instalazioa estimatzeko soilik prozesatzen da eta ez da zure saiotik harago gordetzen. Xehetasuna <a href=\"/privacidad-eu.html\">pribatutasun-politikan</a> duzu.",
         "ldQ": "Zer gertatzen da nire faktura eta datuekin?",
         "ldA": "Zure faktura zure instalazioa estimatzeko soilik prozesatzen da eta ez da zure saiotik harago gordetzen. Xehetasuna SolarVentoren pribatutasun-politikan kontsulta dezakezu."
+      },
+      {
+        "q": "Zer laguntza eta diru-laguntza daude eguzki-plakak jartzeko?",
+        "aHtml": "Espainian lau bide nagusi daude: <strong>autonomia-erkidegoen diru-laguntzak</strong> (aurrekontu mugatuko deialdiak, erkidego bakoitzak kudeatuak), <strong>PFEZaren kenkaria</strong> (%60ra artekoa, etxebizitzaren hobekuntza energetiko egiaztatuari lotua), <strong>OHZaren (IBI) hobaria</strong> (%50era artekoa hainbat urtez, udalaren arabera) eta obra-lizentziaren <strong>EIOZaren (ICIO) hobaria</strong> (%95era artekoa). Kalkulagailuak indarrean dagoen erkidegoko laguntza estimatzen du zure posta-kodearen arabera, eta <a href=\"/ayudas.html\">erkidegokako laguntzen orrian</a> (gaztelaniaz) esteka ofizialak dituzu epeak eta baldintzak sinatu aurretik egiaztatzeko.",
+        "ldQ": "Zer laguntza eta diru-laguntza daude eguzki-plakak jartzeko?",
+        "ldA": "Espainian lau bide nagusi daude: autonomia-erkidegoen diru-laguntzak (aurrekontu mugatuko deialdiak, erkidego bakoitzak kudeatuak), PFEZaren kenkaria (%60ra artekoa, etxebizitzaren hobekuntza energetiko egiaztatuari lotua), OHZaren (IBI) hobaria (%50era artekoa hainbat urtez, udalaren arabera) eta obra-lizentziaren EIOZaren (ICIO) hobaria (%95era artekoa). Kalkulagailuak indarrean dagoen erkidegoko laguntza estimatzen du zure posta-kodearen arabera, eta erkidegokako laguntzen orrian (gaztelaniaz) esteka ofizialak dituzu epeak eta baldintzak sinatu aurretik egiaztatzeko."
+      },
+      {
+        "q": "Zenbat irauten du eguzki-plaken instalazioak?",
+        "aHtml": "Teilatuko muntaketak <strong>egun bat edo bi</strong> irauten du etxebizitza arrunt batean. Paperek hartzen dute denbora gehien: lizentzia edo erantzukizunpeko adierazpena, instalazioaren legeztatzea, banatzaileari jakinaraztea eta soberakinen konpentsazioaren alta; horrek aste batzuetatik hilabete gutxi batzuetara iraun dezake, eremuaren arabera. Normalean instalatzaileak kudeatzen du dena; konpentsazioa aktibatu arte, soberakinak sarera isurtzen dira konpentsaziorik gabe.",
+        "ldQ": "Zenbat irauten du eguzki-plaken instalazioak?",
+        "ldA": "Teilatuko muntaketak egun bat edo bi irauten du etxebizitza arrunt batean. Paperek hartzen dute denbora gehien: lizentzia edo erantzukizunpeko adierazpena, instalazioaren legeztatzea, banatzaileari jakinaraztea eta soberakinen konpentsazioaren alta; horrek aste batzuetatik hilabete gutxi batzuetara iraun dezake, eremuaren arabera. Normalean instalatzaileak kudeatzen du dena; konpentsazioa aktibatu arte, soberakinak sarera isurtzen dira konpentsaziorik gabe."
+      },
+      {
+        "q": "Zer mantentze-lan eta bizitza erabilgarri dituzte eguzki-plakek?",
+        "aHtml": "Oso mantentze gutxi: <strong>garbiketa</strong> bat edo bi urtean eta aldizkako berrikuspen bat. Panelek urtean <strong>%0,5 inguru</strong> galtzen dute ekoizpenean (ohiko bermeek 25 urte estaltzen dituzte), <strong>inbertsorea</strong> behin ordezkatu ohi da 10–15 urtera, eta litiozko bateria batek 10 urte inguruko bermea du. Kalkulagailuak jada kontuan hartzen ditu degradazioa eta inbertsorearen aldaketa urte anitzeko amortizazioan.",
+        "ldQ": "Zer mantentze-lan eta bizitza erabilgarri dituzte eguzki-plakek?",
+        "ldA": "Oso mantentze gutxi: garbiketa bat edo bi urtean eta aldizkako berrikuspen bat. Panelek urtean %0,5 inguru galtzen dute ekoizpenean (ohiko bermeek 25 urte estaltzen dituzte), inbertsorea behin ordezkatu ohi da 10–15 urtera, eta litiozko bateria batek 10 urte inguruko bermea du. Kalkulagailuak jada kontuan hartzen ditu degradazioa eta inbertsorearen aldaketa urte anitzeko amortizazioan."
       }
     ],
     "disclaimer": "Orrialde honetako zenbaki guztiak orientagarriak dira eta ez dute ordezkatzen ez azterketa tekniko profesional bat ez instalatzaile baten eskaintza bat.",
-    "footerHtml": "SolarVento · <a href=\"/\">Kalkulagailua</a> · <a href=\"/privacidad-eu.html\">Pribatutasun-politika</a>"
+    "footerHtml": "SolarVento · <a href=\"/\">Kalkulagailua</a> · <a href=\"/ayudas.html\">Laguntzak erkidegoka (gaztelaniaz)</a> · <a href=\"/privacidad-eu.html\">Pribatutasun-politika</a>"
   },
   "privacy": {
     "title": "Pribatutasun-politika | SolarVento",

@@ -48,6 +48,8 @@
       h2 { font-size: 1.15rem; margin: 2rem 0 .5rem; }
       .lead { color: #57534e; margin: .25rem 0 1.5rem; }
       .back { display: inline-block; margin-bottom: 1.5rem; font-size: .9rem; }
+      .langs { font-size: .82rem; color: #78716c; margin: -0.75rem 0 1.5rem; }
+      .langs strong { font-weight: 650; }
       .cta {
         display: inline-block; margin: 1.5rem 0; padding: .7rem 1.2rem;
         background: #f59e0b; color: #1c1917; border-radius: .6rem;
@@ -60,6 +62,7 @@
         body { color: #e7e5e4; background: #1c1917; }
         a { color: #fbbf24; }
         a:hover { color: #fcd34d; }
+        .langs { color: #a8a29e; }
         footer { border-color: #44403c; }
       }
     </style>
@@ -155,6 +158,30 @@
         "@type": "Answer",
         "text": "Zure faktura zure instalazioa estimatzeko soilik prozesatzen da eta ez da zure saiotik harago gordetzen. Xehetasuna SolarVentoren pribatutasun-politikan kontsulta dezakezu."
       }
+    },
+    {
+      "@type": "Question",
+      "name": "Zer laguntza eta diru-laguntza daude eguzki-plakak jartzeko?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Espainian lau bide nagusi daude: autonomia-erkidegoen diru-laguntzak (aurrekontu mugatuko deialdiak, erkidego bakoitzak kudeatuak), PFEZaren kenkaria (%60ra artekoa, etxebizitzaren hobekuntza energetiko egiaztatuari lotua), OHZaren (IBI) hobaria (%50era artekoa hainbat urtez, udalaren arabera) eta obra-lizentziaren EIOZaren (ICIO) hobaria (%95era artekoa). Kalkulagailuak indarrean dagoen erkidegoko laguntza estimatzen du zure posta-kodearen arabera, eta erkidegokako laguntzen orrian (gaztelaniaz) esteka ofizialak dituzu epeak eta baldintzak sinatu aurretik egiaztatzeko."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Zenbat irauten du eguzki-plaken instalazioak?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Teilatuko muntaketak egun bat edo bi irauten du etxebizitza arrunt batean. Paperek hartzen dute denbora gehien: lizentzia edo erantzukizunpeko adierazpena, instalazioaren legeztatzea, banatzaileari jakinaraztea eta soberakinen konpentsazioaren alta; horrek aste batzuetatik hilabete gutxi batzuetara iraun dezake, eremuaren arabera. Normalean instalatzaileak kudeatzen du dena; konpentsazioa aktibatu arte, soberakinak sarera isurtzen dira konpentsaziorik gabe."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Zer mantentze-lan eta bizitza erabilgarri dituzte eguzki-plakek?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Oso mantentze gutxi: garbiketa bat edo bi urtean eta aldizkako berrikuspen bat. Panelek urtean %0,5 inguru galtzen dute ekoizpenean (ohiko bermeek 25 urte estaltzen dituzte), inbertsorea behin ordezkatu ohi da 10–15 urtera, eta litiozko bateria batek 10 urte inguruko bermea du. Kalkulagailuak jada kontuan hartzen ditu degradazioa eta inbertsorearen aldaketa urte anitzeko amortizazioan."
+      }
     }
   ]
 }
@@ -183,6 +210,7 @@
   <body>
     <main class="wrap">
       <a class="back" href="/">&larr; Kalkulagailura itzuli</a>
+      <nav class="langs" aria-label="Hizkuntza"><a href="/faq.html" hreflang="es" lang="es">Español</a> · <a href="/faq-en.html" hreflang="en" lang="en">English</a> · <a href="/faq-gl.html" hreflang="gl" lang="gl">Galego</a> · <a href="/faq-ca.html" hreflang="ca" lang="ca">Català</a> · <strong>Euskara</strong> · <a href="/faq-fr.html" hreflang="fr" lang="fr">Français</a> · <a href="/faq-pt.html" hreflang="pt" lang="pt">Português</a></nav>
       <h1>Eguzki-plaken eta autokontsumoari buruzko ohiko galderak</h1>
       <p class="lead">Espainiako eguzki-autokontsumoari buruzko ohiko zalantzarik ohikoenak argitzen ditugu: zenbat plaka behar dituzun, bateria bat merezi duen, zenbat aurrezten den, amortizazioa eta baimenak. Zure kasurako zenbakiak nahi dituzu? Erabili kalkulagailua zure fakturarekin.</p>
       <a class="cta" href="/">Nire eguzki-instalazioa kalkulatu</a>
@@ -220,11 +248,20 @@
       <h2>Zer gertatzen da nire faktura eta datuekin?</h2>
       <p>Zure faktura zure instalazioa estimatzeko soilik prozesatzen da eta ez da zure saiotik harago gordetzen. Xehetasuna <a href="/privacidad-eu.html">pribatutasun-politikan</a> duzu.</p>
 
+      <h2>Zer laguntza eta diru-laguntza daude eguzki-plakak jartzeko?</h2>
+      <p>Espainian lau bide nagusi daude: <strong>autonomia-erkidegoen diru-laguntzak</strong> (aurrekontu mugatuko deialdiak, erkidego bakoitzak kudeatuak), <strong>PFEZaren kenkaria</strong> (%60ra artekoa, etxebizitzaren hobekuntza energetiko egiaztatuari lotua), <strong>OHZaren (IBI) hobaria</strong> (%50era artekoa hainbat urtez, udalaren arabera) eta obra-lizentziaren <strong>EIOZaren (ICIO) hobaria</strong> (%95era artekoa). Kalkulagailuak indarrean dagoen erkidegoko laguntza estimatzen du zure posta-kodearen arabera, eta <a href="/ayudas.html">erkidegokako laguntzen orrian</a> (gaztelaniaz) esteka ofizialak dituzu epeak eta baldintzak sinatu aurretik egiaztatzeko.</p>
+
+      <h2>Zenbat irauten du eguzki-plaken instalazioak?</h2>
+      <p>Teilatuko muntaketak <strong>egun bat edo bi</strong> irauten du etxebizitza arrunt batean. Paperek hartzen dute denbora gehien: lizentzia edo erantzukizunpeko adierazpena, instalazioaren legeztatzea, banatzaileari jakinaraztea eta soberakinen konpentsazioaren alta; horrek aste batzuetatik hilabete gutxi batzuetara iraun dezake, eremuaren arabera. Normalean instalatzaileak kudeatzen du dena; konpentsazioa aktibatu arte, soberakinak sarera isurtzen dira konpentsaziorik gabe.</p>
+
+      <h2>Zer mantentze-lan eta bizitza erabilgarri dituzte eguzki-plakek?</h2>
+      <p>Oso mantentze gutxi: <strong>garbiketa</strong> bat edo bi urtean eta aldizkako berrikuspen bat. Panelek urtean <strong>%0,5 inguru</strong> galtzen dute ekoizpenean (ohiko bermeek 25 urte estaltzen dituzte), <strong>inbertsorea</strong> behin ordezkatu ohi da 10–15 urtera, eta litiozko bateria batek 10 urte inguruko bermea du. Kalkulagailuak jada kontuan hartzen ditu degradazioa eta inbertsorearen aldaketa urte anitzeko amortizazioan.</p>
+
       <p class="disc">Orrialde honetako zenbaki guztiak orientagarriak dira eta ez dute ordezkatzen ez azterketa tekniko profesional bat ez instalatzaile baten eskaintza bat.</p>
 
       <a class="cta" href="/">Nire eguzki-instalazioa kalkulatu</a>
 
-      <footer>SolarVento · <a href="/">Kalkulagailua</a> · <a href="/privacidad-eu.html">Pribatutasun-politika</a></footer>
+      <footer>SolarVento · <a href="/">Kalkulagailua</a> · <a href="/ayudas.html">Laguntzak erkidegoka (gaztelaniaz)</a> · <a href="/privacidad-eu.html">Pribatutasun-politika</a></footer>
     </main>
   </body>
 </html>

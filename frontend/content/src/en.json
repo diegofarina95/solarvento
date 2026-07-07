@@ -74,10 +74,28 @@
         "aHtml": "Your bill is processed only to estimate your installation and is not kept beyond your session. You have the details in the <a href=\"/privacidad-en.html\">privacy policy</a>.",
         "ldQ": "What happens to my bill and my data?",
         "ldA": "Your bill is processed only to estimate your installation and is not kept beyond your session. You can check the details in the SolarVento privacy policy."
+      },
+      {
+        "q": "What grants and subsidies are available for solar panels in Spain?",
+        "aHtml": "Spain has four main routes: <strong>regional subsidies</strong> (limited-budget calls managed by each autonomous community), an <strong>income-tax (IRPF) deduction</strong> of up to 60% tied to certified energy improvements to the home, a <strong>property-tax (IBI) rebate</strong> (up to 50% for several years, depending on the town hall) and a rebate of up to 95% on the <strong>building-works tax (ICIO)</strong>. The calculator estimates the current regional subsidy from your postcode, and the <a href=\"/ayudas.html\">regional aid directory</a> (in Spanish) links to the official bodies so you can confirm deadlines and requirements before signing.",
+        "ldQ": "What grants and subsidies are available for solar panels in Spain?",
+        "ldA": "Spain has four main routes: regional subsidies (limited-budget calls managed by each autonomous community), an income-tax (IRPF) deduction of up to 60% tied to certified energy improvements to the home, a property-tax (IBI) rebate (up to 50% for several years, depending on the town hall) and a rebate of up to 95% on the building-works tax (ICIO). The calculator estimates the current regional subsidy from your postcode, and the regional aid directory (in Spanish) links to the official bodies so you can confirm deadlines and requirements before signing."
+      },
+      {
+        "q": "How long does a solar panel installation take?",
+        "aHtml": "The rooftop work itself takes <strong>one or two days</strong> for a typical home. The paperwork takes longer: municipal permit or responsible declaration, legalisation of the installation, notifying the grid operator and activating surplus compensation, which can take from a few weeks to a few months depending on the area. The installer normally handles all of it; until compensation is active, surplus energy is exported to the grid unpaid.",
+        "ldQ": "How long does a solar panel installation take?",
+        "ldA": "The rooftop work itself takes one or two days for a typical home. The paperwork takes longer: municipal permit or responsible declaration, legalisation of the installation, notifying the grid operator and activating surplus compensation, which can take from a few weeks to a few months depending on the area. The installer normally handles all of it; until compensation is active, surplus energy is exported to the grid unpaid."
+      },
+      {
+        "q": "How much maintenance do solar panels need, and how long do they last?",
+        "aHtml": "Very little maintenance: <strong>cleaning</strong> once or twice a year and a periodic check-up. Panels lose about <strong>0.5% of output per year</strong> (typical warranties cover 25 years), the <strong>inverter</strong> is usually replaced once at around 10–15 years, and a lithium battery carries a warranty of about 10 years. The calculator already accounts for degradation and the inverter replacement in its multi-year payback.",
+        "ldQ": "How much maintenance do solar panels need, and how long do they last?",
+        "ldA": "Very little maintenance: cleaning once or twice a year and a periodic check-up. Panels lose about 0.5% of output per year (typical warranties cover 25 years), the inverter is usually replaced once at around 10–15 years, and a lithium battery carries a warranty of about 10 years. The calculator already accounts for degradation and the inverter replacement in its multi-year payback."
       }
     ],
     "disclaimer": "All the figures on this page are indicative and do not replace a professional technical study or a quote from an installer.",
-    "footerHtml": "SolarVento · <a href=\"/\">Calculator</a> · <a href=\"/privacidad-en.html\">Privacy policy</a>"
+    "footerHtml": "SolarVento · <a href=\"/\">Calculator</a> · <a href=\"/ayudas.html\">Regional aid (in Spanish)</a> · <a href=\"/privacidad-en.html\">Privacy policy</a>"
   },
   "privacy": {
     "title": "Privacy policy | SolarVento",

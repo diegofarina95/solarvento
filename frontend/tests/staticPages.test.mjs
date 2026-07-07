@@ -39,7 +39,9 @@ test('las 14 páginas llevan hreflang completo (7 idiomas + x-default)', () => {
   for (const base of ['faq', 'privacidad']) {
     for (const lang of LANGS) {
       const html = readFileSync(join(ROOT, 'public', pagePath(base, lang)), 'utf-8')
-      const langs = [...html.matchAll(/hreflang="([^"]+)"/g)].map((m) => m[1])
+      // Solo los <link rel="alternate"> de la cabecera: el selector de idiomas
+      // del cuerpo también lleva hreflang y no forma parte de esta guarda.
+      const langs = [...html.matchAll(/rel="alternate" hreflang="([^"]+)"/g)].map((m) => m[1])
       assert.deepEqual(langs.sort(), [...LANGS, 'x-default'].sort(), `${base}/${lang}`)
     }
   }
@@ -57,6 +59,21 @@ test('las 14 páginas llevan Open Graph coherente y Twitter Card', () => {
         assert.match(html, new RegExp(`property="${prop}" content="[^"]+"`), `${page}: falta ${prop}`)
       }
       assert.match(html, /name="twitter:card" content="summary_large_image"/, `${page}: falta twitter:card`)
+    }
+  }
+})
+
+test('las 14 páginas llevan selector de idiomas con las otras 6 versiones', () => {
+  for (const base of ['faq', 'privacidad']) {
+    for (const lang of LANGS) {
+      const page = pagePath(base, lang)
+      const html = readFileSync(join(ROOT, 'public', page), 'utf-8')
+      const nav = html.match(/<nav class="langs"[^>]*>([\s\S]*?)<\/nav>/)
+      assert.ok(nav, `${page}: falta el selector de idiomas`)
+      const links = [...nav[1].matchAll(/href="\/([^"]+)"/g)].map((m) => m[1])
+      const expected = LANGS.filter((l) => l !== lang).map((l) => pagePath(base, l))
+      assert.deepEqual(links.sort(), expected.sort(), `${page}: enlaces del selector`)
+      assert.match(nav[1], /<strong>[^<]+<\/strong>/, `${page}: idioma actual sin resaltar`)
     }
   }
 })

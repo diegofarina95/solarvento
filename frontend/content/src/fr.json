@@ -74,10 +74,28 @@
         "aHtml": "Votre facture est traitée uniquement pour estimer votre installation et n'est pas conservée au-delà de votre session. Vous trouverez le détail dans la <a href=\"/privacidad-fr.html\">politique de confidentialité</a>.",
         "ldQ": "Qu'advient-il de ma facture et de mes données ?",
         "ldA": "Votre facture est traitée uniquement pour estimer votre installation et n'est pas conservée au-delà de votre session. Vous pouvez consulter le détail dans la politique de confidentialité de SolarVento."
+      },
+      {
+        "q": "Quelles aides et subventions existent pour installer des panneaux solaires ?",
+        "aHtml": "En Espagne, il existe quatre voies principales : les <strong>subventions régionales</strong> (appels à budget limité gérés par chaque communauté autonome), la <strong>déduction d'impôt sur le revenu (IRPF)</strong> jusqu'à 60 % liée à l'amélioration énergétique certifiée du logement, la <strong>réduction de la taxe foncière (IBI)</strong> (jusqu'à 50 % pendant plusieurs années selon la mairie) et la réduction jusqu'à 95 % de la <strong>taxe sur les travaux (ICIO)</strong>. Le calculateur estime l'aide régionale en vigueur selon votre code postal, et la page <a href=\"/ayudas.html\">aides par région</a> (en espagnol) regroupe les liens officiels pour confirmer délais et conditions avant de signer.",
+        "ldQ": "Quelles aides et subventions existent pour installer des panneaux solaires ?",
+        "ldA": "En Espagne, il existe quatre voies principales : les subventions régionales (appels à budget limité gérés par chaque communauté autonome), la déduction d'impôt sur le revenu (IRPF) jusqu'à 60 % liée à l'amélioration énergétique certifiée du logement, la réduction de la taxe foncière (IBI) (jusqu'à 50 % pendant plusieurs années selon la mairie) et la réduction jusqu'à 95 % de la taxe sur les travaux (ICIO). Le calculateur estime l'aide régionale en vigueur selon votre code postal, et la page aides par région (en espagnol) regroupe les liens officiels pour confirmer délais et conditions avant de signer."
+      },
+      {
+        "q": "Combien de temps prend une installation de panneaux solaires ?",
+        "aHtml": "La pose sur le toit prend <strong>un à deux jours</strong> pour un logement type. Ce sont les démarches qui prennent le plus de temps : permis ou déclaration responsable, légalisation de l'installation, notification au distributeur et activation de la compensation du surplus, ce qui peut prendre de quelques semaines à quelques mois selon la zone. L'installateur s'en charge généralement ; tant que la compensation n'est pas active, le surplus est injecté au réseau sans rémunération.",
+        "ldQ": "Combien de temps prend une installation de panneaux solaires ?",
+        "ldA": "La pose sur le toit prend un à deux jours pour un logement type. Ce sont les démarches qui prennent le plus de temps : permis ou déclaration responsable, légalisation de l'installation, notification au distributeur et activation de la compensation du surplus, ce qui peut prendre de quelques semaines à quelques mois selon la zone. L'installateur s'en charge généralement ; tant que la compensation n'est pas active, le surplus est injecté au réseau sans rémunération."
+      },
+      {
+        "q": "Quel entretien et quelle durée de vie pour les panneaux solaires ?",
+        "aHtml": "Très peu d'entretien : un <strong>nettoyage</strong> une à deux fois par an et un contrôle périodique. Les panneaux perdent environ <strong>0,5 % de production par an</strong> (les garanties typiques couvrent 25 ans), l'<strong>onduleur</strong> se remplace généralement une fois vers 10–15 ans et une batterie lithium est garantie environ 10 ans. Le calculateur intègre déjà la dégradation et le remplacement de l'onduleur dans l'amortissement pluriannuel.",
+        "ldQ": "Quel entretien et quelle durée de vie pour les panneaux solaires ?",
+        "ldA": "Très peu d'entretien : un nettoyage une à deux fois par an et un contrôle périodique. Les panneaux perdent environ 0,5 % de production par an (les garanties typiques couvrent 25 ans), l'onduleur se remplace généralement une fois vers 10–15 ans et une batterie lithium est garantie environ 10 ans. Le calculateur intègre déjà la dégradation et le remplacement de l'onduleur dans l'amortissement pluriannuel."
       }
     ],
     "disclaimer": "Tous les chiffres de cette page sont indicatifs et ne remplacent ni une étude technique professionnelle ni une offre d'un installateur.",
-    "footerHtml": "SolarVento · <a href=\"/\">Calculateur</a> · <a href=\"/privacidad-fr.html\">Politique de confidentialité</a>"
+    "footerHtml": "SolarVento · <a href=\"/\">Calculateur</a> · <a href=\"/ayudas.html\">Aides par région (en espagnol)</a> · <a href=\"/privacidad-fr.html\">Politique de confidentialité</a>"
   },
   "privacy": {
     "title": "Politique de confidentialité | SolarVento",

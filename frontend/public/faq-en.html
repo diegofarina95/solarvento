@@ -48,6 +48,8 @@
       h2 { font-size: 1.15rem; margin: 2rem 0 .5rem; }
       .lead { color: #57534e; margin: .25rem 0 1.5rem; }
       .back { display: inline-block; margin-bottom: 1.5rem; font-size: .9rem; }
+      .langs { font-size: .82rem; color: #78716c; margin: -0.75rem 0 1.5rem; }
+      .langs strong { font-weight: 650; }
       .cta {
         display: inline-block; margin: 1.5rem 0; padding: .7rem 1.2rem;
         background: #f59e0b; color: #1c1917; border-radius: .6rem;
@@ -60,6 +62,7 @@
         body { color: #e7e5e4; background: #1c1917; }
         a { color: #fbbf24; }
         a:hover { color: #fcd34d; }
+        .langs { color: #a8a29e; }
         footer { border-color: #44403c; }
       }
     </style>
@@ -155,6 +158,30 @@
         "@type": "Answer",
         "text": "Your bill is processed only to estimate your installation and is not kept beyond your session. You can check the details in the SolarVento privacy policy."
       }
+    },
+    {
+      "@type": "Question",
+      "name": "What grants and subsidies are available for solar panels in Spain?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Spain has four main routes: regional subsidies (limited-budget calls managed by each autonomous community), an income-tax (IRPF) deduction of up to 60% tied to certified energy improvements to the home, a property-tax (IBI) rebate (up to 50% for several years, depending on the town hall) and a rebate of up to 95% on the building-works tax (ICIO). The calculator estimates the current regional subsidy from your postcode, and the regional aid directory (in Spanish) links to the official bodies so you can confirm deadlines and requirements before signing."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long does a solar panel installation take?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The rooftop work itself takes one or two days for a typical home. The paperwork takes longer: municipal permit or responsible declaration, legalisation of the installation, notifying the grid operator and activating surplus compensation, which can take from a few weeks to a few months depending on the area. The installer normally handles all of it; until compensation is active, surplus energy is exported to the grid unpaid."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much maintenance do solar panels need, and how long do they last?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Very little maintenance: cleaning once or twice a year and a periodic check-up. Panels lose about 0.5% of output per year (typical warranties cover 25 years), the inverter is usually replaced once at around 10–15 years, and a lithium battery carries a warranty of about 10 years. The calculator already accounts for degradation and the inverter replacement in its multi-year payback."
+      }
     }
   ]
 }
@@ -183,6 +210,7 @@
   <body>
     <main class="wrap">
       <a class="back" href="/">&larr; Back to the calculator</a>
+      <nav class="langs" aria-label="Language"><a href="/faq.html" hreflang="es" lang="es">Español</a> · <strong>English</strong> · <a href="/faq-gl.html" hreflang="gl" lang="gl">Galego</a> · <a href="/faq-ca.html" hreflang="ca" lang="ca">Català</a> · <a href="/faq-eu.html" hreflang="eu" lang="eu">Euskara</a> · <a href="/faq-fr.html" hreflang="fr" lang="fr">Français</a> · <a href="/faq-pt.html" hreflang="pt" lang="pt">Português</a></nav>
       <h1>Frequently asked questions about solar panels and self-consumption</h1>
       <p class="lead">We answer the most common questions about solar self-consumption in Spain: how many panels you need, whether a battery is worth it, how much you save, the payback and the permits. Want figures for your case? Use the calculator with your bill.</p>
       <a class="cta" href="/">Calculate my solar installation</a>
@@ -220,11 +248,20 @@
       <h2>What happens to my bill and my data?</h2>
       <p>Your bill is processed only to estimate your installation and is not kept beyond your session. You have the details in the <a href="/privacidad-en.html">privacy policy</a>.</p>
 
+      <h2>What grants and subsidies are available for solar panels in Spain?</h2>
+      <p>Spain has four main routes: <strong>regional subsidies</strong> (limited-budget calls managed by each autonomous community), an <strong>income-tax (IRPF) deduction</strong> of up to 60% tied to certified energy improvements to the home, a <strong>property-tax (IBI) rebate</strong> (up to 50% for several years, depending on the town hall) and a rebate of up to 95% on the <strong>building-works tax (ICIO)</strong>. The calculator estimates the current regional subsidy from your postcode, and the <a href="/ayudas.html">regional aid directory</a> (in Spanish) links to the official bodies so you can confirm deadlines and requirements before signing.</p>
+
+      <h2>How long does a solar panel installation take?</h2>
+      <p>The rooftop work itself takes <strong>one or two days</strong> for a typical home. The paperwork takes longer: municipal permit or responsible declaration, legalisation of the installation, notifying the grid operator and activating surplus compensation, which can take from a few weeks to a few months depending on the area. The installer normally handles all of it; until compensation is active, surplus energy is exported to the grid unpaid.</p>
+
+      <h2>How much maintenance do solar panels need, and how long do they last?</h2>
+      <p>Very little maintenance: <strong>cleaning</strong> once or twice a year and a periodic check-up. Panels lose about <strong>0.5% of output per year</strong> (typical warranties cover 25 years), the <strong>inverter</strong> is usually replaced once at around 10–15 years, and a lithium battery carries a warranty of about 10 years. The calculator already accounts for degradation and the inverter replacement in its multi-year payback.</p>
+
       <p class="disc">All the figures on this page are indicative and do not replace a professional technical study or a quote from an installer.</p>
 
       <a class="cta" href="/">Calculate my solar installation</a>
 
-      <footer>SolarVento · <a href="/">Calculator</a> · <a href="/privacidad-en.html">Privacy policy</a></footer>
+      <footer>SolarVento · <a href="/">Calculator</a> · <a href="/ayudas.html">Regional aid (in Spanish)</a> · <a href="/privacidad-en.html">Privacy policy</a></footer>
     </main>
   </body>
 </html>

@@ -48,6 +48,8 @@
       h2 { font-size: 1.15rem; margin: 2rem 0 .5rem; }
       .lead { color: #57534e; margin: .25rem 0 1.5rem; }
       .back { display: inline-block; margin-bottom: 1.5rem; font-size: .9rem; }
+      .langs { font-size: .82rem; color: #78716c; margin: -0.75rem 0 1.5rem; }
+      .langs strong { font-weight: 650; }
       .cta {
         display: inline-block; margin: 1.5rem 0; padding: .7rem 1.2rem;
         background: #f59e0b; color: #1c1917; border-radius: .6rem;
@@ -60,6 +62,7 @@
         body { color: #e7e5e4; background: #1c1917; }
         a { color: #fbbf24; }
         a:hover { color: #fcd34d; }
+        .langs { color: #a8a29e; }
         footer { border-color: #44403c; }
       }
     </style>
@@ -155,6 +158,30 @@
         "@type": "Answer",
         "text": "Votre facture est traitée uniquement pour estimer votre installation et n'est pas conservée au-delà de votre session. Vous pouvez consulter le détail dans la politique de confidentialité de SolarVento."
       }
+    },
+    {
+      "@type": "Question",
+      "name": "Quelles aides et subventions existent pour installer des panneaux solaires ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "En Espagne, il existe quatre voies principales : les subventions régionales (appels à budget limité gérés par chaque communauté autonome), la déduction d'impôt sur le revenu (IRPF) jusqu'à 60 % liée à l'amélioration énergétique certifiée du logement, la réduction de la taxe foncière (IBI) (jusqu'à 50 % pendant plusieurs années selon la mairie) et la réduction jusqu'à 95 % de la taxe sur les travaux (ICIO). Le calculateur estime l'aide régionale en vigueur selon votre code postal, et la page aides par région (en espagnol) regroupe les liens officiels pour confirmer délais et conditions avant de signer."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Combien de temps prend une installation de panneaux solaires ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "La pose sur le toit prend un à deux jours pour un logement type. Ce sont les démarches qui prennent le plus de temps : permis ou déclaration responsable, légalisation de l'installation, notification au distributeur et activation de la compensation du surplus, ce qui peut prendre de quelques semaines à quelques mois selon la zone. L'installateur s'en charge généralement ; tant que la compensation n'est pas active, le surplus est injecté au réseau sans rémunération."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Quel entretien et quelle durée de vie pour les panneaux solaires ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Très peu d'entretien : un nettoyage une à deux fois par an et un contrôle périodique. Les panneaux perdent environ 0,5 % de production par an (les garanties typiques couvrent 25 ans), l'onduleur se remplace généralement une fois vers 10–15 ans et une batterie lithium est garantie environ 10 ans. Le calculateur intègre déjà la dégradation et le remplacement de l'onduleur dans l'amortissement pluriannuel."
+      }
     }
   ]
 }
@@ -183,6 +210,7 @@
   <body>
     <main class="wrap">
       <a class="back" href="/">&larr; Retour au calculateur</a>
+      <nav class="langs" aria-label="Langue"><a href="/faq.html" hreflang="es" lang="es">Español</a> · <a href="/faq-en.html" hreflang="en" lang="en">English</a> · <a href="/faq-gl.html" hreflang="gl" lang="gl">Galego</a> · <a href="/faq-ca.html" hreflang="ca" lang="ca">Català</a> · <a href="/faq-eu.html" hreflang="eu" lang="eu">Euskara</a> · <strong>Français</strong> · <a href="/faq-pt.html" hreflang="pt" lang="pt">Português</a></nav>
       <h1>Questions fréquentes sur les panneaux solaires et l'autoconsommation</h1>
       <p class="lead">Nous répondons aux questions les plus courantes sur l'autoconsommation solaire en Espagne : combien de panneaux vous faut-il, une batterie en vaut-elle la peine, combien économise-t-on, l'amortissement et les autorisations. Vous voulez des chiffres pour votre cas ? Utilisez le calculateur avec votre facture.</p>
       <a class="cta" href="/">Calculer mon installation solaire</a>
@@ -220,11 +248,20 @@
       <h2>Qu'advient-il de ma facture et de mes données ?</h2>
       <p>Votre facture est traitée uniquement pour estimer votre installation et n'est pas conservée au-delà de votre session. Vous trouverez le détail dans la <a href="/privacidad-fr.html">politique de confidentialité</a>.</p>
 
+      <h2>Quelles aides et subventions existent pour installer des panneaux solaires ?</h2>
+      <p>En Espagne, il existe quatre voies principales : les <strong>subventions régionales</strong> (appels à budget limité gérés par chaque communauté autonome), la <strong>déduction d'impôt sur le revenu (IRPF)</strong> jusqu'à 60 % liée à l'amélioration énergétique certifiée du logement, la <strong>réduction de la taxe foncière (IBI)</strong> (jusqu'à 50 % pendant plusieurs années selon la mairie) et la réduction jusqu'à 95 % de la <strong>taxe sur les travaux (ICIO)</strong>. Le calculateur estime l'aide régionale en vigueur selon votre code postal, et la page <a href="/ayudas.html">aides par région</a> (en espagnol) regroupe les liens officiels pour confirmer délais et conditions avant de signer.</p>
+
+      <h2>Combien de temps prend une installation de panneaux solaires ?</h2>
+      <p>La pose sur le toit prend <strong>un à deux jours</strong> pour un logement type. Ce sont les démarches qui prennent le plus de temps : permis ou déclaration responsable, légalisation de l'installation, notification au distributeur et activation de la compensation du surplus, ce qui peut prendre de quelques semaines à quelques mois selon la zone. L'installateur s'en charge généralement ; tant que la compensation n'est pas active, le surplus est injecté au réseau sans rémunération.</p>
+
+      <h2>Quel entretien et quelle durée de vie pour les panneaux solaires ?</h2>
+      <p>Très peu d'entretien : un <strong>nettoyage</strong> une à deux fois par an et un contrôle périodique. Les panneaux perdent environ <strong>0,5 % de production par an</strong> (les garanties typiques couvrent 25 ans), l'<strong>onduleur</strong> se remplace généralement une fois vers 10–15 ans et une batterie lithium est garantie environ 10 ans. Le calculateur intègre déjà la dégradation et le remplacement de l'onduleur dans l'amortissement pluriannuel.</p>
+
       <p class="disc">Tous les chiffres de cette page sont indicatifs et ne remplacent ni une étude technique professionnelle ni une offre d'un installateur.</p>
 
       <a class="cta" href="/">Calculer mon installation solaire</a>
 
-      <footer>SolarVento · <a href="/">Calculateur</a> · <a href="/privacidad-fr.html">Politique de confidentialité</a></footer>
+      <footer>SolarVento · <a href="/">Calculateur</a> · <a href="/ayudas.html">Aides par région (en espagnol)</a> · <a href="/privacidad-fr.html">Politique de confidentialité</a></footer>
     </main>
   </body>
 </html>

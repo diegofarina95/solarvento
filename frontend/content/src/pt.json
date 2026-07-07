@@ -74,10 +74,28 @@
         "aHtml": "A sua fatura é processada apenas para estimar a sua instalação e não é conservada para além da sua sessão. Tem o detalhe na <a href=\"/privacidad-pt.html\">política de privacidade</a>.",
         "ldQ": "O que acontece com a minha fatura e os meus dados?",
         "ldA": "A sua fatura é processada apenas para estimar a sua instalação e não é conservada para além da sua sessão. Pode consultar o detalhe na política de privacidade da SolarVento."
+      },
+      {
+        "q": "Que ajudas e subsídios existem para instalar painéis solares?",
+        "aHtml": "Em Espanha há quatro vias principais: os <strong>subsídios regionais</strong> (convocatórias com orçamento limitado geridas por cada comunidade autónoma), a <strong>dedução no IRPF</strong> até 60% ligada à melhoria energética certificada da habitação, a <strong>bonificação do IBI</strong> (até 50% durante vários anos, conforme o município) e a bonificação de até 95% do <strong>ICIO</strong> (taxa da licença de obras). A calculadora estima a ajuda regional em vigor segundo o teu código postal, e em <a href=\"/ayudas.html\">ajudas por região</a> (em espanhol) tens as ligações oficiais para confirmar prazos e requisitos antes de assinar.",
+        "ldQ": "Que ajudas e subsídios existem para instalar painéis solares?",
+        "ldA": "Em Espanha há quatro vias principais: os subsídios regionais (convocatórias com orçamento limitado geridas por cada comunidade autónoma), a dedução no IRPF até 60% ligada à melhoria energética certificada da habitação, a bonificação do IBI (até 50% durante vários anos, conforme o município) e a bonificação de até 95% do ICIO (taxa da licença de obras). A calculadora estima a ajuda regional em vigor segundo o teu código postal, e em ajudas por região (em espanhol) tens as ligações oficiais para confirmar prazos e requisitos antes de assinar."
+      },
+      {
+        "q": "Quanto tempo demora uma instalação de painéis solares?",
+        "aHtml": "A montagem no telhado demora <strong>um ou dois dias</strong> numa habitação típica. O que demora mais é a burocracia: licença ou declaração responsável, legalização da instalação, comunicação à distribuidora e ativação da compensação de excedentes, que pode levar de algumas semanas a poucos meses conforme a zona. Normalmente o instalador trata de tudo; até a compensação estar ativa, os excedentes são injetados na rede sem compensação.",
+        "ldQ": "Quanto tempo demora uma instalação de painéis solares?",
+        "ldA": "A montagem no telhado demora um ou dois dias numa habitação típica. O que demora mais é a burocracia: licença ou declaração responsável, legalização da instalação, comunicação à distribuidora e ativação da compensação de excedentes, que pode levar de algumas semanas a poucos meses conforme a zona. Normalmente o instalador trata de tudo; até a compensação estar ativa, os excedentes são injetados na rede sem compensação."
+      },
+      {
+        "q": "Que manutenção e vida útil têm os painéis solares?",
+        "aHtml": "Muito pouca manutenção: uma <strong>limpeza</strong> uma ou duas vezes por ano e uma revisão periódica. Os painéis perdem cerca de <strong>0,5% de produção por ano</strong> (as garantias típicas cobrem 25 anos), o <strong>inversor</strong> costuma substituir-se uma vez aos 10–15 anos e uma bateria de lítio tem cerca de 10 anos de garantia. A calculadora já desconta a degradação e a troca do inversor na amortização plurianual.",
+        "ldQ": "Que manutenção e vida útil têm os painéis solares?",
+        "ldA": "Muito pouca manutenção: uma limpeza uma ou duas vezes por ano e uma revisão periódica. Os painéis perdem cerca de 0,5% de produção por ano (as garantias típicas cobrem 25 anos), o inversor costuma substituir-se uma vez aos 10–15 anos e uma bateria de lítio tem cerca de 10 anos de garantia. A calculadora já desconta a degradação e a troca do inversor na amortização plurianual."
       }
     ],
     "disclaimer": "Todos os valores desta página são orientativos e não substituem um estudo técnico profissional nem uma proposta de um instalador.",
-    "footerHtml": "SolarVento · <a href=\"/\">Calculadora</a> · <a href=\"/privacidad-pt.html\">Política de privacidade</a>"
+    "footerHtml": "SolarVento · <a href=\"/\">Calculadora</a> · <a href=\"/ayudas.html\">Ajudas por região (em espanhol)</a> · <a href=\"/privacidad-pt.html\">Política de privacidade</a>"
   },
   "privacy": {
     "title": "Política de privacidade | SolarVento",

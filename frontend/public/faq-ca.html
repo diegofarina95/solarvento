@@ -48,6 +48,8 @@
       h2 { font-size: 1.15rem; margin: 2rem 0 .5rem; }
       .lead { color: #57534e; margin: .25rem 0 1.5rem; }
       .back { display: inline-block; margin-bottom: 1.5rem; font-size: .9rem; }
+      .langs { font-size: .82rem; color: #78716c; margin: -0.75rem 0 1.5rem; }
+      .langs strong { font-weight: 650; }
       .cta {
         display: inline-block; margin: 1.5rem 0; padding: .7rem 1.2rem;
         background: #f59e0b; color: #1c1917; border-radius: .6rem;
@@ -60,6 +62,7 @@
         body { color: #e7e5e4; background: #1c1917; }
         a { color: #fbbf24; }
         a:hover { color: #fcd34d; }
+        .langs { color: #a8a29e; }
         footer { border-color: #44403c; }
       }
     </style>
@@ -155,6 +158,30 @@
         "@type": "Answer",
         "text": "La teva factura es processa només per estimar la teva instal·lació i no es conserva més enllà de la teva sessió. Pots consultar el detall a la política de privadesa de SolarVento."
       }
+    },
+    {
+      "@type": "Question",
+      "name": "Quins ajuts i subvencions hi ha per instal·lar plaques solars?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A Espanya hi ha quatre vies principals: les subvencions autonòmiques (convocatòries amb pressupost limitat que gestiona cada comunitat), la deducció de l'IRPF de fins al 60% lligada a la millora energètica acreditada de l'habitatge, la bonificació de l'IBI (fins al 50% durant diversos anys, segons l'ajuntament) i la bonificació de l'ICIO de la llicència d'obres (fins al 95%). La calculadora estima l'ajut autonòmic vigent segons el teu codi postal, i a ajuts per comunitat (en castellà) tens els enllaços oficials per confirmar terminis i requisits abans de signar."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Quant triga una instal·lació de plaques solars?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "El muntatge a la teulada dura un o dos dies en un habitatge tipus. El que triga més és la paperassa: llicència o declaració responsable, legalització de la instal·lació, comunicació a la distribuïdora i alta de la compensació d'excedents, que pot portar d'unes setmanes a uns pocs mesos segons la zona. Normalment ho gestiona l'instal·lador; fins que la compensació està activa, els excedents s'aboquen a la xarxa sense compensar."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Quin manteniment i vida útil tenen les plaques solars?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Molt poc manteniment: una neteja un o dos cops l'any i una revisió periòdica. Els panells perden al voltant d'un 0,5% de producció l'any (les garanties típiques cobreixen 25 anys), l'inversor se sol substituir un cop cap als 10–15 anys i una bateria de liti té uns 10 anys de garantia. La calculadora ja descompta la degradació i el canvi d'inversor en l'amortització pluriennal."
+      }
     }
   ]
 }
@@ -183,6 +210,7 @@
   <body>
     <main class="wrap">
       <a class="back" href="/">&larr; Torna a la calculadora</a>
+      <nav class="langs" aria-label="Idioma"><a href="/faq.html" hreflang="es" lang="es">Español</a> · <a href="/faq-en.html" hreflang="en" lang="en">English</a> · <a href="/faq-gl.html" hreflang="gl" lang="gl">Galego</a> · <strong>Català</strong> · <a href="/faq-eu.html" hreflang="eu" lang="eu">Euskara</a> · <a href="/faq-fr.html" hreflang="fr" lang="fr">Français</a> · <a href="/faq-pt.html" hreflang="pt" lang="pt">Português</a></nav>
       <h1>Preguntes freqüents sobre plaques solars i autoconsum</h1>
       <p class="lead">Resolem els dubtes més habituals sobre l'autoconsum solar a Espanya: quantes plaques necessites, si val la pena una bateria, quant s'estalvia, l'amortització i els permisos. Vols xifres per al teu cas? Fes servir la calculadora amb la teva factura.</p>
       <a class="cta" href="/">Calcular la meva instal·lació solar</a>
@@ -220,11 +248,20 @@
       <h2>Què passa amb la meva factura i les meves dades?</h2>
       <p>La teva factura es processa només per estimar la teva instal·lació i no es conserva més enllà de la teva sessió. Tens el detall a la <a href="/privacidad-ca.html">política de privadesa</a>.</p>
 
+      <h2>Quins ajuts i subvencions hi ha per instal·lar plaques solars?</h2>
+      <p>A Espanya hi ha quatre vies principals: les <strong>subvencions autonòmiques</strong> (convocatòries amb pressupost limitat que gestiona cada comunitat), la <strong>deducció de l'IRPF</strong> de fins al 60% lligada a la millora energètica acreditada de l'habitatge, la <strong>bonificació de l'IBI</strong> (fins al 50% durant diversos anys, segons l'ajuntament) i la <strong>bonificació de l'ICIO</strong> de la llicència d'obres (fins al 95%). La calculadora estima l'ajut autonòmic vigent segons el teu codi postal, i a <a href="/ayudas.html">ajuts per comunitat</a> (en castellà) tens els enllaços oficials per confirmar terminis i requisits abans de signar.</p>
+
+      <h2>Quant triga una instal·lació de plaques solars?</h2>
+      <p>El muntatge a la teulada dura <strong>un o dos dies</strong> en un habitatge tipus. El que triga més és la paperassa: llicència o declaració responsable, legalització de la instal·lació, comunicació a la distribuïdora i alta de la compensació d'excedents, que pot portar d'unes setmanes a uns pocs mesos segons la zona. Normalment ho gestiona l'instal·lador; fins que la compensació està activa, els excedents s'aboquen a la xarxa sense compensar.</p>
+
+      <h2>Quin manteniment i vida útil tenen les plaques solars?</h2>
+      <p>Molt poc manteniment: una <strong>neteja</strong> un o dos cops l'any i una revisió periòdica. Els panells perden al voltant d'un <strong>0,5% de producció l'any</strong> (les garanties típiques cobreixen 25 anys), l'<strong>inversor</strong> se sol substituir un cop cap als 10–15 anys i una bateria de liti té uns 10 anys de garantia. La calculadora ja descompta la degradació i el canvi d'inversor en l'amortització pluriennal.</p>
+
       <p class="disc">Totes les xifres d'aquesta pàgina són orientatives i no substitueixen un estudi tècnic professional ni una oferta d'un instal·lador.</p>
 
       <a class="cta" href="/">Calcular la meva instal·lació solar</a>
 
-      <footer>SolarVento · <a href="/">Calculadora</a> · <a href="/privacidad-ca.html">Política de privadesa</a></footer>
+      <footer>SolarVento · <a href="/">Calculadora</a> · <a href="/ayudas.html">Ajuts per comunitat</a> · <a href="/privacidad-ca.html">Política de privadesa</a></footer>
     </main>
   </body>
 </html>

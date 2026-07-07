@@ -38,6 +38,37 @@ const BANNER =
 
 const pagePath = (base, lang) => (lang === 'es' ? `${base}.html` : `${base}-${lang}.html`)
 
+const LANG_NAMES = {
+  es: 'Español',
+  en: 'English',
+  gl: 'Galego',
+  ca: 'Català',
+  eu: 'Euskara',
+  fr: 'Français',
+  pt: 'Português',
+}
+const LANG_NAV_LABEL = {
+  es: 'Idioma',
+  en: 'Language',
+  gl: 'Idioma',
+  ca: 'Idioma',
+  eu: 'Hizkuntza',
+  fr: 'Langue',
+  pt: 'Idioma',
+}
+
+// Selector de idioma visible: complementa los hreflang del <head> con enlaces
+// rastreables y deja cambiar de versión sin volver a la calculadora. El idioma
+// actual va sin enlace.
+function langNav(base, lang) {
+  const items = LANGS.map((l) =>
+    l === lang
+      ? `<strong>${LANG_NAMES[l]}</strong>`
+      : `<a href="/${pagePath(base, l)}" hreflang="${l}" lang="${l}">${LANG_NAMES[l]}</a>`,
+  )
+  return `      <nav class="langs" aria-label="${LANG_NAV_LABEL[lang]}">${items.join(' · ')}</nav>`
+}
+
 function hreflangBlock(base) {
   const lines = LANGS.map(
     (l) => `    <link rel="alternate" hreflang="${l}" href="${ORIGIN}/${pagePath(base, l)}" />`,
@@ -126,6 +157,7 @@ ${JSON.stringify(breadcrumbLd(path, faq.h1), null, 2)}
   <body>
     <main class="wrap">
       <a class="back" href="/">${faq.back}</a>
+${langNav('faq', lang)}
       <h1>${faq.h1}</h1>
       <p class="lead">${faq.leadHtml}</p>
       <a class="cta" href="/">${faq.cta}</a>
@@ -172,6 +204,7 @@ ${JSON.stringify(breadcrumbLd(path, privacy.h1), null, 2)}
   <body>
     <main class="wrap">
       <a class="back" href="/">${privacy.back}</a>
+${langNav('privacidad', lang)}
       <h1>${privacy.h1}</h1>
       <p class="updated">${privacy.updated}</p>
 

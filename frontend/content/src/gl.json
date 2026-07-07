@@ -74,10 +74,28 @@
         "aHtml": "A túa factura procésase só para estimar a túa instalación e non se conserva máis alá da túa sesión. Tes o detalle na <a href=\"/privacidad-gl.html\">política de privacidade</a>.",
         "ldQ": "Que pasa coa miña factura e os meus datos?",
         "ldA": "A túa factura procésase só para estimar a túa instalación e non se conserva máis alá da túa sesión. Podes consultar o detalle na política de privacidade de SolarVento."
+      },
+      {
+        "q": "Que axudas e subvencións hai para instalar placas solares?",
+        "aHtml": "En España hai catro vías principais: as <strong>subvencións autonómicas</strong> (convocatorias con orzamento limitado que xestiona cada comunidade), a <strong>dedución do IRPF</strong> de ata o 60% ligada á mellora enerxética acreditada da vivenda, a <strong>bonificación do IBI</strong> (ata o 50% durante varios anos, segundo o concello) e a <strong>bonificación do ICIO</strong> da licenza de obras (ata o 95%). A calculadora estima a axuda autonómica vixente segundo o teu código postal, e en <a href=\"/ayudas.html\">axudas por comunidade</a> (en castelán) tes as ligazóns oficiais para confirmar prazos e requisitos antes de asinar.",
+        "ldQ": "Que axudas e subvencións hai para instalar placas solares?",
+        "ldA": "En España hai catro vías principais: as subvencións autonómicas (convocatorias con orzamento limitado que xestiona cada comunidade), a dedución do IRPF de ata o 60% ligada á mellora enerxética acreditada da vivenda, a bonificación do IBI (ata o 50% durante varios anos, segundo o concello) e a bonificación do ICIO da licenza de obras (ata o 95%). A calculadora estima a axuda autonómica vixente segundo o teu código postal, e en axudas por comunidade (en castelán) tes as ligazóns oficiais para confirmar prazos e requisitos antes de asinar."
+      },
+      {
+        "q": "Canto tarda unha instalación de placas solares?",
+        "aHtml": "A montaxe no tellado dura <strong>un ou dous días</strong> nunha vivenda tipo. O que máis tarda é o papelame: licenza ou declaración responsable, legalización da instalación, comunicación á distribuidora e alta da compensación de excedentes, que pode levar dunhas semanas a uns poucos meses segundo a zona. Normalmente xestiónao o instalador; ata que a compensación está activa, os excedentes vértense á rede sen compensar.",
+        "ldQ": "Canto tarda unha instalación de placas solares?",
+        "ldA": "A montaxe no tellado dura un ou dous días nunha vivenda tipo. O que máis tarda é o papelame: licenza ou declaración responsable, legalización da instalación, comunicación á distribuidora e alta da compensación de excedentes, que pode levar dunhas semanas a uns poucos meses segundo a zona. Normalmente xestiónao o instalador; ata que a compensación está activa, os excedentes vértense á rede sen compensar."
+      },
+      {
+        "q": "Que mantemento e vida útil teñen as placas solares?",
+        "aHtml": "Moi pouco mantemento: unha <strong>limpeza</strong> unha ou dúas veces ao ano e unha revisión periódica. Os paneis perden arredor dun <strong>0,5% de produción ao ano</strong> (as garantías típicas cobren 25 anos), o <strong>inversor</strong> adóitase substituír unha vez cara aos 10–15 anos e unha batería de litio ten uns 10 anos de garantía. A calculadora xa desconta a degradación e o cambio de inversor na amortización plurianual.",
+        "ldQ": "Que mantemento e vida útil teñen as placas solares?",
+        "ldA": "Moi pouco mantemento: unha limpeza unha ou dúas veces ao ano e unha revisión periódica. Os paneis perden arredor dun 0,5% de produción ao ano (as garantías típicas cobren 25 anos), o inversor adóitase substituír unha vez cara aos 10–15 anos e unha batería de litio ten uns 10 anos de garantía. A calculadora xa desconta a degradación e o cambio de inversor na amortización plurianual."
       }
     ],
     "disclaimer": "Todas as cifras desta páxina son orientativas e non substitúen un estudo técnico profesional nin unha oferta dun instalador.",
-    "footerHtml": "SolarVento · <a href=\"/\">Calculadora</a> · <a href=\"/privacidad-gl.html\">Política de privacidade</a>"
+    "footerHtml": "SolarVento · <a href=\"/\">Calculadora</a> · <a href=\"/ayudas.html\">Axudas por comunidade</a> · <a href=\"/privacidad-gl.html\">Política de privacidade</a>"
   },
   "privacy": {
     "title": "Política de privacidade | SolarVento",

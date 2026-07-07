@@ -48,6 +48,8 @@
       h2 { font-size: 1.15rem; margin: 2rem 0 .5rem; }
       .lead { color: #57534e; margin: .25rem 0 1.5rem; }
       .back { display: inline-block; margin-bottom: 1.5rem; font-size: .9rem; }
+      .langs { font-size: .82rem; color: #78716c; margin: -0.75rem 0 1.5rem; }
+      .langs strong { font-weight: 650; }
       .cta {
         display: inline-block; margin: 1.5rem 0; padding: .7rem 1.2rem;
         background: #f59e0b; color: #1c1917; border-radius: .6rem;
@@ -60,6 +62,7 @@
         body { color: #e7e5e4; background: #1c1917; }
         a { color: #fbbf24; }
         a:hover { color: #fcd34d; }
+        .langs { color: #a8a29e; }
         footer { border-color: #44403c; }
       }
     </style>
@@ -155,6 +158,30 @@
         "@type": "Answer",
         "text": "Tu factura se procesa solo para estimar tu instalación y no se conserva más allá de tu sesión. Puedes consultar el detalle en la política de privacidad de SolarVento."
       }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué ayudas y subvenciones hay para instalar placas solares?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "En España hay cuatro vías principales: las subvenciones autonómicas (convocatorias con presupuesto limitado que gestiona cada comunidad), la deducción del IRPF de hasta el 60% ligada a la mejora energética acreditada de la vivienda, la bonificación del IBI (hasta el 50% durante varios años, según el ayuntamiento) y la bonificación del ICIO de la licencia de obras (hasta el 95%). La calculadora estima la ayuda autonómica vigente según tu código postal, y en ayudas por comunidad tienes los enlaces oficiales para confirmar plazos y requisitos antes de firmar."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cuánto tarda una instalación de placas solares?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "El montaje en el tejado dura uno o dos días en una vivienda tipo. Lo que más tarda es el papeleo: licencia o declaración responsable, legalización de la instalación, comunicación a la distribuidora y alta de la compensación de excedentes, que puede llevar de unas semanas a unos pocos meses según la zona. Normalmente lo gestiona el instalador; hasta que la compensación está activa, los excedentes se vierten a la red sin compensar."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué mantenimiento y vida útil tienen las placas solares?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Muy poco mantenimiento: una limpieza una o dos veces al año y una revisión periódica. Los paneles pierden en torno a un 0,5% de producción al año (las garantías típicas cubren 25 años), el inversor se suele sustituir una vez hacia los 10–15 años y una batería de litio tiene unos 10 años de garantía. La calculadora ya descuenta la degradación y el cambio de inversor en la amortización plurianual."
+      }
     }
   ]
 }
@@ -183,6 +210,7 @@
   <body>
     <main class="wrap">
       <a class="back" href="/">&larr; Volver a la calculadora</a>
+      <nav class="langs" aria-label="Idioma"><strong>Español</strong> · <a href="/faq-en.html" hreflang="en" lang="en">English</a> · <a href="/faq-gl.html" hreflang="gl" lang="gl">Galego</a> · <a href="/faq-ca.html" hreflang="ca" lang="ca">Català</a> · <a href="/faq-eu.html" hreflang="eu" lang="eu">Euskara</a> · <a href="/faq-fr.html" hreflang="fr" lang="fr">Français</a> · <a href="/faq-pt.html" hreflang="pt" lang="pt">Português</a></nav>
       <h1>Preguntas frecuentes sobre placas solares y autoconsumo</h1>
       <p class="lead">Resolvemos las dudas más habituales sobre el autoconsumo solar en España: cuántas placas necesitas, si merece la pena una batería, cuánto se ahorra, la amortización y los permisos. ¿Quieres cifras para tu caso? Usa la calculadora con tu factura.</p>
       <a class="cta" href="/">Calcular mi instalación solar</a>
@@ -220,11 +248,20 @@
       <h2>¿Qué pasa con mi factura y mis datos?</h2>
       <p>Tu factura se procesa solo para estimar tu instalación y no se conserva más allá de tu sesión. Tienes el detalle en la <a href="/privacidad.html">política de privacidad</a>.</p>
 
+      <h2>¿Qué ayudas y subvenciones hay para instalar placas solares?</h2>
+      <p>En España hay cuatro vías principales: las <strong>subvenciones autonómicas</strong> (convocatorias con presupuesto limitado que gestiona cada comunidad), la <strong>deducción del IRPF</strong> de hasta el 60% ligada a la mejora energética acreditada de la vivienda, la <strong>bonificación del IBI</strong> (hasta el 50% durante varios años, según el ayuntamiento) y la <strong>bonificación del ICIO</strong> de la licencia de obras (hasta el 95%). La calculadora estima la ayuda autonómica vigente según tu código postal, y en <a href="/ayudas.html">ayudas por comunidad</a> tienes los enlaces oficiales para confirmar plazos y requisitos antes de firmar.</p>
+
+      <h2>¿Cuánto tarda una instalación de placas solares?</h2>
+      <p>El montaje en el tejado dura <strong>uno o dos días</strong> en una vivienda tipo. Lo que más tarda es el papeleo: licencia o declaración responsable, legalización de la instalación, comunicación a la distribuidora y alta de la compensación de excedentes, que puede llevar de unas semanas a unos pocos meses según la zona. Normalmente lo gestiona el instalador; hasta que la compensación está activa, los excedentes se vierten a la red sin compensar.</p>
+
+      <h2>¿Qué mantenimiento y vida útil tienen las placas solares?</h2>
+      <p>Muy poco mantenimiento: una <strong>limpieza</strong> una o dos veces al año y una revisión periódica. Los paneles pierden en torno a un <strong>0,5% de producción al año</strong> (las garantías típicas cubren 25 años), el <strong>inversor</strong> se suele sustituir una vez hacia los 10–15 años y una batería de litio tiene unos 10 años de garantía. La calculadora ya descuenta la degradación y el cambio de inversor en la amortización plurianual.</p>
+
       <p class="disc">Todas las cifras de esta página son orientativas y no sustituyen un estudio técnico profesional ni una oferta de un instalador.</p>
 
       <a class="cta" href="/">Calcular mi instalación solar</a>
 
-      <footer>SolarVento · <a href="/">Calculadora</a> · <a href="/privacidad.html">Política de privacidad</a></footer>
+      <footer>SolarVento · <a href="/">Calculadora</a> · <a href="/ayudas.html">Ayudas por comunidad</a> · <a href="/privacidad.html">Política de privacidad</a></footer>
     </main>
   </body>
 </html>

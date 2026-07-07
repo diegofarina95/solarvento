@@ -14,6 +14,8 @@ h1 { font-size: 1.7rem; line-height: 1.2; margin: 0 0 .25rem; }
 h2 { font-size: 1.15rem; margin: 2rem 0 .5rem; }
 .lead { color: #57534e; margin: .25rem 0 1.5rem; }
 .back { display: inline-block; margin-bottom: 1.5rem; font-size: .9rem; }
+.langs { font-size: .82rem; color: #78716c; margin: -0.75rem 0 1.5rem; }
+.langs strong { font-weight: 650; }
 .cta {
   display: inline-block; margin: 1.5rem 0; padding: .7rem 1.2rem;
   background: #f59e0b; color: #1c1917; border-radius: .6rem;
@@ -26,5 +28,6 @@ footer { margin-top: 3rem; border-top: 1px solid #e7e5e4; padding-top: 1rem; fon
   body { color: #e7e5e4; background: #1c1917; }
   a { color: #fbbf24; }
   a:hover { color: #fcd34d; }
+  .langs { color: #a8a29e; }
   footer { border-color: #44403c; }
 }

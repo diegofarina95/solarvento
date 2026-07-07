@@ -1,0 +1,146 @@
+================================================================================
+SOLARVENTO — ANÁLISIS EXPERTO DEL MOTOR DE CÁLCULO
+Fotovoltaica, baterías y energía renovable
+Fecha: 2026-07-07
+Alcance: backend/app/{calculations,simulation,cashflow,profiles,pvgis}.py,
+         pricing/, frontend/src/{solarScore,batteryRecommendation}.js
+================================================================================
+
+
+VEREDICTO GENERAL
+--------------------------------------------------------------------------------
+El motor está muy por encima del estándar de las calculadoras solares online.
+La física y la economía son sólidas y el sesgo general es conservador (la
+dirección correcta para una herramienta pública). Hay UNA corrección de modelo
+con impacto material (desfase horario UTC) y varios refinamientos menores.
+
+
+LO QUE YA ESTÁ BIEN RESUELTO (no tocar)
+--------------------------------------------------------------------------------
+- Simulación horaria real 12x24 producción vs consumo, en vez del atajo
+  "producción anual x precio".
+- Compensación simplificada española correcta (RD 244/2019): tope MENSUAL de la
+  compensación al coste de la energía comprada ese mes (el error típico del
+  sector es aplicarlo anual o no aplicarlo).
+- Payback INCREMENTAL de la batería (coste extra / ahorro extra), no el del
+  sistema completo — el error nº1 del sector para vender baterías. Además hay
+  techo estructural: excedente x (precio - compensación) como valor máximo de
+  cualquier batería.
+- Descarga de batería valorada a precio VALLE cuando la factura trae precios
+  por periodo (en 2.0TD la batería desplaza consumo nocturno barato).
+- Factor fiscal 1,27 sobre el kWh autoconsumido evitado (impuesto eléctrico
+  5,11% x IVA 21%), solo cuando el precio deriva de facturas, y NO aplicado a
+  la compensación de excedentes. Metodológicamente fino.
+- Economía plurianual seria: degradación, escalada, O&M, inversor a año 13,
+  VAN, TIR, payback real interpolado; barrido de tamaños por VAN óptimo (en
+  España con compensación topada cae en el 60-90% de cobertura, no en el 100%,
+  y el modelo captura esa física).
+- Autosuficiencia estacional invierno/verano expuesta por separado.
+- Curva de escala de costes por tamaño (exponente 0,3, calibrada con datos
+  reales) para estrechar horquillas sin mentir.
+
+
+RECOMENDACIÓN PRINCIPAL (prioridad ALTA)
+--------------------------------------------------------------------------------
+1. CORREGIR EL DESFASE HORARIO UTC -> HORA LOCAL DEL PERFIL PVGIS
+
+   Problema: PVGIS seriescalc devuelve la serie horaria en UTC y
+   parse_seriescalc (pvgis.py:191) usa esa hora directamente como índice de la
+   matriz 12x24, mientras el perfil de consumo (profiles.py) está en hora
+   local. No existe ninguna conversión en el código.
+
+   Efecto en España (UTC+1 invierno / UTC+2 verano): la producción queda
+   desplazada 1-2 h "antes" respecto al consumo. El pico solar real de las
+   ~14:00 locales se casa con el consumo de las 12:00; a las 19:00 locales de
+   julio (aún con sol) el modelo ya casi no produce. Consecuencias:
+     - Subestima el autoconsumo directo (peor en perfiles evening/standard).
+     - Sobreestima el excedente de mediodía.
+     - Sobreestima el beneficio de la batería (el hueco de tarde parece mayor).
+   Magnitud estimada: varios puntos porcentuales de autoconsumo; décimas de
+   año en paybacks; puede mover veredictos límite.
+
+   Corrección propuesta: desplazar la matriz de producción round(lon/15) horas
+   (offset solar por longitud) o el offset del huso del país, en
+   parse_seriescalc o justo después. Con día medio mensual no hace falta
+   afinar el DST día a día. Cambio pequeño y acotado + test de regresión
+   (con lon de Madrid, el máximo de producción debe caer en h=13-14 local,
+   no en h=11-12).
+
+
+SUPUESTOS PLURIANUALES (cashflow.py) — VALIDACIÓN UNO A UNO
+--------------------------------------------------------------------------------
+Pendientes de revisión de Diego desde la fusión del 2026-07-03. Mi valoración:
+
+   Supuesto                    Valor actual      Valoración
+   -------------------------   ---------------   --------------------------------
+   Degradación paneles         0,5 %/año         OK. Garantías Tier-1: 0,40-0,55%.
+   Escalada precio luz         +2 %/año          OK. Conservador y defendible
+                                                 (histórico nominal europeo 3-5%).
+   O&M                         1% capex/año      REVISAR. Techo del rango
+                                                 residencial (0,5-1%). Con seguro
+                                                 incluido, defendible; si no,
+                                                 bajar a 0,7-0,8%.
+   Inversor nuevo              año 13            OK. Vida típica 10-15 años.
+   Degradación batería         2 %/año           OK. ~82% a 10 años, coherente
+                                                 con garantías LFP (70-80%).
+   Tasa de descuento (VAN)     3% nominal        SUBIR A 4-5% NOMINAL. Con
+                                                 escalada del 2% queda ~1% real:
+                                                 el VAN sale generoso.
+   Garantía / vida batería     10 / 12 años      OK para LFP actual.
+
+Precios por defecto de España (default_prices.py), plausibles a jul-2026:
+   - Llave en mano 800-1.500 EUR/kWp (mediana 1.100)  -> OK
+   - Batería instalada 550-780 EUR/kWh                -> OK
+   - Excedente 0,06 EUR/kWh                           -> OK (ofertas 0,04-0,10)
+   - Electricidad 0,17 EUR/kWh                        -> OK como default
+
+
+RECOMENDACIONES MENORES (por orden de relevancia)
+--------------------------------------------------------------------------------
+2. LÍMITE DE POTENCIA DE LA BATERÍA (C-rate)
+   El modelo permite que una batería de 5 kWh absorba todo el excedente de una
+   hora sin tope de kW; las residenciales reales limitan a ~0,5-1C (2,5-5 kW).
+   Con paso horario rara vez muerde, pero en sistemas grandes con batería
+   pequeña infla su ahorro. Añadir tope de carga/descarga por hora = capacidad
+   x C (con C=0,5-1 configurable).
+
+3. FALLBACK SIN SIMULACIÓN HORARIA (main.py:1808)
+   Si seriescalc falla, el ahorro usa min(producción, consumo): asume que todo
+   lo producido hasta el consumo se autoconsume, cuando sin batería lo real es
+   25-45%. Aplicar un factor de autoconsumo típico (~0,35-0,45) en esa ruta
+   degradada y marcar el resultado como menos fiable.
+
+4. DÍA MEDIO MENSUAL — DISCLAIMER
+   Promediar el mes suaviza la variabilidad real (rachas nubladas): sobreestima
+   ligeramente autoconsumo y valor de batería (una batería no sirve en una
+   semana nublada de enero y el día medio no lo ve). Compromiso razonable para
+   un estimador; añadir mención en el disclaimer si no la hay.
+
+5. AUTOCONSUMO DIRECTO A PRECIO MEDIO
+   La FV desplaza sobre todo consumo de llano/mediodía, algo más barato que el
+   precio medio con punta. Ya existe el precio valle de la factura: el
+   refinamiento simétrico al de la batería es posible. Impacto pequeño.
+
+6. loss_pct POR DEFECTO = 14%
+   Es el default heredado de PVGIS; instalaciones modernas: 8-12%. Sesga a la
+   baja (dirección segura, pero un pelín pesimista). Considerar 10-12% como
+   default propio, documentándolo.
+
+7. PAÍSES BAJOS / NET METERING
+   Si NL usa net_metering en la tabla de países: el salderen se desmonta a
+   partir de 2027 y el plurianual lo asume constante 25 años. Solo afecta a
+   NL; bastaría una nota o una transición a market_price desde 2027.
+
+
+ORDEN DE EJECUCIÓN SUGERIDO
+--------------------------------------------------------------------------------
+   1º  Desfase UTC (nº1) — corrige sesgo sistemático en el mercado principal.
+   2º  Tasa de descuento 4-5% + decisión sobre O&M (tabla de supuestos).
+   3º  Factor de autoconsumo en el fallback (nº3).
+   4º  C-rate de batería (nº2).
+   5º  Resto (nº4-7) según apetito.
+
+================================================================================
+Análisis realizado sin tocar código. Cada recomendación es independiente y
+puede implementarse por separado con su test de regresión.
+================================================================================
