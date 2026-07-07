@@ -788,6 +788,9 @@ def preview(ref: str):
     src = content_path(lang, stem)
     title = parse_frontmatter(src.read_text()).get("title", stem)
     slug = public_slug(src)
+    # Estado por idioma del grupo (qué tradujo la subida y qué falló):
+    g = next((x for x in list_groups() if x["stem"] == stem), None)
+    chips_row = f'<div class="actions">{lang_chips(g)}</div>' if g else ""
     return page(
         f"Preview · {title}",
         f"""
@@ -802,6 +805,7 @@ def preview(ref: str):
   </form>
 </div>
 <div class="actions">{schedule_widget(stem, blog_schedule.get(stem), True)}</div>
+{chips_row}
 <iframe src="/draft/{ref}"></iframe>
 """,
     )

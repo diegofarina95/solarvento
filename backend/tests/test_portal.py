@@ -807,3 +807,17 @@ def test_upload_rollback_si_generador_rechaza_traducciones(client, monkeypatch, 
     assert r.status_code == 303  # la subida del español NO se pierde
     assert (tmp_path / "nuevo.html").exists()
     assert not (tmp_path / "en" / "nuevo.html").exists()  # traducciones revertidas
+
+
+def test_preview_muestra_chips_de_idiomas(client, monkeypatch, tmp_path):
+    content = tmp_path / "content"
+    (content / "en").mkdir(parents=True)
+    (content / "factura.html").write_text(FM.format(t="Factura"))
+    (content / "en" / "factura.html").write_text(FM.format(t="Bill"))
+    monkeypatch.setattr(portal, "CONTENT_BLOG", content)
+    monkeypatch.setattr(portal, "PUBLIC_BLOG", tmp_path / "public")
+    monkeypatch.setattr(portal, "draft_refs", lambda: {"factura", "en/factura"})
+    r = client.get("/preview/factura")
+    assert r.status_code == 200
+    assert 'href="/preview/en/factura"' in r.text  # chip del borrador EN
+    assert "Traducir (3)" in r.text  # faltan ca/gl/eu → reintento a mano
