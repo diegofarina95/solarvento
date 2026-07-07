@@ -326,3 +326,110 @@ def test_delete_rechaza_slug_inexistente(client, monkeypatch, tmp_path):
     monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
     r = client.post("/delete/no-esta")
     assert r.status_code == 404
+
+
+# --- Publicación selectiva de un grupo (publish_group) ---
+
+FM = "---\ntitle: {t}\ndescription: d\nkeywords: k\ndate: 2026-07-07\nexcerpt: e\n---\n<p>x</p>"
+
+
+@pytest.fixture
+def blog_fs(monkeypatch, tmp_path):
+    """content/ con dos grupos (factura con EN, otro solo es) + aside/ + public/."""
+    content, public, aside = tmp_path / "content", tmp_path / "public", tmp_path / "aside"
+    content.mkdir(), public.mkdir()
+    (content / "factura.html").write_text(FM.format(t="Factura"))
+    (content / "en").mkdir()
+    (content / "en" / "factura.html").write_text(FM.format(t="Bill") + "\n")
+    (content / "otro.html").write_text(FM.format(t="Otro"))
+    monkeypatch.setattr(portal, "CONTENT_BLOG", content)
+    monkeypatch.setattr(portal, "PUBLIC_BLOG", public)
+    monkeypatch.setattr(portal, "DRAFTS_ASIDE", aside)
+    monkeypatch.setattr(portal, "draft_refs", lambda: {"factura", "en/factura", "otro"})
+    return content, public, aside
+
+
+def test_group_refs_y_group_langs(blog_fs, monkeypatch):
+    assert portal.group_refs("factura") == ["en/factura", "factura"]
+    assert portal.group_refs("otro") == ["otro"]
+    assert portal.group_refs("no-existe") == []
+    assert portal.group_langs("factura") == ["es", "en"]
+    assert portal.group_langs("otro") == ["es"]
+
+
+def test_publish_group_aparta_otros_y_los_restaura(blog_fs, monkeypatch):
+    content, public, aside = blog_fs
+    seen: dict = {}
+
+    def fake_generate():
+        # dentro de la publicación, «otro» debe estar apartado y el grupo presente
+        seen.setdefault("otro_fuera", not (content / "otro.html").exists())
+        seen.setdefault("grupo_dentro", (content / "factura.html").exists())
+        return True, ""
+
+    def fake_commit(msg):
+        seen["msg"] = msg
+        return True, "ok"
+
+    monkeypatch.setattr(portal, "run_generate", fake_generate)
+    monkeypatch.setattr(portal, "commit_paths", fake_commit)
+    monkeypatch.setattr(portal, "sync_to_prod", lambda: (True, "sincronizado"))
+
+    ok, detail, published = portal.publish_group("factura", scheduled=True)
+
+    assert ok
+    assert seen["otro_fuera"] and seen["grupo_dentro"]
+    assert (content / "otro.html").exists()  # restaurado
+    assert not any(aside.rglob("*.html")) if aside.exists() else True  # aside vacío al terminar
+    assert [(t, lang) for t, lang, _ in published] == [("Factura", "es"), ("Bill", "en")]
+    assert "programado, portal" in seen["msg"]
+    assert "«Factura»" in seen["msg"] and "[es, en]" in seen["msg"]
+
+
+def test_publish_group_restaura_si_falla_el_commit(blog_fs, monkeypatch):
+    content, public, aside = blog_fs
+    monkeypatch.setattr(portal, "run_generate", lambda: (True, ""))
+    monkeypatch.setattr(portal, "commit_paths", lambda msg: (False, "boom"))
+    monkeypatch.setattr(portal, "sync_to_prod", lambda: (True, ""))
+    ok, detail, published = portal.publish_group("factura", scheduled=False)
+    assert not ok
+    assert "boom" in detail
+    assert (content / "otro.html").exists()  # restaurado pese al fallo
+
+
+def test_publish_group_sin_borradores_reintenta_solo_sync(blog_fs, monkeypatch):
+    # tras un fallo de solo-sync el grupo ya está commiteado (sin borradores):
+    # el reintento debe regenerar + commit no-op + rsync, sin apartar nada.
+    monkeypatch.setattr(portal, "draft_refs", lambda: set())
+    calls: list[str] = []
+    monkeypatch.setattr(portal, "run_generate", lambda: (calls.append("gen"), (True, ""))[1])
+    monkeypatch.setattr(
+        portal, "commit_paths",
+        lambda msg: (calls.append("commit"), (True, "sin cambios que commitear"))[1],
+    )
+    monkeypatch.setattr(
+        portal, "sync_to_prod", lambda: (calls.append("sync"), (True, "sincronizado"))[1]
+    )
+    ok, detail, published = portal.publish_group("factura", scheduled=False)
+    assert ok
+    assert calls == ["gen", "commit", "sync"]
+    assert [lang for _, lang, _ in published] == ["es", "en"]
+
+
+def test_restore_aside_recupera_borradores(blog_fs, monkeypatch):
+    content, public, aside = blog_fs
+    calls: list[str] = []
+    monkeypatch.setattr(portal, "run_generate", lambda: (calls.append("gen"), (True, ""))[1])
+    (aside / "en").mkdir(parents=True)
+    (aside / "en" / "perdido.html").write_text("x")
+    portal.restore_aside()
+    assert (content / "en" / "perdido.html").exists()
+    assert not aside.exists()
+    assert calls == ["gen"]
+
+
+def test_restore_aside_sin_restos_no_regenera(blog_fs, monkeypatch):
+    calls: list[str] = []
+    monkeypatch.setattr(portal, "run_generate", lambda: (calls.append("gen"), (True, ""))[1])
+    portal.restore_aside()  # aside/ ni siquiera existe
+    assert calls == []

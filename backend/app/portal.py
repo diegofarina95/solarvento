@@ -43,6 +43,9 @@ PUBLIC_SITEMAP = FRONTEND / "public" / "sitemap.xml"
 GENERATE_SCRIPT = FRONTEND / "scripts" / "generate-static-pages.mjs"
 ENV_FILE = REPO_ROOT / ".env"
 
+# Borradores de OTROS grupos apartados durante una publicación selectiva.
+DRAFTS_ASIDE = REPO_ROOT / ".drafts-aside"
+
 ORIGIN = "https://solarvento.es"
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 
@@ -281,6 +284,88 @@ def commit_paths(message: str) -> tuple[bool, str]:
         return True, "sin cambios que commitear"
     proc = git("commit", "-m", message)
     return proc.returncode == 0, (proc.stdout + proc.stderr).strip()
+
+
+# --- publicación selectiva de un grupo (programación por artículo) ----------
+
+def group_refs(stem: str) -> list[str]:
+    """Refs de borrador que pertenecen al grupo `stem` (es + traducciones)."""
+    out = []
+    for ref in draft_refs():
+        parsed = parse_ref(ref)
+        if parsed and parsed[1] == stem:
+            out.append(ref)
+    return sorted(out)
+
+
+def group_langs(stem: str) -> list[str]:
+    """Idiomas con archivo en content para el grupo (borrador o commiteado)."""
+    return [l for l in ("es", *TRANSLATION_LANGS) if content_path(l, stem).exists()]
+
+
+def publish_group(stem: str, scheduled: bool) -> tuple[bool, str, list[tuple[str, str, str]]]:
+    """Publica SOLO el grupo `stem`: es + traducciones tal como estén.
+
+    Aparta los borradores de OTROS grupos a .drafts-aside/ (y borra sus páginas
+    generadas) para que el generador no los meta en índices/sitemap ni acaben
+    en git/prod; el finally los restaura pase lo que pase. El caller debe
+    tener el LOCK. Devuelve (ok, detalle, [(title, lang, slug), ...])."""
+    others = [r for r in draft_refs() if parse_ref(r) and parse_ref(r)[1] != stem]
+    aside: list[tuple[Path, Path]] = []
+    try:
+        for ref in others:
+            lang, other = parse_ref(ref)
+            src = content_path(lang, other)
+            slug = public_slug(src)
+            dst = DRAFTS_ASIDE / src.relative_to(CONTENT_BLOG)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(src), str(dst))
+            aside.append((src, dst))
+            shutil.rmtree(generated_page(lang, slug).parent, ignore_errors=True)
+        ok, out = run_generate()
+        if not ok:
+            return False, f"generador: {out}", []
+        published = []
+        for lang in group_langs(stem):
+            src = content_path(lang, stem)
+            published.append(
+                (parse_frontmatter(src.read_text()).get("title", stem), lang, public_slug(src))
+            )
+        title = published[0][0] if published else stem
+        langs = ", ".join(lang for _, lang, _ in published)
+        origin = "programado, portal" if scheduled else "portal"
+        ok, out = commit_paths(f"Blog: publica «{title}» [{langs}] ({origin})")
+        if not ok:
+            return False, f"git commit: {out}", []
+        synced, sync_out = sync_to_prod()
+        if not synced:
+            return False, f"sync a prod: {sync_out}", published
+        return True, "publicado", published
+    finally:
+        for src, dst in aside:
+            src.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(dst), str(src))
+        if aside:
+            shutil.rmtree(DRAFTS_ASIDE, ignore_errors=True)
+            run_generate()  # las previews de los borradores restaurados vuelven
+
+
+def restore_aside() -> None:
+    """Al arrancar: recupera borradores apartados por un crash a mitad de publicación."""
+    if not DRAFTS_ASIDE.is_dir():
+        return
+    moved = False
+    for f in sorted(DRAFTS_ASIDE.rglob("*.html")):
+        dst = CONTENT_BLOG / f.relative_to(DRAFTS_ASIDE)
+        if dst.exists():
+            f.unlink()  # ya restaurado por el finally: esto es un resto duplicado
+            continue
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(f), str(dst))
+        moved = True
+    shutil.rmtree(DRAFTS_ASIDE, ignore_errors=True)
+    if moved:
+        run_generate()
 
 
 # --- HTML del portal ---------------------------------------------------------
