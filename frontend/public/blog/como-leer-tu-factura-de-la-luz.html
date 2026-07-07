@@ -25,72 +25,156 @@
     <meta name="twitter:description" content="Guía para entender la factura eléctrica española línea a línea: potencia, energía por periodos 2.0TD, impuestos y las tres cifras que necesitas antes de calcular si te compensan las placas solares." />
     <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
     <style>
-      :root { color-scheme: light dark; }
+      /* Tema del blog = tema de la portada (src/index.css): papel cálido con
+         amanecer, marca en Bricolage Grotesque, botón solar y cards en capas.
+         Única licencia propia del blog: cuerpo serif para lectura larga. */
+      @font-face {
+        font-family: 'Bricolage Grotesque Variable';
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
+      }
+
+      :root {
+        color-scheme: light dark;
+        /* Tema solar (mismos tokens que la app) */
+        --page: #fbfaf6;
+        --sky-dawn: #fff4de;
+        --sun-400: #fbbf24;
+        --sun-500: #f59e0b;
+        --sun-600: #d97706;
+        --ember: #b45309;
+        --gridline: #ece6d9;
+      }
       * { box-sizing: border-box; }
       body {
         margin: 0;
-        /* Cuerpo serif (lectura larga) + titulares sans: identidad del blog. */
+        /* Cuerpo serif (lectura larga); titulares y UI en la familia de la app. */
         font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
         line-height: 1.7;
-        color: #292524;
-        background: #fafaf9;
+        color: #1c1917;
+        /* Amanecer: la página nace en luz cálida y se asienta en papel */
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(255, 243, 220, 0) 420px),
+          var(--page);
       }
-      h1, h2, h3, .brand, .meta, .cta, .cta-block, .cards, footer, .tag {
+      h1, h2, .brand { font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif; }
+      h3, .meta, .cta, .cta-block, .cards, footer, .eyebrow, .anatomy li strong {
         font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
       }
       .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
-      a { color: #b45309; }
+      a { color: var(--ember); }
       a:hover { color: #92400e; }
       a:focus-visible, .cta:focus-visible {
-        outline: 3px solid #f59e0b;
+        outline: 3px solid var(--sun-500);
         outline-offset: 2px;
         border-radius: .15rem;
       }
-      h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.15; margin: 1.2rem 0 .5rem; }
-      h2 { font-size: 1.35rem; line-height: 1.25; margin: 2.2rem 0 .6rem; }
-      h3 { font-size: 1.05rem; margin: 1.4rem 0 .3rem; }
+      h1 {
+        font-size: clamp(1.9rem, 4vw, 2.6rem);
+        font-weight: 700;
+        letter-spacing: -.02em;
+        line-height: 1.12;
+        margin: 1.2rem 0 .5rem;
+      }
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 650;
+        letter-spacing: -.01em;
+        line-height: 1.25;
+        margin: 2.2rem 0 .6rem;
+      }
+      h3 { font-size: 1.02rem; margin: 1.4rem 0 .3rem; }
       p { margin: .55rem 0; }
       ul, ol { padding-left: 1.4rem; }
       li { margin: .3rem 0; }
 
-      /* Cabecera: logo + CTA a la calculadora */
+      /* Cabecera: logo + wordmark como en la portada, CTA solar a la derecha */
       header.site {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
         padding-bottom: 1rem;
-        border-bottom: 1px solid #e7e5e4;
+        border-bottom: 1px solid var(--gridline);
       }
       .brand {
-        font-weight: 800;
-        font-size: 1.15rem;
-        letter-spacing: -.01em;
-        color: #292524;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        font-weight: 700;
+        font-size: 1.35rem;
+        letter-spacing: -.02em;
+        color: #1c1917;
         text-decoration: none;
       }
-      .brand span { color: #f59e0b; }
+      .brand img { width: 2.1rem; height: 2.1rem; filter: drop-shadow(0 1px 1px rgba(28,25,23,.15)); }
+      .brand b { font-weight: inherit; }
+      .brand span { color: var(--sun-600); }
+      .brand small {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #78716c;
+        align-self: flex-end;
+        margin-bottom: .3rem;
+      }
+
+      /* Botón principal: gradiente solar con texto oscuro (el .btn-solar de la app) */
       .cta {
         display: inline-block;
-        background: #f59e0b;
-        color: #451a03;
-        font-weight: 700;
+        background: linear-gradient(135deg, var(--sun-400), var(--sun-500) 55%, var(--sun-600));
+        color: #1c1917;
+        font-weight: 650;
         font-size: .9rem;
-        padding: .5rem .9rem;
-        border-radius: .6rem;
+        padding: .55rem 1rem;
+        border-radius: .75rem;
         text-decoration: none;
         white-space: nowrap;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 1px 2px rgba(180, 83, 9, .25);
+        transition: box-shadow .15s ease, filter .15s ease;
       }
-      .cta:hover { background: #fbbf24; color: #451a03; }
+      .cta:hover {
+        color: #1c1917;
+        filter: brightness(1.05);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 3px 10px rgba(217, 119, 6, .35);
+      }
 
-      .meta { color: #78716c; font-size: .88rem; margin: 0 0 1.4rem; }
-      .lead { font-size: 1.08rem; color: #57534e; }
+      /* Eyebrow con tick solar (fecha del artículo, etiquetas de sección) */
+      .eyebrow, .meta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        font-weight: 650;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #78716c;
+        margin: 0 0 1.4rem;
+      }
+      .eyebrow::before, .meta::before {
+        content: '';
+        width: .5rem;
+        height: .5rem;
+        border-radius: 9999px;
+        background: radial-gradient(circle at 35% 35%, var(--sun-400), var(--sun-600));
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, .18);
+        flex-shrink: 0;
+      }
+      .lead { font-size: 1.08rem; color: #52514e; }
 
-      /* Callout: aviso destacado en ámbar (mismo lenguaje que .notice de ayudas) */
+      /* Callout: aviso ámbar (border-amber-200 + bg-amber-50, como en la app) */
       .callout {
-        border: 1px solid #fcd34d;
-        border-left: .3rem solid #f59e0b;
+        border: 1px solid #fde68a;
+        border-left: .3rem solid var(--sun-500);
         background: #fffbeb;
         border-radius: .75rem;
         color: #78350f;
@@ -100,69 +184,83 @@
       }
       .callout strong { color: #92400e; }
 
-      /* Tarjeta de anatomía: desglose línea a línea (p. ej. la factura) */
-      .anatomy {
+      /* Cards: papel sobre papel, borde cálido, profundidad en capas (.card-solar) */
+      .anatomy, .card, .cta-block {
         background: #fff;
-        border: 1px solid #e7e5e4;
-        border-radius: .9rem;
-        padding: 1.1rem 1.25rem;
-        margin: 1.4rem 0;
+        border: 1px solid var(--gridline);
+        border-radius: 1rem;
+        box-shadow:
+          0 1px 2px rgba(28, 25, 23, .04),
+          0 6px 16px -8px rgba(120, 90, 20, .08);
       }
+      .anatomy { padding: 1.1rem 1.25rem; margin: 1.4rem 0; }
       .anatomy h3 { margin-top: 0; }
       .anatomy ol { margin: 0; padding-left: 1.3rem; }
       .anatomy li { margin: .55rem 0; }
-      .anatomy li strong { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-      .anatomy .hint { color: #78716c; font-size: .88rem; }
+      .anatomy .hint { color: #898781; font-size: .88rem; }
 
-      /* Bloque CTA hacia la calculadora */
+      /* Bloque CTA: card de decisión con el sol encima (.card-hero de la app) */
       .cta-block {
-        background: #fffbeb;
-        border: 1px solid #fcd34d;
-        border-radius: .9rem;
-        padding: 1.25rem 1.4rem;
+        position: relative;
+        overflow: hidden;
+        padding: 1.35rem 1.4rem 1.45rem;
         margin: 2.2rem 0;
         text-align: center;
       }
-      .cta-block p { margin: 0 0 .8rem; color: #78350f; }
-      .cta-block .cta { font-size: 1rem; padding: .65rem 1.25rem; }
+      .cta-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--sun-400), var(--sun-600));
+      }
+      .cta-block p { margin: 0 0 .9rem; color: #52514e; }
+      .cta-block .cta { font-size: 1rem; padding: .7rem 1.3rem; }
 
       /* Índice del blog */
       .cards { display: grid; gap: 1rem; margin-top: 1.6rem; }
       .card {
-        background: #fff;
-        border: 1px solid #e7e5e4;
-        border-radius: .9rem;
-        padding: 1.1rem 1.25rem;
+        padding: 1.15rem 1.3rem;
+        transition: box-shadow .2s ease, transform .2s ease;
       }
-      .card h2 { margin: 0 0 .25rem; font-size: 1.25rem; }
-      .card h2 a { text-decoration: none; }
-      .card h2 a:hover { text-decoration: underline; }
-      .card .meta { margin: 0 0 .4rem; }
+      .card:hover {
+        box-shadow:
+          0 2px 4px rgba(28, 25, 23, .05),
+          0 16px 32px -12px rgba(120, 90, 20, .14);
+      }
+      .card h2 { margin: 0 0 .35rem; font-size: 1.3rem; }
+      .card h2 a { color: #1c1917; text-decoration: none; }
+      .card h2 a:hover { color: var(--ember); text-decoration: underline; }
+      .card .meta { margin: 0 0 .5rem; }
       .card p.excerpt {
         margin: 0;
-        color: #57534e;
+        color: #52514e;
         font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
       }
 
       footer {
         margin-top: 3rem;
-        border-top: 1px solid #e7e5e4;
+        border-top: 1px solid var(--gridline);
         padding-top: 1rem;
         font-size: .82rem;
         color: #78716c;
       }
 
       @media (prefers-color-scheme: dark) {
+        :root { --gridline: #44403c; }
         body { color: #e7e5e4; background: #1c1917; }
-        a { color: #fbbf24; }
+        a { color: var(--sun-400); }
         a:hover { color: #fcd34d; }
-        .brand { color: #e7e5e4; }
-        header.site, footer { border-color: #44403c; }
-        .lead, .meta, .anatomy .hint, .card p.excerpt { color: #a8a29e; }
-        .anatomy, .card { background: #292524; border-color: #44403c; }
-        .callout, .cta-block { background: rgba(146, 64, 14, .2); border-color: #92400e; color: #fef3c7; }
-        .callout strong, .cta-block p { color: #fde68a; }
-        .cta { background: #f59e0b; color: #451a03; }
+        .brand, .card h2 a { color: #e7e5e4; }
+        .lead, .meta, .eyebrow, .anatomy .hint, .card p.excerpt, .cta-block p, .brand small { color: #a8a29e; }
+        .anatomy, .card, .cta-block { background: #292524; box-shadow: none; }
+        .card:hover { box-shadow: 0 8px 24px -12px rgba(0, 0, 0, .5); }
+        .card h2 a:hover { color: var(--sun-400); }
+        .callout { background: rgba(146, 64, 14, .2); border-color: #92400e; border-left-color: var(--sun-600); color: #fef3c7; }
+        .callout strong { color: #fde68a; }
+        .cta, .cta:hover { color: #1c1917; }
       }
     </style>
     <script type="application/ld+json">
@@ -222,7 +320,11 @@
   <body>
     <main class="wrap">
       <header class="site">
-        <a class="brand" href="/blog/">Solar<span>Vento</span> · Blog</a>
+        <a class="brand" href="/blog/">
+          <img src="/logo-mark-96.webp" alt="" width="34" height="34" />
+          <b>Solar<span>Vento</span></b>
+          <small>Blog</small>
+        </a>
         <a class="cta" href="/">Calcular mi ahorro</a>
       </header>
       <article>

@@ -75,12 +75,20 @@ function indentCss(css) {
     .join('\n')
 }
 
-// Cabecera y pie comunes: logo con "Vento" en ámbar, CTA a la calculadora y
-// footer con el resto del sitio (mismos destinos que la app principal).
+// Cabecera y pie comunes: logo + wordmark como en la portada ("Vento" en
+// ámbar), CTA a la calculadora y footer con el resto del sitio.
 const SITE_HEADER = `      <header class="site">
-        <a class="brand" href="/blog/">Solar<span>Vento</span> · Blog</a>
+        <a class="brand" href="/blog/">
+          <img src="/logo-mark-96.webp" alt="" width="34" height="34" />
+          <b>Solar<span>Vento</span></b>
+          <small>Blog</small>
+        </a>
         <a class="cta" href="/">Calcular mi ahorro</a>
       </header>`
+
+// La fuente de marca (titulares) se sirve autoalojada desde /fonts.
+const FONT_PRELOAD =
+  '    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />'
 
 const SITE_FOOTER = `      <footer>
         <a href="/">Calculadora solar</a>
@@ -168,6 +176,7 @@ export function articlePage(a, css) {
     <link rel="canonical" href="${ORIGIN}/${path}" />
 ${socialBlock(path, `${a.title} | SolarVento`, a.description, published)}
     <link rel="icon" href="/favicon.ico" sizes="any" />
+${FONT_PRELOAD}
     <style>
 ${indentCss(css)}
     </style>
@@ -235,6 +244,7 @@ export function blogIndexPage(articles, css) {
     <link rel="canonical" href="${ORIGIN}/blog/" />
 ${socialBlock('blog/', title, description)}
     <link rel="icon" href="/favicon.ico" sizes="any" />
+${FONT_PRELOAD}
     <style>
 ${indentCss(css)}
     </style>
