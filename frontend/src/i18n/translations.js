@@ -63,6 +63,7 @@ export const translations = {
       privacyPolicy: 'Política de privacidad',
       faq: 'Preguntas frecuentes',
       grants: 'Ayudas',
+      blog: 'Blog',
     },
     errors: {
       invalidNumber: ({ label }) => `Valor no válido en ${label}.`,
@@ -631,6 +632,7 @@ export const translations = {
       privacyPolicy: 'Privacy policy',
       faq: 'FAQ',
       grants: 'Grants',
+      blog: 'Blog',
     },
     errors: {
       invalidNumber: ({ label }) => `Invalid value for ${label}.`,
@@ -1199,6 +1201,7 @@ export const translations = {
       privacyPolicy: 'Politique de confidentialité',
       faq: 'Questions fréquentes',
       grants: 'Aides',
+      blog: 'Blog',
     },
     errors: {
       invalidNumber: ({ label }) => `Valeur non valide pour ${label}.`,
@@ -1770,6 +1773,7 @@ export const translations = {
       privacyPolicy: 'Política de privacidade',
       faq: 'Perguntas frequentes',
       grants: 'Apoios',
+      blog: 'Blogue',
     },
     errors: {
       invalidNumber: ({ label }) => `Valor inválido para ${label}.`,
@@ -2338,6 +2342,7 @@ export const translations = {
       privacyPolicy: 'Política de privacidade',
       faq: 'Preguntas frecuentes',
       grants: 'Axudas',
+      blog: 'Blog',
     },
     errors: {
       invalidNumber: ({ label }) => `Valor non válido en ${label}.`,
@@ -2906,6 +2911,7 @@ export const translations = {
       privacyPolicy: 'Política de privacitat',
       faq: 'Preguntes freqüents',
       grants: 'Ajuts',
+      blog: 'Blog',
     },
     errors: {
       invalidNumber: ({ label }) => `Valor no vàlid a ${label}.`,
@@ -3474,6 +3480,7 @@ export const translations = {
       privacyPolicy: 'Pribatutasun-politika',
       faq: 'Ohiko galderak',
       grants: 'Laguntzak',
+      blog: 'Bloga',
     },
     errors: {
       invalidNumber: ({ label }) => `Balio baliogabea hemen: ${label}.`,

@@ -1,0 +1,376 @@
+<!doctype html>
+<!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/blog/ — NO EDITAR A MANO -->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cómo leer tu factura de la luz (y qué mirar antes de poner placas) | SolarVento</title>
+    <meta name="description" content="Guía para entender la factura eléctrica española línea a línea: potencia, energía por periodos 2.0TD, impuestos y las tres cifras que necesitas antes de calcular si te compensan las placas solares." />
+    <meta name="keywords" content="como leer factura de la luz, factura electricidad explicada, 2.0TD periodos, punta llano valle, termino de potencia, termino de energia, impuesto electrico, consumo anual kwh, factura luz placas solares" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://solarvento.es/blog/como-leer-tu-factura-de-la-luz.html" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:url" content="https://solarvento.es/blog/como-leer-tu-factura-de-la-luz.html" />
+    <meta property="og:title" content="Cómo leer tu factura de la luz (y qué mirar antes de poner placas) | SolarVento" />
+    <meta property="og:description" content="Guía para entender la factura eléctrica española línea a línea: potencia, energía por periodos 2.0TD, impuestos y las tres cifras que necesitas antes de calcular si te compensan las placas solares." />
+    <meta property="og:image" content="https://solarvento.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="article:published_time" content="2026-07-07" />
+    <meta property="article:modified_time" content="2026-07-07" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Cómo leer tu factura de la luz (y qué mirar antes de poner placas) | SolarVento" />
+    <meta name="twitter:description" content="Guía para entender la factura eléctrica española línea a línea: potencia, energía por periodos 2.0TD, impuestos y las tres cifras que necesitas antes de calcular si te compensan las placas solares." />
+    <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <style>
+      :root { color-scheme: light dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        /* Cuerpo serif (lectura larga) + titulares sans: identidad del blog. */
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+        line-height: 1.7;
+        color: #292524;
+        background: #fafaf9;
+      }
+      h1, h2, h3, .brand, .meta, .cta, .cta-block, .cards, footer, .tag {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+      a { color: #b45309; }
+      a:hover { color: #92400e; }
+      a:focus-visible, .cta:focus-visible {
+        outline: 3px solid #f59e0b;
+        outline-offset: 2px;
+        border-radius: .15rem;
+      }
+      h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.15; margin: 1.2rem 0 .5rem; }
+      h2 { font-size: 1.35rem; line-height: 1.25; margin: 2.2rem 0 .6rem; }
+      h3 { font-size: 1.05rem; margin: 1.4rem 0 .3rem; }
+      p { margin: .55rem 0; }
+      ul, ol { padding-left: 1.4rem; }
+      li { margin: .3rem 0; }
+
+      /* Cabecera: logo + CTA a la calculadora */
+      header.site {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e7e5e4;
+      }
+      .brand {
+        font-weight: 800;
+        font-size: 1.15rem;
+        letter-spacing: -.01em;
+        color: #292524;
+        text-decoration: none;
+      }
+      .brand span { color: #f59e0b; }
+      .cta {
+        display: inline-block;
+        background: #f59e0b;
+        color: #451a03;
+        font-weight: 700;
+        font-size: .9rem;
+        padding: .5rem .9rem;
+        border-radius: .6rem;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .cta:hover { background: #fbbf24; color: #451a03; }
+
+      .meta { color: #78716c; font-size: .88rem; margin: 0 0 1.4rem; }
+      .lead { font-size: 1.08rem; color: #57534e; }
+
+      /* Callout: aviso destacado en ámbar (mismo lenguaje que .notice de ayudas) */
+      .callout {
+        border: 1px solid #fcd34d;
+        border-left: .3rem solid #f59e0b;
+        background: #fffbeb;
+        border-radius: .75rem;
+        color: #78350f;
+        padding: .85rem 1.1rem;
+        margin: 1.4rem 0;
+        font-size: .95rem;
+      }
+      .callout strong { color: #92400e; }
+
+      /* Tarjeta de anatomía: desglose línea a línea (p. ej. la factura) */
+      .anatomy {
+        background: #fff;
+        border: 1px solid #e7e5e4;
+        border-radius: .9rem;
+        padding: 1.1rem 1.25rem;
+        margin: 1.4rem 0;
+      }
+      .anatomy h3 { margin-top: 0; }
+      .anatomy ol { margin: 0; padding-left: 1.3rem; }
+      .anatomy li { margin: .55rem 0; }
+      .anatomy li strong { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .anatomy .hint { color: #78716c; font-size: .88rem; }
+
+      /* Bloque CTA hacia la calculadora */
+      .cta-block {
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-radius: .9rem;
+        padding: 1.25rem 1.4rem;
+        margin: 2.2rem 0;
+        text-align: center;
+      }
+      .cta-block p { margin: 0 0 .8rem; color: #78350f; }
+      .cta-block .cta { font-size: 1rem; padding: .65rem 1.25rem; }
+
+      /* Índice del blog */
+      .cards { display: grid; gap: 1rem; margin-top: 1.6rem; }
+      .card {
+        background: #fff;
+        border: 1px solid #e7e5e4;
+        border-radius: .9rem;
+        padding: 1.1rem 1.25rem;
+      }
+      .card h2 { margin: 0 0 .25rem; font-size: 1.25rem; }
+      .card h2 a { text-decoration: none; }
+      .card h2 a:hover { text-decoration: underline; }
+      .card .meta { margin: 0 0 .4rem; }
+      .card p.excerpt {
+        margin: 0;
+        color: #57534e;
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+      }
+
+      footer {
+        margin-top: 3rem;
+        border-top: 1px solid #e7e5e4;
+        padding-top: 1rem;
+        font-size: .82rem;
+        color: #78716c;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body { color: #e7e5e4; background: #1c1917; }
+        a { color: #fbbf24; }
+        a:hover { color: #fcd34d; }
+        .brand { color: #e7e5e4; }
+        header.site, footer { border-color: #44403c; }
+        .lead, .meta, .anatomy .hint, .card p.excerpt { color: #a8a29e; }
+        .anatomy, .card { background: #292524; border-color: #44403c; }
+        .callout, .cta-block { background: rgba(146, 64, 14, .2); border-color: #92400e; color: #fef3c7; }
+        .callout strong, .cta-block p { color: #fde68a; }
+        .cta { background: #f59e0b; color: #451a03; }
+      }
+    </style>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Cómo leer tu factura de la luz (y qué mirar antes de poner placas)",
+  "description": "Guía para entender la factura eléctrica española línea a línea: potencia, energía por periodos 2.0TD, impuestos y las tres cifras que necesitas antes de calcular si te compensan las placas solares.",
+  "datePublished": "2026-07-07",
+  "dateModified": "2026-07-07",
+  "inLanguage": "es",
+  "mainEntityOfPage": "https://solarvento.es/blog/como-leer-tu-factura-de-la-luz.html",
+  "image": "https://solarvento.es/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://solarvento.es/logo-mark.png"
+    }
+  }
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "SolarVento",
+      "item": "https://solarvento.es/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://solarvento.es/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Cómo leer tu factura de la luz (y qué mirar antes de poner placas)",
+      "item": "https://solarvento.es/blog/como-leer-tu-factura-de-la-luz.html"
+    }
+  ]
+}
+    </script>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="site">
+        <a class="brand" href="/blog/">Solar<span>Vento</span> · Blog</a>
+        <a class="cta" href="/">Calcular mi ahorro</a>
+      </header>
+      <article>
+        <h1>Cómo leer tu factura de la luz (y qué mirar antes de poner placas)</h1>
+        <p class="meta"><time datetime="2026-07-07">7 de julio de 2026</time></p>
+        <p class="lead">
+          La factura de la luz española está pensada para cumplir la normativa, no para que la entiendas.
+          Pero dentro hay tres cifras que valen dinero: cuánta energía usas al año, cuándo la usas y a qué
+          precio la pagas. Esta guía te enseña a encontrarlas línea a línea.
+        </p>
+        
+        <h2>Primero: los datos del contrato</h2>
+        <p>
+          En la primera página, casi siempre en un lateral o un recuadro, están los datos que definen tu
+          suministro. Dos merecen atención:
+        </p>
+        <ul>
+          <li>
+            <strong>CUPS</strong>: el identificador único de tu punto de suministro (empieza por «ES» y tiene
+            20-22 caracteres). No cambia aunque cambies de comercializadora. Sirve para comparar ofertas o
+            hacer trámites, y para comprobar que la factura es de la vivienda que crees.
+          </li>
+          <li>
+            <strong>Potencia contratada</strong>: los kW que puedes usar a la vez, en dos tramos (punta y
+            valle). La mayoría de viviendas tienen entre 3,45 y 5,75 kW. La pagas fija cada día, la uses o no.
+          </li>
+        </ul>
+        <p>
+          También verás el <strong>peaje de acceso</strong>: en casi todas las viviendas es
+          <strong>2.0TD</strong>, la tarifa doméstica regulada de la que salen los famosos periodos horarios.
+        </p>
+        
+        <h2>Los periodos: punta, llano y valle</h2>
+        <p>
+          Con el peaje 2.0TD, el precio del kWh depende de la hora en que lo consumes (en PVPC y en muchas
+          ofertas del mercado libre; otras aplanan el precio, pero los periodos siguen apareciendo en la
+          factura):
+        </p>
+        <ul>
+          <li><strong>Punta (P1)</strong>: laborables de 10:00 a 14:00 y de 18:00 a 22:00. La hora más cara.</li>
+          <li><strong>Llano (P2)</strong>: laborables de 8:00 a 10:00, de 14:00 a 18:00 y de 22:00 a 24:00.</li>
+          <li><strong>Valle (P3)</strong>: de 0:00 a 8:00 y todo el fin de semana y festivos nacionales. La más barata.</li>
+        </ul>
+        <div class="callout">
+          <strong>Por qué importa para el autoconsumo:</strong> las placas producen sobre todo en horas de
+          punta y llano, las más caras. Cada kWh solar que consumes directamente evita comprar el kWh caro;
+          por eso el reparto de tu consumo entre periodos cambia la rentabilidad real de una instalación.
+        </div>
+        
+        <h2>Anatomía de la factura, línea a línea</h2>
+        <div class="anatomy">
+          <h3>Qué es cada cargo</h3>
+          <ol>
+            <li>
+              <strong>Término de potencia</strong> — precio fijo por kW contratado y día. Se paga siempre,
+              haya consumo o no. <span class="hint">Las placas NO lo reducen: solo se ahorra sobre la energía.</span>
+            </li>
+            <li>
+              <strong>Término de energía</strong> — los kWh consumidos multiplicados por su precio, desglosados
+              por periodo (P1/P2/P3). <span class="hint">La cifra que importa es el TOTAL de kWh del periodo
+              facturado, no el de un solo periodo.</span>
+            </li>
+            <li>
+              <strong>Impuesto especial sobre la electricidad</strong> — un 5,11 % sobre potencia y energía.
+            </li>
+            <li>
+              <strong>Alquiler del contador</strong> — en torno a 0,80-1 €/mes si el equipo no es tuyo.
+            </li>
+            <li>
+              <strong>IVA</strong> — el 21 % sobre todo lo anterior (impuesto eléctrico incluido: sí, es un
+              impuesto sobre otro impuesto).
+            </li>
+          </ol>
+          <p class="hint">
+            Algunas facturas añaden bono social, servicios de mantenimiento o seguros. Los servicios extra no
+            son parte del suministro: revisa si los contrataste a propósito.
+          </p>
+        </div>
+        <div class="callout">
+          <strong>El efecto multiplicador de los impuestos:</strong> cada kWh que dejas de comprar te ahorra
+          su precio <em>más</em> el impuesto eléctrico <em>más</em> el IVA de ambos — en la práctica, cada
+          euro de energía evitada son unos 1,27 € menos en la factura. Es una de las razones por las que el
+          autoconsumo ahorra más de lo que parece mirando solo el precio del kWh.
+        </div>
+        
+        <h2>Las tres cifras que necesitas antes de pensar en placas</h2>
+        <ol>
+          <li>
+            <strong>Tu consumo anual en kWh.</strong> Una factura mensual no basta: el consumo de enero y el
+            de julio pueden diferir el doble. Casi todas las facturas incluyen un gráfico o tabla con los
+            últimos 12-14 meses; suma el año completo o busca la línea «consumo últimos 12 meses».
+          </li>
+          <li>
+            <strong>El reparto por periodos.</strong> ¿Cuánto de tu consumo cae en punta, llano y valle? Si
+            vives de día en casa, el sol te cubrirá mucho; si todo tu consumo es nocturno, la ecuación cambia
+            (y una batería empieza a tener sentido).
+          </li>
+          <li>
+            <strong>El precio real que pagas por kWh.</strong> Divide el término de energía entre los kWh del
+            periodo, o localiza los precios unitarios. Ojo: para comparar con el ahorro solar hay que usar el
+            precio <em>con</em> impuestos, no el de la letra pequeña.
+          </li>
+        </ol>
+        
+        <div class="cta-block">
+          <p>
+            ¿Sin ganas de hacer cuentas? Sube tu factura (o varias) a la calculadora de SolarVento: extrae el
+            consumo, los periodos y el precio automáticamente, y te dice cuántas placas necesitas y en cuántos
+            años se amortizan en tu tejado, con datos oficiales de radiación.
+          </p>
+          <a class="cta" href="/">Calcular mi ahorro con mi factura</a>
+        </div>
+        
+        <h2>Señales de alarma al revisarla</h2>
+        <ul>
+          <li>
+            <strong>Potencia sobrada:</strong> si nunca salta el limitador (ICP), quizá pagas más potencia de
+            la que usas. Bajar un tramo ahorra sin instalar nada.
+          </li>
+          <li>
+            <strong>Servicios que no recuerdas contratar:</strong> mantenimientos y seguros de urgencias
+            suman 3-10 €/mes y no son suministro.
+          </li>
+          <li>
+            <strong>Precio del kWh muy por encima del mercado:</strong> compara tu precio unitario con las
+            ofertas vigentes; las permanencias baratas del primer año suelen encarecerse al renovar.
+          </li>
+        </ul>
+        
+        <p>
+          Entender la factura no es un fin en sí mismo: es el punto de partida para decidir con números si el
+          autoconsumo te compensa, cuánta potencia instalar y si una batería aporta algo en tu caso. Con el
+          consumo anual, el reparto horario y el precio real, cualquier estimación seria — la nuestra o la de
+          un instalador — deja de ser una promesa y pasa a ser una cuenta.
+        </p>
+      </article>
+      <footer>
+        <a href="/">Calculadora solar</a>
+        <span> · </span>
+        <a href="/blog/">Blog</a>
+        <span> · </span>
+        <a href="/faq.html">Preguntas frecuentes</a>
+        <span> · </span>
+        <a href="/ayudas.html">Ayudas por comunidad</a>
+        <span> · </span>
+        <a href="/privacidad.html">Privacidad</a>
+        <p>SolarVento ofrece estimaciones orientativas basadas en datos oficiales; no sustituyen a un estudio técnico en tu tejado.</p>
+      </footer>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,235 @@
+<!doctype html>
+<!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/blog/ — NO EDITAR A MANO -->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog de SolarVento: guías de autoconsumo solar</title>
+    <meta name="description" content="Guías prácticas sobre autoconsumo solar en España: facturas de la luz, placas, baterías, ayudas y amortización, del equipo de la calculadora SolarVento." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://solarvento.es/blog/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:url" content="https://solarvento.es/blog/" />
+    <meta property="og:title" content="Blog de SolarVento: guías de autoconsumo solar" />
+    <meta property="og:description" content="Guías prácticas sobre autoconsumo solar en España: facturas de la luz, placas, baterías, ayudas y amortización, del equipo de la calculadora SolarVento." />
+    <meta property="og:image" content="https://solarvento.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Blog de SolarVento: guías de autoconsumo solar" />
+    <meta name="twitter:description" content="Guías prácticas sobre autoconsumo solar en España: facturas de la luz, placas, baterías, ayudas y amortización, del equipo de la calculadora SolarVento." />
+    <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <style>
+      :root { color-scheme: light dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        /* Cuerpo serif (lectura larga) + titulares sans: identidad del blog. */
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+        line-height: 1.7;
+        color: #292524;
+        background: #fafaf9;
+      }
+      h1, h2, h3, .brand, .meta, .cta, .cta-block, .cards, footer, .tag {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+      a { color: #b45309; }
+      a:hover { color: #92400e; }
+      a:focus-visible, .cta:focus-visible {
+        outline: 3px solid #f59e0b;
+        outline-offset: 2px;
+        border-radius: .15rem;
+      }
+      h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.15; margin: 1.2rem 0 .5rem; }
+      h2 { font-size: 1.35rem; line-height: 1.25; margin: 2.2rem 0 .6rem; }
+      h3 { font-size: 1.05rem; margin: 1.4rem 0 .3rem; }
+      p { margin: .55rem 0; }
+      ul, ol { padding-left: 1.4rem; }
+      li { margin: .3rem 0; }
+
+      /* Cabecera: logo + CTA a la calculadora */
+      header.site {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e7e5e4;
+      }
+      .brand {
+        font-weight: 800;
+        font-size: 1.15rem;
+        letter-spacing: -.01em;
+        color: #292524;
+        text-decoration: none;
+      }
+      .brand span { color: #f59e0b; }
+      .cta {
+        display: inline-block;
+        background: #f59e0b;
+        color: #451a03;
+        font-weight: 700;
+        font-size: .9rem;
+        padding: .5rem .9rem;
+        border-radius: .6rem;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .cta:hover { background: #fbbf24; color: #451a03; }
+
+      .meta { color: #78716c; font-size: .88rem; margin: 0 0 1.4rem; }
+      .lead { font-size: 1.08rem; color: #57534e; }
+
+      /* Callout: aviso destacado en ámbar (mismo lenguaje que .notice de ayudas) */
+      .callout {
+        border: 1px solid #fcd34d;
+        border-left: .3rem solid #f59e0b;
+        background: #fffbeb;
+        border-radius: .75rem;
+        color: #78350f;
+        padding: .85rem 1.1rem;
+        margin: 1.4rem 0;
+        font-size: .95rem;
+      }
+      .callout strong { color: #92400e; }
+
+      /* Tarjeta de anatomía: desglose línea a línea (p. ej. la factura) */
+      .anatomy {
+        background: #fff;
+        border: 1px solid #e7e5e4;
+        border-radius: .9rem;
+        padding: 1.1rem 1.25rem;
+        margin: 1.4rem 0;
+      }
+      .anatomy h3 { margin-top: 0; }
+      .anatomy ol { margin: 0; padding-left: 1.3rem; }
+      .anatomy li { margin: .55rem 0; }
+      .anatomy li strong { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .anatomy .hint { color: #78716c; font-size: .88rem; }
+
+      /* Bloque CTA hacia la calculadora */
+      .cta-block {
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-radius: .9rem;
+        padding: 1.25rem 1.4rem;
+        margin: 2.2rem 0;
+        text-align: center;
+      }
+      .cta-block p { margin: 0 0 .8rem; color: #78350f; }
+      .cta-block .cta { font-size: 1rem; padding: .65rem 1.25rem; }
+
+      /* Índice del blog */
+      .cards { display: grid; gap: 1rem; margin-top: 1.6rem; }
+      .card {
+        background: #fff;
+        border: 1px solid #e7e5e4;
+        border-radius: .9rem;
+        padding: 1.1rem 1.25rem;
+      }
+      .card h2 { margin: 0 0 .25rem; font-size: 1.25rem; }
+      .card h2 a { text-decoration: none; }
+      .card h2 a:hover { text-decoration: underline; }
+      .card .meta { margin: 0 0 .4rem; }
+      .card p.excerpt {
+        margin: 0;
+        color: #57534e;
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+      }
+
+      footer {
+        margin-top: 3rem;
+        border-top: 1px solid #e7e5e4;
+        padding-top: 1rem;
+        font-size: .82rem;
+        color: #78716c;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body { color: #e7e5e4; background: #1c1917; }
+        a { color: #fbbf24; }
+        a:hover { color: #fcd34d; }
+        .brand { color: #e7e5e4; }
+        header.site, footer { border-color: #44403c; }
+        .lead, .meta, .anatomy .hint, .card p.excerpt { color: #a8a29e; }
+        .anatomy, .card { background: #292524; border-color: #44403c; }
+        .callout, .cta-block { background: rgba(146, 64, 14, .2); border-color: #92400e; color: #fef3c7; }
+        .callout strong, .cta-block p { color: #fde68a; }
+        .cta { background: #f59e0b; color: #451a03; }
+      }
+    </style>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "Blog de SolarVento",
+  "url": "https://solarvento.es/blog/",
+  "inLanguage": "es",
+  "blogPost": [
+    {
+      "@type": "BlogPosting",
+      "headline": "Cómo leer tu factura de la luz (y qué mirar antes de poner placas)",
+      "datePublished": "2026-07-07",
+      "url": "https://solarvento.es/blog/como-leer-tu-factura-de-la-luz.html"
+    }
+  ]
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "SolarVento",
+      "item": "https://solarvento.es/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://solarvento.es/blog/"
+    }
+  ]
+}
+    </script>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="site">
+        <a class="brand" href="/blog/">Solar<span>Vento</span> · Blog</a>
+        <a class="cta" href="/">Calcular mi ahorro</a>
+      </header>
+      <h1>Blog</h1>
+      <p class="lead">
+        Guías prácticas para entender tu factura, dimensionar una instalación de autoconsumo y
+        no dejarte llevar por promesas comerciales. Sin humo: números y normativa española.
+      </p>
+      <div class="cards">
+        <article class="card">
+          <h2><a href="/blog/como-leer-tu-factura-de-la-luz.html">Cómo leer tu factura de la luz (y qué mirar antes de poner placas)</a></h2>
+          <p class="meta"><time datetime="2026-07-07">7 de julio de 2026</time></p>
+          <p class="excerpt">La factura de la luz española, línea a línea y sin jerga: qué es cada cargo, qué son los periodos punta, llano y valle, y las tres cifras que de verdad importan si te estás planteando autoconsumo.</p>
+        </article>
+      </div>
+      <footer>
+        <a href="/">Calculadora solar</a>
+        <span> · </span>
+        <a href="/blog/">Blog</a>
+        <span> · </span>
+        <a href="/faq.html">Preguntas frecuentes</a>
+        <span> · </span>
+        <a href="/ayudas.html">Ayudas por comunidad</a>
+        <span> · </span>
+        <a href="/privacidad.html">Privacidad</a>
+        <p>SolarVento ofrece estimaciones orientativas basadas en datos oficiales; no sustituyen a un estudio técnico en tu tejado.</p>
+      </footer>
+    </main>
+  </body>
+</html>

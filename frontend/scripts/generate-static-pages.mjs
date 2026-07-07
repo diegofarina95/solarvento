@@ -1,19 +1,23 @@
 #!/usr/bin/env node
-// Generador de las páginas estáticas multiidioma (FAQ y política de privacidad)
-// y del sitemap. FUENTE ÚNICA: frontend/content/src/<lang>.json (+ estilos en
-// frontend/content/styles/). Corre en el prebuild de npm, así que public/
-// siempre refleja la fuente; editar los .html generados a mano no sirve de nada.
+// Generador de las páginas estáticas multiidioma (FAQ y política de privacidad),
+// del blog (/blog) y del sitemap. FUENTE ÚNICA: frontend/content/src/<lang>.json
+// y frontend/content/blog/ (+ estilos en frontend/content/styles/). Corre en el
+// prebuild de npm, así que public/ siempre refleja la fuente; editar los .html
+// generados a mano no sirve de nada.
 //
 // Uso:
 //   node scripts/generate-static-pages.mjs           # escribe en public/
 //   node scripts/generate-static-pages.mjs --check   # compara sin escribir (exit 1 si hay deriva)
 
-import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { loadArticles, articlePage, blogIndexPage, blogSitemapEntries } from './blog.mjs'
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const SRC = join(ROOT, 'content', 'src')
+const BLOG_SRC = join(ROOT, 'content', 'blog')
 const STYLES = join(ROOT, 'content', 'styles')
 const PUBLIC = join(ROOT, 'public')
 
@@ -219,7 +223,7 @@ ${body}
 `
 }
 
-function sitemap() {
+function sitemap(blogEntries) {
   const verbose = (loc, changefreq, priority) =>
     `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${LASTMOD}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`
   const compact = (loc, changefreq, priority) =>
@@ -232,6 +236,7 @@ function sitemap() {
     verbose(`${ORIGIN}/faq.html`, 'monthly', '0.8'),
     verbose(`${ORIGIN}/ayudas.html`, 'monthly', '0.7'),
     verbose(`${ORIGIN}/privacidad.html`, 'yearly', '0.3'),
+    ...blogEntries,
     ...others.map((l) => compact(`${ORIGIN}/${pagePath('faq', l)}`, 'monthly', '0.7')),
     ...others.map((l) => compact(`${ORIGIN}/${pagePath('privacidad', l)}`, 'yearly', '0.2')),
     '</urlset>',
@@ -255,7 +260,17 @@ function main() {
     outputs.set(pagePath('faq', lang), faqPage(content, faqCss))
     outputs.set(pagePath('privacidad', lang), privacyPage(content, privacyCss))
   }
-  outputs.set('sitemap.xml', sitemap())
+
+  // Blog: un HTML por artículo + índice, desde content/blog/.
+  const blogCss = readFileSync(join(STYLES, 'blog.css'), 'utf-8')
+  const articles = loadArticles(BLOG_SRC)
+  if (articles.length === 0) throw new Error('content/blog está vacío')
+  for (const article of articles) {
+    outputs.set(join('blog', `${article.slug}.html`), articlePage(article, blogCss))
+  }
+  outputs.set(join('blog', 'index.html'), blogIndexPage(articles, blogCss))
+
+  outputs.set('sitemap.xml', sitemap(blogSitemapEntries(articles)))
 
   // Paridad: mismas preguntas/secciones en todos los idiomas que en es.
   const ref = JSON.parse(readFileSync(join(SRC, 'es.json'), 'utf-8'))
@@ -267,6 +282,7 @@ function main() {
       throw new Error(`${lang}: nº de secciones de privacidad distinto de es`)
   }
 
+  mkdirSync(join(PUBLIC, 'blog'), { recursive: true })
   let drift = 0
   for (const [name, html] of outputs) {
     const target = join(PUBLIC, name)
