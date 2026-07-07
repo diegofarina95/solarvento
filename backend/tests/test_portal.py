@@ -679,3 +679,74 @@ def test_preview_muestra_el_widget(client, monkeypatch, tmp_path):
     r = client.get("/preview/factura")
     assert r.status_code == 200
     assert 'action="/schedule/factura"' in r.text
+
+
+# --- Helper de traducción compartido (subida automática + botón Traducir) ---
+
+class FakeSettingsConClave:
+    resolved_openai_api_key = "sk-test"
+    openai_base_url = "https://test/v1"
+
+
+class FakeSettingsSinClave:
+    resolved_openai_api_key = None
+    openai_base_url = "https://test/v1"
+
+
+@pytest.fixture
+def grupo_es(monkeypatch, tmp_path):
+    content = tmp_path / "content"
+    content.mkdir()
+    (content / "factura.html").write_text(FM.format(t="Factura"))
+    monkeypatch.setattr(portal, "CONTENT_BLOG", content)
+    return content
+
+
+def fake_translate_ok(meta, body, lang, **kwargs):
+    return {"title": f"T {lang}", "description": "d", "keywords": "k",
+            "excerpt": "e", "slug": f"slug-{lang}", "body_html": "<p>tr</p>"}
+
+
+def test_helper_traduce_los_que_faltan(grupo_es, monkeypatch):
+    monkeypatch.setattr(portal, "get_settings", lambda: FakeSettingsConClave())
+    monkeypatch.setattr(portal.translate_blog, "translate_article", fake_translate_ok)
+    written, errors = portal.generate_missing_translations("factura")
+    assert sorted(written) == ["ca", "en", "eu", "gl"]
+    assert errors == {}
+    for lang in ("en", "ca", "gl", "eu"):
+        assert (grupo_es / lang / "factura.html").exists()
+
+
+def test_helper_fallo_parcial_escribe_el_resto(grupo_es, monkeypatch):
+    monkeypatch.setattr(portal, "get_settings", lambda: FakeSettingsConClave())
+
+    def translate(meta, body, lang, **kwargs):
+        if lang == "gl":
+            raise portal.translate_blog.BlogTranslationError("gl: la API dijo no")
+        return fake_translate_ok(meta, body, lang)
+
+    monkeypatch.setattr(portal.translate_blog, "translate_article", translate)
+    written, errors = portal.generate_missing_translations("factura")
+    assert sorted(written) == ["ca", "en", "eu"]
+    assert "gl" in errors
+    assert not (grupo_es / "gl" / "factura.html").exists()
+
+
+def test_helper_sin_clave_no_intenta_nada(grupo_es, monkeypatch):
+    monkeypatch.setattr(portal, "get_settings", lambda: FakeSettingsSinClave())
+    monkeypatch.setattr(
+        portal.translate_blog, "translate_article",
+        lambda *a, **k: pytest.fail("no debe llamarse sin clave"),
+    )
+    written, errors = portal.generate_missing_translations("factura")
+    assert written == []
+    assert "*" in errors
+
+
+def test_helper_sin_idiomas_pendientes(grupo_es, monkeypatch):
+    for lang in ("en", "ca", "gl", "eu"):
+        d = grupo_es / lang
+        d.mkdir()
+        (d / "factura.html").write_text(FM.format(t=f"T {lang}"))
+    written, errors = portal.generate_missing_translations("factura")
+    assert (written, errors) == ([], {})

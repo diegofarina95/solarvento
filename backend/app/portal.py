@@ -422,6 +422,48 @@ def restore_aside() -> None:
         run_generate()
 
 
+def generate_missing_translations(stem: str) -> tuple[list[str], dict[str, str]]:
+    """Traduce en paralelo los idiomas que falten del grupo y escribe borradores.
+
+    Compartido por la subida (automática) y el botón «Traducir» (reintento).
+    Asume el LOCK cogido y NO ejecuta el generador (eso es del caller).
+    Devuelve (idiomas_escritos, errores_por_idioma); sin clave de API no
+    intenta nada — la subida no debe bloquearse por OpenAI."""
+    missing = [lang for lang in TRANSLATION_LANGS if not content_path(lang, stem).exists()]
+    if not missing:
+        return [], {}
+    settings = get_settings()
+    api_key = settings.resolved_openai_api_key
+    if not api_key:
+        return [], {"*": "sin OPENAI_API_KEY en backend/.env"}
+    raw = content_path("es", stem).read_text()
+    meta = parse_frontmatter(raw)
+    body = re.sub(r"^---\r?\n[\s\S]*?\r?\n---\r?\n", "", raw).strip()
+
+    def one(lang: str):
+        result = translate_blog.translate_article(
+            meta, body, lang, api_key=api_key, base_url=settings.openai_base_url
+        )
+        return lang, translate_blog.compose_file(meta, result, lang)
+
+    outcomes: dict[str, str] = {}
+    errors: dict[str, str] = {}
+    with ThreadPoolExecutor(max_workers=len(missing)) as pool:
+        for future in [pool.submit(one, lang) for lang in missing]:
+            try:
+                lang, content = future.result()
+                outcomes[lang] = content
+            except translate_blog.BlogTranslationError as exc:
+                errors[str(exc).split(":", 1)[0]] = str(exc)
+    written = []
+    for lang, content in outcomes.items():
+        path = content_path(lang, stem)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        written.append(lang)
+    return written, errors
+
+
 # --- HTML del portal ---------------------------------------------------------
 
 CSS = """
@@ -891,51 +933,25 @@ def translate(stem: str):
     src = content_path("es", stem)
     if not valid_filename(f"{stem}.html") or not src.exists():
         return error_page("No encontrado", f"No existe el artículo «{stem}».", 404)
-    missing = [lang for lang in TRANSLATION_LANGS if not content_path(lang, stem).exists()]
-    if not missing:
+    if not [lang for lang in TRANSLATION_LANGS if not content_path(lang, stem).exists()]:
         return error_page("Nada que traducir", "Ya existe en todos los idiomas.", 409)
-    settings = get_settings()
-    api_key = settings.resolved_openai_api_key
-    if not api_key:
+    if not get_settings().resolved_openai_api_key:
         return error_page("Sin clave de OpenAI", "No hay OPENAI_API_KEY en backend/.env.", 500)
     if not LOCK.acquire(blocking=False):
         return error_page("Ocupado", "Hay otra operación en curso; reintenta.", 423)
     try:
-        raw = src.read_text()
-        meta = parse_frontmatter(raw)
-        body = re.sub(r"^---\r?\n[\s\S]*?\r?\n---\r?\n", "", raw).strip()
-
-        def one(lang: str):
-            result = translate_blog.translate_article(
-                meta, body, lang, api_key=api_key, base_url=settings.openai_base_url
-            )
-            return lang, translate_blog.compose_file(meta, result, lang)
-
-        outcomes: dict[str, str] = {}
-        errors: dict[str, str] = {}
-        with ThreadPoolExecutor(max_workers=len(missing)) as pool:
-            for future in [pool.submit(one, lang) for lang in missing]:
-                try:
-                    lang, content = future.result()
-                    outcomes[lang] = content
-                except translate_blog.BlogTranslationError as exc:
-                    errors[str(exc).split(":", 1)[0]] = str(exc)
-        written = []
-        for lang, content in outcomes.items():
-            path = content_path(lang, stem)
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(content, encoding="utf-8")
-            written.append(path)
-        ok, out = run_generate()
-        if not ok:
-            for path in written:
-                path.unlink(missing_ok=True)
-            run_generate()
-            return error_page("El generador rechazó las traducciones", out, 422)
+        written, errors = generate_missing_translations(stem)
+        if written:
+            ok, out = run_generate()
+            if not ok:
+                for lang in written:
+                    content_path(lang, stem).unlink(missing_ok=True)
+                run_generate()
+                return error_page("El generador rechazó las traducciones", out, 422)
     finally:
         LOCK.release()
     chips = " · ".join(
-        f'<a href="/preview/{lang}/{stem}">{lang.upper()} ✏️</a>' for lang in outcomes
+        f'<a href="/preview/{lang}/{stem}">{lang.upper()} ✏️</a>' for lang in written
     )
     fails = "".join(f"<pre>{html.escape(e)}</pre>" for e in errors.values())
     return page(
@@ -945,7 +961,7 @@ def translate(stem: str):
 {fails}
 <p class="meta">Revisa cada preview y usa «Publicar todo lo pendiente» cuando estén bien.</p>
 <p><a href="/">← Volver al portal</a></p>""",
-        200 if outcomes else 502,
+        200 if written else 502,
     )
 
 
