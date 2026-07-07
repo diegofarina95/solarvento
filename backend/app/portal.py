@@ -449,6 +449,15 @@ CSS = """
   button.danger { color:var(--bad); }
   form.inline { display:inline; }
   input[type=file] { font-size:14px; }
+  form.schedule { display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  input[type=datetime-local] { font:inherit; font-size:14px; color:var(--ink);
+    background:var(--card); border:1px solid var(--line); border-radius:8px;
+    padding:7px 10px; }
+  input[type=datetime-local]:hover, button:hover { border-color:var(--amber); }
+  button.primary:hover { background:#92400e; border-color:#92400e; }
+  button.danger:hover { border-color:var(--bad); }
+  input:focus-visible, button:focus-visible { outline:2px solid var(--amber);
+    outline-offset:2px; }
   .ok { color:var(--ok); } .bad { color:var(--bad); }
   pre { background:#1c1917; color:#e7e5e4; padding:12px; border-radius:8px;
         overflow-x:auto; font-size:13px; white-space:pre-wrap; }
@@ -569,8 +578,9 @@ def schedule_widget(stem: str, entry: dict | None, has_drafts: bool) -> str:
             return ""
         default = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%dT09:00")
         return (
-            f'<form class="inline" method="post" action="/schedule/{stem}">'
-            f'<input type="datetime-local" name="publish_at" value="{default}" required /> '
+            f'<form class="schedule" method="post" action="/schedule/{stem}">'
+            '<span class="meta">⏰ Sale el</span>'
+            f'<input type="datetime-local" name="publish_at" value="{default}" required />'
             "<button>Programar</button></form>"
         )
     when = format_local(entry["publish_at"])
