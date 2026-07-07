@@ -708,12 +708,13 @@ def index():
 <p class="meta">Sube un <code>.html</code> con el frontmatter del blog
 (<code>--- title/description/keywords/date/excerpt ---</code> + cuerpo HTML).
 La URL pública usa el campo opcional <code>slug:</code> del frontmatter; si no lo hay,
-el nombre del archivo (<code>minusculas-con-guiones.html</code>). Las traducciones
-(EN/CA/GL/EU) se generan con el botón «Traducir» y se revisan antes de publicar.</p>
+el nombre del archivo (<code>minusculas-con-guiones.html</code>). Al subir se
+generan solas las traducciones (EN/CA/GL/EU) — tarda un minuto —; si alguna
+falla, el botón «Traducir» la reintenta.</p>
 <form class="card" method="post" action="/upload" enctype="multipart/form-data">
   <div class="row">
     <input type="file" name="file" accept=".html" required />
-    <button class="primary">Subir y previsualizar</button>
+    <button class="primary">Subir, traducir y previsualizar</button>
   </div>
 </form>
 <h2>Artículos ({len(groups)})</h2>
@@ -764,6 +765,15 @@ async def upload(file: UploadFile):
             summary = generator_error_summary(out)
             detail = f"{summary}\n\n— salida completa —\n{out}" if summary else out
             return error_page("El generador rechazó el artículo", detail, 422)
+        # Traducción automática: el grupo nace completo; los fallos no
+        # bloquean (quedan pendientes para el botón «Traducir»).
+        written, _errors = generate_missing_translations(target.stem)
+        if written:
+            ok, out = run_generate()
+            if not ok:
+                for lang in written:
+                    content_path(lang, target.stem).unlink(missing_ok=True)
+                run_generate()
     finally:
         LOCK.release()
     return RedirectResponse(f"/preview/{target.stem}", status_code=303)

@@ -275,6 +275,7 @@ def test_upload_sin_frontmatter_da_ayuda(client, monkeypatch, tmp_path):
 def test_upload_con_bom_se_normaliza(client, monkeypatch, tmp_path):
     monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
     monkeypatch.setattr(portal, "run_generate", lambda: (True, ""))
+    monkeypatch.setattr(portal, "generate_missing_translations", lambda stem: ([], {}))
     raw = "﻿---\ntitle: x\ndescription: d\nkeywords: k\ndate: 2026-07-07\nexcerpt: e\n---\n<p>x</p>".encode("utf-8")
     r = client.post(
         "/upload", files={"file": ("con-bom.html", raw)}, follow_redirects=False
@@ -290,6 +291,7 @@ def test_upload_crea_directorio_si_falta(client, monkeypatch, tmp_path):
     dest = tmp_path / "content" / "blog"
     monkeypatch.setattr(portal, "CONTENT_BLOG", dest)
     monkeypatch.setattr(portal, "run_generate", lambda: (True, ""))
+    monkeypatch.setattr(portal, "generate_missing_translations", lambda stem: ([], {}))
     raw = b"---\ntitle: x\ndescription: d\nkeywords: k\ndate: 2026-07-07\nexcerpt: e\n---\n<p>x</p>"
     r = client.post("/upload", files={"file": ("nuevo.html", raw)}, follow_redirects=False)
     assert r.status_code == 303
@@ -750,3 +752,58 @@ def test_helper_sin_idiomas_pendientes(grupo_es, monkeypatch):
         (d / "factura.html").write_text(FM.format(t=f"T {lang}"))
     written, errors = portal.generate_missing_translations("factura")
     assert (written, errors) == ([], {})
+
+
+# --- Subida con traducción automática ---
+
+RAW_OK = b"---\ntitle: x\ndescription: d\nkeywords: k\ndate: 2026-07-07\nexcerpt: e\n---\n<p>x</p>"
+
+
+def test_upload_genera_traducciones(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
+    monkeypatch.setattr(portal, "run_generate", lambda: (True, ""))
+    monkeypatch.setattr(portal, "get_settings", lambda: FakeSettingsConClave())
+    monkeypatch.setattr(portal.translate_blog, "translate_article", fake_translate_ok)
+    r = client.post("/upload", files={"file": ("nuevo.html", RAW_OK)}, follow_redirects=False)
+    assert r.status_code == 303
+    for lang in ("en", "ca", "gl", "eu"):
+        assert (tmp_path / lang / "nuevo.html").exists()
+
+
+def test_upload_traduccion_parcial_no_bloquea(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
+    monkeypatch.setattr(portal, "run_generate", lambda: (True, ""))
+    monkeypatch.setattr(portal, "get_settings", lambda: FakeSettingsConClave())
+
+    def translate(meta, body, lang, **kwargs):
+        if lang in ("gl", "eu"):
+            raise portal.translate_blog.BlogTranslationError(f"{lang}: caído")
+        return fake_translate_ok(meta, body, lang)
+
+    monkeypatch.setattr(portal.translate_blog, "translate_article", translate)
+    r = client.post("/upload", files={"file": ("nuevo.html", RAW_OK)}, follow_redirects=False)
+    assert r.status_code == 303
+    assert (tmp_path / "en" / "nuevo.html").exists()
+    assert not (tmp_path / "gl" / "nuevo.html").exists()
+
+
+def test_upload_sin_clave_sube_sin_traducir(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
+    monkeypatch.setattr(portal, "run_generate", lambda: (True, ""))
+    monkeypatch.setattr(portal, "get_settings", lambda: FakeSettingsSinClave())
+    r = client.post("/upload", files={"file": ("nuevo.html", RAW_OK)}, follow_redirects=False)
+    assert r.status_code == 303
+    assert (tmp_path / "nuevo.html").exists()
+    assert not (tmp_path / "en").exists()
+
+
+def test_upload_rollback_si_generador_rechaza_traducciones(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(portal, "CONTENT_BLOG", tmp_path)
+    monkeypatch.setattr(portal, "get_settings", lambda: FakeSettingsConClave())
+    monkeypatch.setattr(portal.translate_blog, "translate_article", fake_translate_ok)
+    gen = iter([(True, ""), (False, "Error: hreflang roto"), (True, "")])
+    monkeypatch.setattr(portal, "run_generate", lambda: next(gen))
+    r = client.post("/upload", files={"file": ("nuevo.html", RAW_OK)}, follow_redirects=False)
+    assert r.status_code == 303  # la subida del español NO se pierde
+    assert (tmp_path / "nuevo.html").exists()
+    assert not (tmp_path / "en" / "nuevo.html").exists()  # traducciones revertidas
