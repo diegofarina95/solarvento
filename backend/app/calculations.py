@@ -2,6 +2,12 @@
 
 import math
 
+# Autoconsumo directo típico de una vivienda SIN batería (25-45% de la
+# producción). Se usa en la ruta degradada (seriescalc caído): asumir que todo
+# lo producido hasta el consumo se autoconsume sería el caso más optimista
+# justo cuando menos datos hay.
+FALLBACK_SELF_CONSUMPTION_FACTOR = 0.40
+
 
 def loss_vs_optimal_pct(user_annual_kwh: float, optimal_annual_kwh: float) -> float:
     """% de producción perdida por usar la inclinación/orientación real frente a la óptima."""
@@ -17,16 +23,25 @@ def annual_savings_eur(
     annual_production_kwh: float,
     price_eur_kwh: float,
     annual_consumption_kwh: float | None = None,
+    self_consumption_factor: float | None = None,
 ) -> float:
     """Ahorro anual estimado.
 
     Si se conoce el consumo, solo la energía que puede autoconsumirse ahorra
     dinero (min(producción, consumo)); sin consumo se asume que toda la
-    producción se aprovecha.
+    producción se aprovecha. Con self_consumption_factor (ruta degradada, sin
+    simulación horaria) solo esa fracción de la producción cuenta como
+    autoconsumida, siempre con el consumo como techo.
     """
     usable = annual_production_kwh
     if annual_consumption_kwh is not None:
-        usable = min(annual_production_kwh, annual_consumption_kwh)
+        if self_consumption_factor is not None:
+            usable = min(
+                annual_production_kwh * self_consumption_factor,
+                annual_consumption_kwh,
+            )
+        else:
+            usable = min(annual_production_kwh, annual_consumption_kwh)
     return round(usable * price_eur_kwh, 2)
 
 

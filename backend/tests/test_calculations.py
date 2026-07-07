@@ -55,3 +55,21 @@ class TestRecommendedPanels:
     def test_invalid_production_raises(self):
         with pytest.raises(ValueError):
             calculations.recommended_panels(4500, 0)
+
+
+def test_factor_de_autoconsumo_en_fallback():
+    # Ruta degradada (seriescalc caído): sin simulación horaria, asumir que
+    # todo lo producido hasta el consumo se autoconsume es el caso MÁS
+    # optimista; el factor típico sin batería es ~40%.
+    assert calculations.annual_savings_eur(
+        10000, 0.20, 6000, self_consumption_factor=0.4
+    ) == 800.0
+    # El consumo sigue siendo el techo aunque el factor dé más.
+    assert calculations.annual_savings_eur(
+        20000, 0.20, 6000, self_consumption_factor=0.4
+    ) == 1200.0
+    # Sin consumo no hay contra qué autoconsumir: el factor no aplica.
+    assert calculations.annual_savings_eur(
+        10000, 0.20, None, self_consumption_factor=0.4
+    ) == 2000.0
+    assert calculations.FALLBACK_SELF_CONSUMPTION_FACTOR == 0.40

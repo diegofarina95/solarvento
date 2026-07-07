@@ -1278,6 +1278,7 @@ def _confidence_summary(
     consumption_summary: dict | None,
     price_source: str,
     price_quote: dict,
+    hourly_degraded: bool = False,
 ) -> dict:
     bill_count = consumption_summary.get("bill_count", 0) if consumption_summary else 0
     priced_bill_count = (
@@ -1296,6 +1297,10 @@ def _confidence_summary(
         estimated_inputs.append("electricity_price")
     if price_quote.get("fallback_used", True):
         estimated_inputs.append("market_prices")
+    if hourly_degraded:
+        # PVGIS seriescalc no respondió: el autoconsumo es un factor típico,
+        # no una simulación horaria de esta casa.
+        estimated_inputs.append("hourly_simulation")
 
     observed_months = (
         consumption_summary.get("observed_months", []) if consumption_summary else []
@@ -1316,6 +1321,8 @@ def _confidence_summary(
         level = "medium"
     else:
         level = "low"
+    if hourly_degraded:
+        level = "low"
 
     hints = []
     # Con un año completo de datos reales no tiene sentido pedir más meses.
@@ -1330,7 +1337,7 @@ def _confidence_summary(
         "bill_count": bill_count,
         "priced_bill_count": priced_bill_count,
         "real_months": real_months,
-        "pvgis_ok": True,
+        "pvgis_ok": not hourly_degraded,
         "prices_current": prices_current,
         "estimated_inputs": estimated_inputs,
         "improvement_hints": hints,
@@ -1493,30 +1500,51 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
                 )
             )
         needs_hourly = annual_consumption is not None
+        hourly_task_idx = None
         if needs_hourly and has_user_angles:
             tasks.append(
                 pvgis.hourly_profile(
                     req.lat, req.lon, 1.0, req.loss_pct, angle=user_angle, aspect=user_aspect
                 )
             )
-        results = await asyncio.gather(*tasks)
+            hourly_task_idx = len(tasks) - 1
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # PVcalc y precios son imprescindibles: sus errores siguen abortando.
+        # La serie horaria es DEGRADABLE: sin ella hay estimación (peor) con
+        # factor de autoconsumo típico, en vez de dejar al usuario sin nada.
+        for idx, result in enumerate(results):
+            if idx != hourly_task_idx and isinstance(result, BaseException):
+                raise result
 
         price_quote = results[0]
         optimal = results[1]
         user_system = results[2] if has_user_angles else None
-        hourly_production = results[3] if needs_hourly and has_user_angles else None
+        hourly_production = None
+        hourly_degraded = False
+        if hourly_task_idx is not None:
+            hourly_result = results[hourly_task_idx]
+            if isinstance(hourly_result, PVGISError):
+                hourly_degraded = True
+            elif isinstance(hourly_result, BaseException):
+                raise hourly_result
+            else:
+                hourly_production = hourly_result
         selected = user_system or optimal
 
         # Modo básico con consumo: la serie horaria necesita los ángulos óptimos
-        if needs_hourly and hourly_production is None:
-            hourly_production = await pvgis.hourly_profile(
-                req.lat,
-                req.lon,
-                1.0,
-                req.loss_pct,
-                angle=selected["slope_deg"],
-                aspect=selected["azimuth_deg"],
-            )
+        if needs_hourly and hourly_production is None and not hourly_degraded:
+            try:
+                hourly_production = await pvgis.hourly_profile(
+                    req.lat,
+                    req.lon,
+                    1.0,
+                    req.loss_pct,
+                    angle=selected["slope_deg"],
+                    aspect=selected["azimuth_deg"],
+                )
+            except PVGISError:
+                hourly_degraded = True
     except PVGISError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
@@ -1805,8 +1833,15 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         # (incluye compensación de excedentes): más realista que el modelo simple
         savings = scenarios[0]["annual_savings_eur"]
     else:
+        # Con consumo conocido solo se llega aquí degradados (seriescalc caído):
+        # sin simulación horaria, se asume el autoconsumo típico sin batería.
         savings = calculations.annual_savings_eur(
-            selected["annual_production_kwh"], effective_price, annual_consumption
+            selected["annual_production_kwh"],
+            effective_price,
+            annual_consumption,
+            self_consumption_factor=(
+                calculations.FALLBACK_SELF_CONSUMPTION_FACTOR if hourly_degraded else None
+            ),
         )
         savings = _cap_savings_to_annual_spend(
             savings, annual_consumption, effective_price, export_scheme
@@ -1977,7 +2012,9 @@ async def solar_estimate(req: SolarEstimateRequest, request: Request):
         subsidies=subsidies_info,
         grid_limits=grid_limits,
         typical_day=typical_day,
-        confidence=_confidence_summary(consumption_summary, price_source, price_quote),
+        confidence=_confidence_summary(
+            consumption_summary, price_source, price_quote, hourly_degraded
+        ),
         precheck=_precheck(consumption_summary, economics, recommended_system),
     )
 

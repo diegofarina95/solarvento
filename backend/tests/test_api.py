@@ -2030,3 +2030,43 @@ def test_subsidies_valid_record_applies_per_scenario(respx_mock, client, monkeyp
         assert s["payback_with_subsidy_years"] < s["payback_years"]
     # el óptimo (<8 kWp) recibe más ayuda por kWp instalado que el grande (topado)
     assert opt["subsidy_grant_eur"] / opt["power_kwp"] > cov["subsidy_grant_eur"] / cov["power_kwp"]
+
+
+@respx.mock
+def test_seriescalc_caido_degrada_con_factor_en_vez_de_502(respx_mock, client):
+    # Bloque 2 (jul-2026): con consumo conocido y seriescalc caído, antes se
+    # devolvía 502 (el peor caso técnico dejaba sin resultado). Ahora se
+    # degrada: ahorro con factor de autoconsumo típico (40%) y marca visible.
+    def pvcalc_side_effect(request):
+        params = request.url.params
+        if params.get("optimalangles") == "1":
+            return Response(200, json=pvcalc_response(slope=35, azimuth=0))
+        return Response(200, json=pvcalc_response(
+            slope=float(params.get("angle", 35)),
+            azimuth=float(params.get("aspect", 0)),
+            optimal=False,
+        ))
+
+    respx_mock.get(f"{PVGIS}/PVcalc").mock(side_effect=pvcalc_side_effect)
+    respx_mock.get(f"{PVGIS}/seriescalc").mock(return_value=Response(500))
+
+    resp = client.post("/api/solar-estimate", json={
+        "lat": 42.88, "lon": -8.54, "peak_power_kwp": 5.0,
+        "country_code": "ES", "annual_consumption_kwh": 6000,
+    })
+    assert resp.status_code == 200
+    d = resp.json()
+    conf = d["confidence"]
+    assert conf["pvgis_ok"] is False
+    assert "hourly_simulation" in conf["estimated_inputs"]
+    # Sin serie horaria no hay análisis de batería ni barrido de tamaños.
+    assert d["battery_analysis"] is None
+
+    eco = d["economics"]
+    production = d["annual_energy"]["production_kwh"]
+    price = eco.get("effective_price_eur_kwh") or eco["electricity_price_eur_kwh"]
+    expected = round(min(0.40 * production, 6000) * price, 2)
+    assert eco["annual_savings_eur"] == pytest.approx(expected, rel=0.01)
+    # Y desde luego menos que el min(prod, consumo) de antes.
+    old_optimistic = min(production, 6000) * price
+    assert eco["annual_savings_eur"] < old_optimistic
