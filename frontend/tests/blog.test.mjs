@@ -12,7 +12,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
-import { loadArticles } from '../scripts/blog.mjs'
+import { articlePage, loadArticles } from '../scripts/blog.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const BLOG_SRC = join(ROOT, 'content', 'blog')
@@ -41,10 +41,10 @@ test('cada artículo lleva metadatos SEO completos y su contenido íntegro', () 
   assert.ok(sources.length >= 1, 'no hay artículos en content/blog')
   for (const file of sources) {
     const slug = slugOf(file)
-    const html = readPublic(join('blog', `${slug}.html`))
+    const html = readPublic(join('blog', slug, 'index.html'))
 
-    // Canonical exacto y robots indexable
-    assert.match(html, new RegExp(`rel="canonical" href="${ORIGIN}/blog/${slug}\\.html"`))
+    // Canonical exacto (URL limpia, sin .html) y robots indexable
+    assert.match(html, new RegExp(`rel="canonical" href="${ORIGIN}/blog/${slug}/"`))
     assert.match(html, /name="robots" content="index, follow/)
 
     // OG de artículo coherente con el canonical
@@ -60,7 +60,7 @@ test('cada artículo lleva metadatos SEO completos y su contenido íntegro', () 
     const lds = ldBlocks(html)
     const article = lds.find((ld) => ld['@type'] === 'Article')
     assert.ok(article, `${slug}: falta JSON-LD Article`)
-    assert.equal(article.mainEntityOfPage, `${ORIGIN}/blog/${slug}.html`)
+    assert.equal(article.mainEntityOfPage, `${ORIGIN}/blog/${slug}/`)
     assert.ok(article.headline && article.datePublished, `${slug}: Article incompleto`)
     const crumbs = lds.find((ld) => ld['@type'] === 'BreadcrumbList')
     assert.ok(crumbs, `${slug}: falta BreadcrumbList`)
@@ -92,9 +92,14 @@ test('el tema día/noche sigue al sol de España, no al modo del sistema', () =>
   // por ecuación solar en Europe/Madrid. Si el blog escuchara
   // prefers-color-scheme podría verse oscuro mientras la calculadora está en
   // claro (o al revés).
-  const pages = ['index.html', ...readdirSync(BLOG_SRC).filter((f) => f.endsWith('.html'))]
+  const pages = [
+    join('blog', 'index.html'),
+    ...readdirSync(BLOG_SRC)
+      .filter((f) => f.endsWith('.html'))
+      .map((f) => join('blog', slugOf(f), 'index.html')),
+  ]
   for (const page of pages) {
-    const html = readPublic(join('blog', page))
+    const html = readPublic(page)
     assert.ok(!html.includes('prefers-color-scheme'), `${page}: usa el modo del sistema`)
     assert.match(html, /\[data-theme='night'\]/, `${page}: falta la paleta de noche`)
     assert.match(html, /setAttribute\('data-theme', ?'night'\)/, `${page}: falta el cálculo solar`)
@@ -114,7 +119,7 @@ test('el índice /blog/ lista todos los artículos con título, fecha y extracto
 
   for (const file of readdirSync(BLOG_SRC).filter((f) => f.endsWith('.html'))) {
     const slug = slugOf(file)
-    assert.ok(html.includes(`href="/blog/${slug}.html"`), `índice sin enlace a ${slug}`)
+    assert.ok(html.includes(`href="/blog/${slug}/"`), `índice sin enlace a ${slug}`)
     const src = readFileSync(join(BLOG_SRC, file), 'utf-8')
     const excerpt = src.match(/^excerpt:\s*(.+)$/m)?.[1]?.trim()
     assert.ok(excerpt && html.includes(excerpt), `índice sin extracto de ${slug}`)
@@ -155,6 +160,22 @@ test('un slug inválido en el frontmatter se rechaza', () => {
   assert.throws(() => loadArticles(dir), /slug/)
 })
 
+test('el template añade el cta-block si el artículo no trae el suyo', () => {
+  const base = {
+    slug: 's', title: 't', description: 'd', keywords: 'k',
+    date: '2026-07-07', updated: '2026-07-07', excerpt: 'e', lang: 'es',
+  }
+  // Sin cta propio: el template pone el estándar (el embudo nunca se pierde)
+  const sin = articlePage({ ...base, bodyHtml: '<p>x</p>' }, '')
+  assert.equal(sin.match(/class="cta-block"/g)?.length, 1)
+  // Con cta propio: se respeta y no se duplica
+  const con = articlePage(
+    { ...base, bodyHtml: '<p>x</p><div class="cta-block"><a class="cta" href="/">Ir</a></div>' },
+    '',
+  )
+  assert.equal(con.match(/class="cta-block"/g)?.length, 1)
+})
+
 test('dos artículos con el mismo slug público se rechazan', () => {
   const dir = mkdtempSync(join(tmpdir(), 'blog-'))
   writeFileSync(join(dir, 'uno.html'), article('slug: repetido\n'))
@@ -167,9 +188,9 @@ test('el sitemap incluye el índice del blog y cada artículo con su lastmod', (
   assert.ok(xml.includes(`<loc>${ORIGIN}/blog/</loc>`), 'sitemap sin /blog/')
   for (const file of readdirSync(BLOG_SRC).filter((f) => f.endsWith('.html'))) {
     const slug = slugOf(file)
-    assert.ok(xml.includes(`<loc>${ORIGIN}/blog/${slug}.html</loc>`), `sitemap sin ${slug}`)
+    assert.ok(xml.includes(`<loc>${ORIGIN}/blog/${slug}/</loc>`), `sitemap sin ${slug}`)
     const date = readFileSync(join(BLOG_SRC, file), 'utf-8').match(/^date:\s*(\S+)/m)?.[1]
-    const entry = xml.split(`<loc>${ORIGIN}/blog/${slug}.html</loc>`)[1]?.split('</url>')[0] ?? ''
+    const entry = xml.split(`<loc>${ORIGIN}/blog/${slug}/</loc>`)[1]?.split('</url>')[0] ?? ''
     assert.ok(entry.includes(`<lastmod>${date}</lastmod>`), `${slug}: lastmod ≠ date del artículo`)
   }
 })

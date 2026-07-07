@@ -148,7 +148,7 @@ def test_index_lista_articulos(client, monkeypatch):
     r = client.get("/")
     assert r.status_code == 200
     assert "Uno" in r.text
-    assert "https://solarvento.es/blog/uno-largo-seo.html" in r.text
+    assert "https://solarvento.es/blog/uno-largo-seo/" in r.text  # URL limpia, sin .html
     assert 'action="/delete/uno"' in r.text  # las rutas del portal van por stem
 
 
@@ -168,7 +168,8 @@ def test_draft_resuelve_slug_del_frontmatter(client, monkeypatch, tmp_path):
     content, public = tmp_path / "content", tmp_path / "public"
     content.mkdir(), public.mkdir()
     (content / "corto.html").write_text("---\ntitle: t\nslug: url-larga-seo\n---\n<p>x</p>")
-    (public / "url-larga-seo.html").write_text("<html>GENERADO</html>")
+    (public / "url-larga-seo").mkdir()
+    (public / "url-larga-seo" / "index.html").write_text("<html>GENERADO</html>")
     monkeypatch.setattr(portal, "CONTENT_BLOG", content)
     monkeypatch.setattr(portal, "PUBLIC_BLOG", public)
     r = client.get("/draft/corto")

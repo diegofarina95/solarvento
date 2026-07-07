@@ -266,7 +266,8 @@ function main() {
   const articles = loadArticles(BLOG_SRC)
   if (articles.length === 0) throw new Error('content/blog está vacío')
   for (const article of articles) {
-    outputs.set(join('blog', `${article.slug}.html`), articlePage(article, blogCss))
+    // URL limpia /blog/<slug>/: el artículo vive en blog/<slug>/index.html
+    outputs.set(join('blog', article.slug, 'index.html'), articlePage(article, blogCss))
   }
   outputs.set(join('blog', 'index.html'), blogIndexPage(articles, blogCss))
 
@@ -282,10 +283,10 @@ function main() {
       throw new Error(`${lang}: nº de secciones de privacidad distinto de es`)
   }
 
-  mkdirSync(join(PUBLIC, 'blog'), { recursive: true })
   let drift = 0
   for (const [name, html] of outputs) {
     const target = join(PUBLIC, name)
+    if (!check) mkdirSync(dirname(target), { recursive: true })
     if (check) {
       const current = existsSync(target) ? readFileSync(target, 'utf-8') : null
       if (current !== html) {

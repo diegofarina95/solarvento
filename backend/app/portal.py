@@ -213,7 +213,7 @@ def sync_to_prod() -> tuple[bool, str]:
 
 
 def check_live(slug: str) -> str:
-    url = f"{ORIGIN}/blog/{slug}.html"
+    url = f"{ORIGIN}/blog/{slug}/"
     try:
         with urllib.request.urlopen(url, timeout=10) as resp:
             return f"✅ {url} responde {resp.status}"
@@ -368,8 +368,8 @@ def index():
     )
     pub_html = "".join(
         f"""<div class="card row">
-  <div><a href="{ORIGIN}/blog/{a["slug"]}.html" target="_blank">{html.escape(a["title"])}</a>
-    <div class="meta">{html.escape(a["date"])} · /blog/{a["slug"]}.html</div></div>
+  <div><a href="{ORIGIN}/blog/{a["slug"]}/" target="_blank">{html.escape(a["title"])}</a>
+    <div class="meta">{html.escape(a["date"])} · /blog/{a["slug"]}/</div></div>
   <form class="inline" method="post" action="/delete/{a["stem"]}"
         onsubmit="return confirm('¿Borrar «{html.escape(a["title"])}» del blog y de prod?')">
     <button class="danger">Borrar</button>
@@ -453,7 +453,7 @@ def preview(stem: str):
         f"Preview · {title}",
         f"""
 <h1>Preview: {html.escape(title)}</h1>
-<p class="meta">Así quedará en {ORIGIN}/blog/{pub}.html (índice y sitemap se actualizan solos).</p>
+<p class="meta">Así quedará en {ORIGIN}/blog/{pub}/ (índice y sitemap se actualizan solos).</p>
 <div class="actions">
   <form class="inline" method="post" action="/publish/{stem}">
     <button class="primary">Publicar en solarvento.es</button>
@@ -472,7 +472,7 @@ def draft(stem: str):
     src = CONTENT_BLOG / f"{stem}.html"
     if not valid_filename(f"{stem}.html") or not src.exists():
         return error_page("No encontrado", f"No hay borrador «{stem}».", 404)
-    f = PUBLIC_BLOG / f"{public_slug(src)}.html"
+    f = PUBLIC_BLOG / public_slug(src) / "index.html"
     if not f.exists():
         return error_page("No encontrado", f"No hay página generada para «{stem}».", 404)
     return HTMLResponse(f.read_text())
@@ -509,7 +509,7 @@ def publish(stem: str):
         "Publicado",
         f"""<h1 class="ok">Publicado ✅</h1>
 <p><strong>{html.escape(title)}</strong> ya está en
-<a href="{ORIGIN}/blog/{slug}.html" target="_blank">{ORIGIN}/blog/{slug}.html</a></p>
+<a href="{ORIGIN}/blog/{slug}/" target="_blank">{ORIGIN}/blog/{slug}/</a></p>
 <p>{html.escape(live)}</p>
 <p class="meta">Commit en git hecho; el próximo deploy completo regenerará exactamente lo mismo.</p>
 <p><a href="/">← Volver al portal</a></p>""",
@@ -526,7 +526,7 @@ def discard(stem: str):
     try:
         pub = public_slug(src)
         src.unlink()
-        (PUBLIC_BLOG / f"{pub}.html").unlink(missing_ok=True)
+        shutil.rmtree(PUBLIC_BLOG / pub, ignore_errors=True)
         run_generate()  # índice/sitemap vuelven al estado del último commit
     finally:
         LOCK.release()
@@ -551,7 +551,7 @@ def delete(stem: str):
         title = parse_frontmatter(src.read_text()).get("title", stem)
         pub = public_slug(src)
         src.unlink()
-        (PUBLIC_BLOG / f"{pub}.html").unlink(missing_ok=True)
+        shutil.rmtree(PUBLIC_BLOG / pub, ignore_errors=True)
         ok, out = run_generate()
         if not ok:
             return error_page("El generador falló tras borrar", out, 500)

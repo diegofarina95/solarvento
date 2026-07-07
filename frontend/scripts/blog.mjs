@@ -172,7 +172,7 @@ function articleLd(a) {
     datePublished: a.date,
     dateModified: a.updated,
     inLanguage: a.lang,
-    mainEntityOfPage: `${ORIGIN}/blog/${a.slug}.html`,
+    mainEntityOfPage: `${ORIGIN}/blog/${a.slug}/`,
     image: `${ORIGIN}/og-image.png`,
     author: { '@type': 'Organization', name: 'SolarVento', url: `${ORIGIN}/` },
     publisher: {
@@ -197,8 +197,21 @@ function breadcrumbLd(items) {
   }
 }
 
+// Embudo hacia la calculadora: todo artículo termina en un cta-block. Si el
+// autor coloca el suyo (posición o texto propios), se respeta; si no, el
+// template añade este estándar.
+const DEFAULT_CTA = `<div class="cta-block">
+  <p>¿Quieres saber cuánto ahorrarías con placas en tu tejado?</p>
+  <a class="cta" href="/">Calcular mi ahorro</a>
+</div>`
+
 export function articlePage(a, css) {
-  const path = `blog/${a.slug}.html`
+  // URL limpia: /blog/<slug>/ (el fichero es blog/<slug>/index.html; el
+  // backend sirve índices de directorio con StaticFiles html=True).
+  const path = `blog/${a.slug}/`
+  const bodyHtml = a.bodyHtml.includes('cta-block')
+    ? a.bodyHtml
+    : `${a.bodyHtml}\n${DEFAULT_CTA}`
   const published = `    <meta property="article:published_time" content="${a.date}" />
     <meta property="article:modified_time" content="${a.updated}" />
 `
@@ -238,7 +251,7 @@ ${SITE_HEADER}
       <article>
         <h1>${a.title}</h1>
         <p class="meta"><time datetime="${a.date}">${humanDate(a.date)}</time></p>
-${a.bodyHtml.replace(/^/gm, '        ')}
+${bodyHtml.replace(/^/gm, '        ')}
       </article>
 ${SITE_FOOTER}
     </main>
@@ -258,7 +271,7 @@ export function blogIndexPage(articles, css) {
       '@type': 'BlogPosting',
       headline: a.title,
       datePublished: a.date,
-      url: `${ORIGIN}/blog/${a.slug}.html`,
+      url: `${ORIGIN}/blog/${a.slug}/`,
     })),
   }
   const crumbs = breadcrumbLd([
@@ -268,7 +281,7 @@ export function blogIndexPage(articles, css) {
   const cards = articles
     .map(
       (a) => `        <article class="card">
-          <h2><a href="/blog/${a.slug}.html">${a.title}</a></h2>
+          <h2><a href="/blog/${a.slug}/">${a.title}</a></h2>
           <p class="meta"><time datetime="${a.date}">${humanDate(a.date)}</time></p>
           <p class="excerpt">${a.excerpt}</p>
         </article>`,
@@ -326,7 +339,7 @@ export function blogSitemapEntries(articles) {
   const lines = []
   if (newest) lines.push(compact(`${ORIGIN}/blog/`, newest, 'weekly', '0.8'))
   for (const a of articles) {
-    lines.push(compact(`${ORIGIN}/blog/${a.slug}.html`, a.updated, 'monthly', '0.6'))
+    lines.push(compact(`${ORIGIN}/blog/${a.slug}/`, a.updated, 'monthly', '0.6'))
   }
   return lines
 }
