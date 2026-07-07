@@ -79,7 +79,6 @@ function indentCss(css) {
 // ámbar), CTA a la calculadora y footer con el resto del sitio.
 const SITE_HEADER = `      <header class="site">
         <a class="brand" href="/blog/">
-          <img src="/logo-mark-96.webp" alt="" width="34" height="34" />
           <b>Solar<span>Vento</span></b>
           <small>Blog</small>
         </a>
