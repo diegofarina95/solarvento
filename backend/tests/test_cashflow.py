@@ -186,3 +186,54 @@ def test_marginal_battery_payback_interpolates():
 def test_marginal_battery_payback_none_cases():
     assert cashflow.marginal_battery_payback([100.0] * 30, [100.0] * 30, 500.0) is None
     assert cashflow.marginal_battery_payback([200.0] * 30, [100.0] * 30, 0.0) is None
+
+
+# --- Verificación del "payback ajustado = simple" visto en informes (jul-2026) ---
+# NO es un bug: el ajustado SÍ incorpora escalada, degradación, O&M e inversor
+# (guardas de arriba). A paybacks cortos los efectos casi se cancelan:
+# escalada (+2%) − degradación (−0,5%) ≈ +1,5%/año de crecimiento del ahorro,
+# frente a un O&M del 1% del capex/año; y el inversor (año 13) no puede tocar
+# un payback que llega antes del año 13. Estos tests fijan el caso de
+# referencia (25.637 kWh, Santiago) para que la casi-igualdad no se vuelva a
+# diagnosticar como costes sin aplicar.
+
+
+def test_referencia_santiago_ajustado_una_decima_sobre_el_simple():
+    investment = 7642.72
+    savings_year1 = 1616.97
+    om = round(investment * cashflow.OM_PCT_PER_YEAR, 2)
+    yearly = cashflow.simple_yearly_savings(savings_year1)
+    analysis = cashflow.cashflow_analysis(
+        yearly,
+        investment_eur=investment,
+        om_eur_per_year=om,
+        replacements={cashflow.INVERTER_REPLACEMENT_YEAR: 900.0},
+    )
+    simple = round(investment / savings_year1, 1)
+    assert simple == 4.7
+    assert analysis["payback_years"] == 4.8
+    # A paybacks cortos el O&M pesa más que la escalada acumulada: el ajustado
+    # queda (ligeramente) por encima del simple, nunca por debajo.
+    assert analysis["payback_years"] >= simple
+
+
+def test_reemplazo_antes_del_payback_si_lo_alarga():
+    investment = 1000.0
+    yearly = _flat(250.0)  # simple: 4,0 años
+    without = cashflow.cashflow_analysis(yearly, investment_eur=investment)
+    with_early = cashflow.cashflow_analysis(
+        yearly, investment_eur=investment, replacements={3: 250.0}
+    )
+    assert without["payback_years"] == 4.0
+    assert with_early["payback_years"] == 5.0
+
+
+def test_reemplazo_despues_del_payback_no_lo_toca_pero_baja_el_van():
+    investment = 1000.0
+    yearly = _flat(250.0)
+    base = cashflow.cashflow_analysis(yearly, investment_eur=investment)
+    late = cashflow.cashflow_analysis(
+        yearly, investment_eur=investment, replacements={13: 400.0}
+    )
+    assert late["payback_years"] == base["payback_years"] == 4.0
+    assert late["npv_eur"] < base["npv_eur"]
