@@ -345,6 +345,29 @@ test('la card del índice lleva clase y etiqueta junto a la fecha; la neutra que
   assert.ok(html.includes('<article class="card">'))  // la neutra, sin clase extra
 })
 
+// --- Nav de idiomas del blog ---
+
+test('índices y artículos llevan nav de idiomas a las versiones existentes', () => {
+  const out = blogOutputs(loadBlog(tmpBlog()), '')
+  const idxEs = out.get('index.html')
+  assert.match(idxEs, /<nav class="langs"[^>]*>/)
+  assert.ok(idxEs.includes('<strong>Español</strong>'))
+  assert.ok(idxEs.includes('href="/blog/en/" hreflang="en"'))
+  const artEn = out.get(join('en', 'how-to-read-your-bill', 'index.html'))
+  assert.ok(artEn.includes('<strong>English</strong>'))
+  assert.ok(artEn.includes('href="/blog/como-leer-la-factura/" hreflang="es"'))
+  assert.ok(!artEn.includes('hreflang="ca"'))  // no existe esa versión
+})
+
+test('con un solo idioma no hay nav de idiomas', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'blog-'))
+  writeFileSync(join(dir, 'solo.html'), FM(''))
+  const out = blogOutputs(loadBlog(dir), '')
+  assert.ok(!out.get('index.html').includes('class="langs"'))
+  assert.ok(!out.get(join('solo', 'index.html')).includes('class="langs"'))
+})
+
+
 test('las variables de categoría existen en día y en noche en las páginas servidas', () => {
   const html = readPublic(join('blog', 'index.html'))
   // Día (en :root)

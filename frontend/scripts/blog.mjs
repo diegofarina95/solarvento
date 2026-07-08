@@ -53,6 +53,7 @@ const STRINGS = {
     faq: 'Preguntas frecuentes',
     ayudas: 'Ayudas por comunidad',
     privacidad: 'Privacidad',
+    langLabel: 'Idioma',
     disclaimer:
       'SolarVento ofrece estimaciones orientativas basadas en datos oficiales; no sustituyen a un estudio técnico en tu tejado.',
   },
@@ -70,6 +71,7 @@ const STRINGS = {
     faq: 'FAQ',
     ayudas: 'Subsidies by region',
     privacidad: 'Privacy',
+    langLabel: 'Language',
     disclaimer:
       'SolarVento provides indicative estimates based on official data; they are no substitute for a technical survey of your roof.',
   },
@@ -87,6 +89,7 @@ const STRINGS = {
     faq: 'Preguntes freqüents',
     ayudas: 'Ajuts per comunitat',
     privacidad: 'Privacitat',
+    langLabel: 'Idioma',
     disclaimer:
       'SolarVento ofereix estimacions orientatives basades en dades oficials; no substitueixen un estudi tècnic al teu teulat.',
   },
@@ -104,6 +107,7 @@ const STRINGS = {
     faq: 'Preguntas frecuentes',
     ayudas: 'Axudas por comunidade',
     privacidad: 'Privacidade',
+    langLabel: 'Idioma',
     disclaimer:
       'SolarVento ofrece estimacións orientativas baseadas en datos oficiais; non substitúen un estudo técnico no teu tellado.',
   },
@@ -121,6 +125,7 @@ const STRINGS = {
     faq: 'Ohiko galderak',
     ayudas: 'Laguntzak erkidegoka',
     privacidad: 'Pribatutasuna',
+    langLabel: 'Hizkuntza',
     disclaimer:
       'SolarVentok datu ofizialetan oinarritutako gutxi gorabeherako estimazioak eskaintzen ditu; ez dute zure teilatuko azterketa tekniko bat ordezkatzen.',
   },
@@ -151,6 +156,22 @@ export function articleUrl(a) {
 
 function blogHome(lang) {
   return lang === 'es' ? 'blog/' : `blog/${lang}/`
+}
+
+// Nombres de idioma para el selector visible (mismos que las páginas estáticas).
+const LANG_NAMES = { es: 'Español', en: 'English', ca: 'Català', gl: 'Galego', eu: 'Euskara' }
+
+// Nav de idiomas: versión actual sin enlace, resto enlazadas (complementa el
+// hreflang del <head> con enlaces visibles y rastreables). Con una sola
+// versión no se emite, igual que el hreflang.
+function langNav(current, versions) {
+  if (versions.length < 2) return ''
+  const items = versions.map(([lang, href]) =>
+    lang === current
+      ? `<strong>${LANG_NAMES[lang]}</strong>`
+      : `<a href="${href}" hreflang="${lang}" lang="${lang}">${LANG_NAMES[lang]}</a>`,
+  )
+  return `      <nav class="langs" aria-label="${STRINGS[current].langLabel}">${items.join(' · ')}</nav>\n`
 }
 
 // Páginas estáticas del sitio por idioma (mismo esquema que generate-static-pages).
@@ -396,7 +417,7 @@ function defaultCta(lang) {
 </div>`
 }
 
-export function articlePage(a, css, hreflang = '') {
+export function articlePage(a, css, hreflang = '', versions = []) {
   // URL limpia: /blog/[lang/]<slug>/ (el fichero es …/<slug>/index.html; el
   // backend sirve índices de directorio con StaticFiles html=True).
   const path = articleUrl(a)
@@ -444,7 +465,7 @@ ${JSON.stringify(crumbs, null, 2)}
   <body>
     <main class="wrap">
 ${siteHeader(a.lang)}
-      <article${catClass}>
+${langNav(a.lang, versions)}      <article${catClass}>
 ${catLabel}        <h1>${a.title}</h1>
         <p class="meta"><time datetime="${a.date}">${humanDate(a.date, a.lang)}</time></p>
 ${bodyHtml.replace(/^/gm, '        ')}
@@ -456,7 +477,7 @@ ${siteFooter(a.lang)}
 `
 }
 
-export function blogIndexPage(articles, css, lang = 'es', hreflang = '') {
+export function blogIndexPage(articles, css, lang = 'es', hreflang = '', indexLangs = []) {
   const s = STRINGS[lang]
   const home = blogHome(lang)
   const ld = {
@@ -514,7 +535,7 @@ ${JSON.stringify(crumbs, null, 2)}
   <body>
     <main class="wrap">
 ${siteHeader(lang)}
-      <h1>${s.blogLabel}</h1>
+${langNav(lang, indexLangs.map((l) => [l, `/${blogHome(l)}`]))}      <h1>${s.blogLabel}</h1>
       <p class="lead">
         ${s.indexLead}
       </p>
@@ -540,16 +561,20 @@ export function blogOutputs(groups, css) {
   }
   for (const g of gs) {
     const hb = hreflangBlock(g)
-    out.set(join(g.es.slug, 'index.html'), articlePage(g.es, css, hb))
+    const versions = [g.es, ...TRANSLATION_LANGS.map((l) => g.tr[l]).filter(Boolean)].map(
+      (v) => [v.lang, `/${articleUrl(v)}`],
+    )
+    out.set(join(g.es.slug, 'index.html'), articlePage(g.es, css, hb, versions))
     for (const l of TRANSLATION_LANGS)
-      if (g.tr[l]) out.set(join(l, g.tr[l].slug, 'index.html'), articlePage(g.tr[l], css, hb))
+      if (g.tr[l])
+        out.set(join(l, g.tr[l].slug, 'index.html'), articlePage(g.tr[l], css, hb, versions))
   }
   const langs = BLOG_LANGS.filter((l) => byLang.get(l).length > 0)
   const idxAlt = indexHreflang(langs)
   const byDate = (arr) =>
     [...arr].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug < b.slug ? -1 : 1))
   for (const l of langs) {
-    const page = blogIndexPage(byDate(byLang.get(l)), css, l, idxAlt)
+    const page = blogIndexPage(byDate(byLang.get(l)), css, l, idxAlt, langs)
     out.set(l === 'es' ? 'index.html' : join(l, 'index.html'), page)
   }
   return out
