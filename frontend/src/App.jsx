@@ -563,7 +563,10 @@ export default function App() {
           {t('app.grants')}
         </a>
         <span className="mx-2">·</span>
-        <a href="/blog/" className="underline hover:text-stone-700">
+        <a
+          href={language === 'es' ? '/blog/' : `/blog/${language}/`}
+          className="underline hover:text-stone-700"
+        >
           {t('app.blog')}
         </a>
         <span className="mx-2">·</span>
