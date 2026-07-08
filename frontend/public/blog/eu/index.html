@@ -218,6 +218,12 @@
       }
       .lead { font-size: 1.08rem; color: #52514e; }
 
+      /* Selector de idiomas (como FAQ/privacidad): visible, discreto */
+      .langs { font-size: .78rem; color: #78716c; margin: 1rem 0 0;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .langs a { color: #78716c; }
+      .langs strong { color: #1c1917; }
+
       /* Callout: aviso ámbar (border-amber-200 + bg-amber-50, como en la app) */
       .callout {
         border: 1px solid #fde68a;
@@ -341,6 +347,8 @@
           0 16px 32px -12px rgba(0, 0, 0, .6);
       }
       [data-theme='night'] .card h2 a:hover { color: var(--sun-400); }
+      [data-theme='night'] .langs, [data-theme='night'] .langs a { color: #a8a29e; }
+      [data-theme='night'] .langs strong { color: #e7e5e4; }
       [data-theme='night'] .callout {
         background: rgba(245, 158, 11, .12);
         border-color: rgba(245, 158, 11, .4);
@@ -441,6 +449,7 @@
         </a>
         <a class="cta" href="/">Nire aurrezpena kalkulatu</a>
       </header>
+      <nav class="langs" aria-label="Hizkuntza"><a href="/blog/" hreflang="es" lang="es">Español</a> · <a href="/blog/en/" hreflang="en" lang="en">English</a> · <a href="/blog/ca/" hreflang="ca" lang="ca">Català</a> · <a href="/blog/gl/" hreflang="gl" lang="gl">Galego</a> · <strong>Euskara</strong></nav>
       <h1>Bloga</h1>
       <p class="lead">
         Gida praktikoak zure faktura ulertzeko, autokontsumo-instalazio bat dimentsionatzeko eta promesa komertzialek ez engainatzeko. Kerik gabe: zenbakiak eta Espainiako araudia.

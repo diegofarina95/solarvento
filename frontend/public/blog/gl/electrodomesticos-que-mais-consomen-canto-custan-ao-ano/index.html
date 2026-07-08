@@ -221,6 +221,12 @@
       }
       .lead { font-size: 1.08rem; color: #52514e; }
 
+      /* Selector de idiomas (como FAQ/privacidad): visible, discreto */
+      .langs { font-size: .78rem; color: #78716c; margin: 1rem 0 0;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .langs a { color: #78716c; }
+      .langs strong { color: #1c1917; }
+
       /* Callout: aviso ámbar (border-amber-200 + bg-amber-50, como en la app) */
       .callout {
         border: 1px solid #fde68a;
@@ -344,6 +350,8 @@
           0 16px 32px -12px rgba(0, 0, 0, .6);
       }
       [data-theme='night'] .card h2 a:hover { color: var(--sun-400); }
+      [data-theme='night'] .langs, [data-theme='night'] .langs a { color: #a8a29e; }
+      [data-theme='night'] .langs strong { color: #e7e5e4; }
       [data-theme='night'] .callout {
         background: rgba(245, 158, 11, .12);
         border-color: rgba(245, 158, 11, .4);
@@ -418,6 +426,7 @@
         </a>
         <a class="cta" href="/">Calcular o meu aforro</a>
       </header>
+      <nav class="langs" aria-label="Idioma"><a href="/blog/que-electrodomesticos-gastan-mas/" hreflang="es" lang="es">Español</a> · <a href="/blog/en/appliances-that-use-the-most-electricity-and-annual-cost/" hreflang="en" lang="en">English</a> · <a href="/blog/ca/quins-electrodomestics-disparen-el-teu-consum/" hreflang="ca" lang="ca">Català</a> · <strong>Galego</strong> · <a href="/blog/eu/zein-etxetresnak-handitzen-duten-zure-kontsumoa/" hreflang="eu" lang="eu">Euskara</a></nav>
       <article class="cat-guia">
         <p class="eyebrow cat-label">GUÍA</p>
         <h1>Que electrodomésticos disparan o teu consumo e canto custa cada un ao ano</h1>

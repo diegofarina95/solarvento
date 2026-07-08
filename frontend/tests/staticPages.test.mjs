@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const LANGS = ['es', 'en', 'gl', 'ca', 'eu', 'fr', 'pt']
+const LANGS = ['es', 'en', 'gl', 'ca', 'eu']
 const pagePath = (base, lang) => (lang === 'es' ? `${base}.html` : `${base}-${lang}.html`)
 
 test('public/ está sincronizado con content/src (generador --check)', () => {

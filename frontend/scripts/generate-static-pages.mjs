@@ -23,7 +23,7 @@ const PUBLIC = join(ROOT, 'public')
 
 const ORIGIN = 'https://solarvento.es'
 // Orden de idiomas: fija el orden de los hreflang (es primero, luego el resto).
-const LANGS = ['es', 'en', 'gl', 'ca', 'eu', 'fr', 'pt']
+const LANGS = ['es', 'en', 'gl', 'ca', 'eu']
 const LASTMOD = '2026-07-07' // actualizar al cambiar el contenido de las páginas
 
 // Locales Open Graph por idioma (territorio España salvo en/fr/pt).
@@ -33,8 +33,6 @@ const OG_LOCALES = {
   gl: 'gl_ES',
   ca: 'ca_ES',
   eu: 'eu_ES',
-  fr: 'fr_FR',
-  pt: 'pt_PT',
 }
 
 const BANNER =
@@ -48,8 +46,6 @@ const LANG_NAMES = {
   gl: 'Galego',
   ca: 'Català',
   eu: 'Euskara',
-  fr: 'Français',
-  pt: 'Português',
 }
 const LANG_NAV_LABEL = {
   es: 'Idioma',
@@ -57,8 +53,6 @@ const LANG_NAV_LABEL = {
   gl: 'Idioma',
   ca: 'Idioma',
   eu: 'Hizkuntza',
-  fr: 'Langue',
-  pt: 'Idioma',
 }
 
 // Selector de idioma visible: complementa los hreflang del <head> con enlaces
