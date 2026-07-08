@@ -24,11 +24,16 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
-  <url><loc>https://solarvento.es/blog/</loc><lastmod>2026-07-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/en/</loc><lastmod>2026-07-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/ca/</loc><lastmod>2026-07-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/gl/</loc><lastmod>2026-07-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/eu/</loc><lastmod>2026-07-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/</loc><lastmod>2026-07-08</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/en/</loc><lastmod>2026-07-08</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/ca/</loc><lastmod>2026-07-08</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/gl/</loc><lastmod>2026-07-08</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/eu/</loc><lastmod>2026-07-08</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/cuanta-energia-produce-una-placa-solar/</loc><lastmod>2026-07-08</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/en/how-much-energy-does-a-solar-panel-produce-in-a-day/</loc><lastmod>2026-07-08</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/ca/quanta-energia-produeix-una-placa-solar-en-un-dia/</loc><lastmod>2026-07-08</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/gl/canta-enerxia-produce-unha-placa-solar-nun-dia/</loc><lastmod>2026-07-08</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/eu/zenbat-energia-sortzen-du-eguzki-plaka-batek-egun-batean/</loc><lastmod>2026-07-08</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://solarvento.es/blog/coche-electrico-y-placas-solares/</loc><lastmod>2026-07-07</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://solarvento.es/blog/como-leer-tu-factura-de-la-luz/</loc><lastmod>2026-07-07</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://solarvento.es/blog/en/how-to-read-your-electricity-bill-in-spain/</loc><lastmod>2026-07-07</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
