@@ -52,7 +52,11 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     standard_openai_api_key: str | None = Field(default=None, validation_alias="OPENAI_API_KEY")
     openai_base_url: str = "https://api.openai.com/v1"
-    openai_bill_parser_model: str = "gpt-5.5"
+    # gpt-5.4-mini (no gpt-5.5): ~7x más barato ($0,75/$4,50 vs $5/$30 por M tok)
+    # y reproduce el MISMO output normalizado en texto y visión (verificado con
+    # tests/model_compare.py, 2026-07-09). nano se descartó: falla la vía visión
+    # (fotos de móvil). Sobreescribible con SOLVENTO_OPENAI_BILL_PARSER_MODEL.
+    openai_bill_parser_model: str = "gpt-5.4-mini"
     openai_bill_parser_timeout_seconds: float = 60.0
 
     pvgis_base_url: str = "https://re.jrc.ec.europa.eu/api/v5_2"

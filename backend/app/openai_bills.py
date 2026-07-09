@@ -27,7 +27,7 @@ class OpenAIBillParser:
         api_key: str,
         *,
         base_url: str = "https://api.openai.com/v1",
-        model: str = "gpt-5.5",
+        model: str = "gpt-5.4-mini",
         timeout: float = 60.0,
     ) -> None:
         self.model = model

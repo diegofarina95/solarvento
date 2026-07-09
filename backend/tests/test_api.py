@@ -637,7 +637,7 @@ def test_parse_bill_uses_openai_when_configured(respx_mock, openai_client):
     assert data["parser"] == "openai-contract"
 
     payload = json.loads(respx_mock.calls.last.request.content)
-    assert payload["model"] == "gpt-5.5"
+    assert payload["model"] == get_settings().openai_bill_parser_model
     # 'temperature' NO se envía: los modelos de razonamiento lo rechazan con 400.
     assert "temperature" not in payload
     content = payload["input"][1]["content"]
