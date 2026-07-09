@@ -32,7 +32,9 @@ from app.config import get_settings  # noqa: E402
 from app.openai_bills import OpenAIBillParser  # noqa: E402
 from app.bills import BillParseError  # noqa: E402
 
-MODELS = ["gpt-5.5", "gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano"]
+# nano excluido: falla la vía visión (verificado 2026-07-09). Añádelo aquí para
+# volver a medirlo.
+MODELS = ["gpt-5.5", "gpt-5.4", "gpt-5.4-mini"]
 
 # Facturas sintéticas: mismas formas que tests/corpus. Cada una con su salida
 # normalizada esperada (annual/split/power/tariff/outcome).
@@ -116,10 +118,55 @@ BILLS = [
         ),
         "expected": {"outcome": "review"},
     },
+    {
+        # Trampa: 22 días con autoconsumo → revisión; el anual sale del HISTÓRICO
+        # (4646), NUNCA de la lectura del contador (19.806) ni de 346×365/22.
+        "name": "autoconsumo_subanual",
+        "text": (
+            "EnergyPlus — Factura de electricidad (con autoconsumo)\n"
+            "Tarifa: 2.0TD   Potencia contratada: 4,6 kW\n"
+            "Dirección de suministro: Rúa da Ponte 3, 36650 Caldas de Reis\n"
+            "Periodo facturado: 01/06/2026 - 22/06/2026 (22 días)\n"
+            "Lectura del contador: anterior 19.460 kWh / actual 19.806 kWh\n"
+            "Consumo de red del periodo por franjas (kWh): Punta 63 / Llano 83 / Valle 200\n"
+            "Consumo de red del periodo (total): 346 kWh\n"
+            "Dispone de instalación de autoconsumo; la energía vertida se compensa aparte.\n"
+            "Consumo anual (histórico 12 meses): 4.646 kWh\n"
+            "TOTAL FACTURA: 61,20 €\n"
+        ),
+        # Con un anual histórico explícito y corroborado, el pipeline calcula
+        # (4646); la clave es que use el HISTÓRICO, no la lectura 19.806 ni
+        # extrapolar el periodo de 346. Comprueba que ningún modelo cae en esa
+        # trampa. (Las facturas con FV y periodo corto SIN anual claro sí van a
+        # revisión: caso caldas del corpus.)
+        "expected": {"outcome": "compute", "annual": 4646, "power": 4.6, "tariff": "2.0TD"},
+    },
+    {
+        "name": "punta_dominante",
+        "text": (
+            "NATURGY — Detalle de consumo\n"
+            "Peaje: 2.0TD   Potencia contratada: 3,45 kW\n"
+            "Dirección: Gran Vía 100, 28013 Madrid\n"
+            "Periodo facturado: 01/01/2026 - 31/12/2026 (365 días)\n"
+            "Consumo por periodos (kWh):\n"
+            "  P1 Punta ....... 1.600\n"
+            "  P2 Llano .......   900\n"
+            "  P3 Valle .......   700\n"
+            "Consumo total anual: 3.200 kWh\n"
+            "TOTAL FACTURA: 812,00 €\n"
+        ),
+        "expected": {
+            "outcome": "compute",
+            "annual": 3200,
+            "power": 3.45,
+            "tariff": "2.0TD",
+            "split": {"punta": 1600, "llano": 900, "valle": 700},
+        },
+    },
 ]
 
-# Factura que además se prueba por la vía VISIÓN (imagen renderizada).
-VISION_BILL = "multiperiodo_valle"
+# Facturas que además se prueban por la vía VISIÓN (imagen renderizada).
+VISION_BILLS = ["multiperiodo_valle", "anual_simple"]
 
 
 def _close(a, b, tol_pct=0.02, tol_abs=20.0):
@@ -149,12 +196,18 @@ def _grade(bill: dict, contract: dict) -> tuple[str, list[str]]:
     exp = bill["expected"]
     result = contract_to_bill(contract)
     computed = not result["needs_review"]
+    annual = (result.get("consumption_resolution") or {}).get("annual_kwh")
     if exp["outcome"] == "review":
-        return ("correct" if not computed else "computed_should_review", [])
+        if computed:
+            return ("computed_should_review", [])
+        # Aun en revisión, el anual RESUELTO debe salir del histórico, no de la
+        # lectura del contador ni de extrapolar el periodo (trampa autoconsumo).
+        if exp.get("annual") and not _close(annual, exp["annual"]):
+            return ("review_wrong_annual", [f"annual={annual}≠{exp['annual']}"])
+        return ("correct", [])
     if not computed:
         return ("review_should_compute", [])
     diffs = []
-    annual = (result.get("consumption_resolution") or {}).get("annual_kwh")
     if not _close(annual, exp["annual"]):
         diffs.append(f"annual={annual}≠{exp['annual']}")
     if exp.get("split"):
@@ -178,17 +231,18 @@ async def _run_model(parser: OpenAIBillParser) -> list[dict]:
         except BillParseError as exc:
             outcome, diffs = "ERROR", [str(exc)]
         rows.append({"bill": bill["name"], "via": "texto", "outcome": outcome, "diffs": diffs})
-    # Vía visión: una factura renderizada a imagen.
-    vbill = next(b for b in BILLS if b["name"] == VISION_BILL)
-    try:
-        png = _render_png(vbill["text"])
-        contract = await parser.extract_contract(png, content_type="image/png")
-        outcome, diffs = _grade(vbill, contract)
-    except BillParseError as exc:
-        outcome, diffs = "ERROR", [str(exc)]
-    except Exception as exc:  # visión no soportada, etc.
-        outcome, diffs = "ERROR", [f"{type(exc).__name__}: {exc}"]
-    rows.append({"bill": vbill["name"], "via": "visión", "outcome": outcome, "diffs": diffs})
+    # Vía visión: facturas renderizadas a imagen.
+    for name in VISION_BILLS:
+        vbill = next(b for b in BILLS if b["name"] == name)
+        try:
+            png = _render_png(vbill["text"])
+            contract = await parser.extract_contract(png, content_type="image/png")
+            outcome, diffs = _grade(vbill, contract)
+        except BillParseError as exc:
+            outcome, diffs = "ERROR", [str(exc)]
+        except Exception as exc:  # visión no soportada, etc.
+            outcome, diffs = "ERROR", [f"{type(exc).__name__}: {exc}"]
+        rows.append({"bill": vbill["name"], "via": "visión", "outcome": outcome, "diffs": diffs})
     return rows
 
 
