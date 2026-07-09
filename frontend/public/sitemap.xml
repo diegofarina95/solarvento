@@ -24,11 +24,16 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
-  <url><loc>https://solarvento.es/blog/</loc><lastmod>2026-07-08</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/en/</loc><lastmod>2026-07-08</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/ca/</loc><lastmod>2026-07-08</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/gl/</loc><lastmod>2026-07-08</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/eu/</loc><lastmod>2026-07-08</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/</loc><lastmod>2026-07-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/en/</loc><lastmod>2026-07-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/ca/</loc><lastmod>2026-07-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/gl/</loc><lastmod>2026-07-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/eu/</loc><lastmod>2026-07-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/tarifa-fija-o-indexada/</loc><lastmod>2026-07-09</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/en/fixed-or-indexed-electricity-tariff-which-suits-your-consumption/</loc><lastmod>2026-07-09</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/ca/tarifa-fixa-o-indexada-quina-et-conve-segons-com-consumeixes/</loc><lastmod>2026-07-09</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/gl/tarifa-fixa-ou-indexada-cal-che-conven/</loc><lastmod>2026-07-09</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/eu/tarifa-finkoa-edo-indexatua-kontsumoaren-arabera/</loc><lastmod>2026-07-09</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://solarvento.es/blog/aire-encendido-o-apagarlo/</loc><lastmod>2026-07-08</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://solarvento.es/blog/en/leaving-air-conditioner-on-or-turning-it-off/</loc><lastmod>2026-07-08</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://solarvento.es/blog/ca/que-gasta-mes-deixar-aire-ences-o-apagar-lo-i-engegar-lo/</loc><lastmod>2026-07-08</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
