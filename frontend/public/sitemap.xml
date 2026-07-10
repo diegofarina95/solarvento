@@ -24,11 +24,16 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
-  <url><loc>https://solarvento.es/blog/</loc><lastmod>2026-07-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/en/</loc><lastmod>2026-07-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/ca/</loc><lastmod>2026-07-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/gl/</loc><lastmod>2026-07-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/eu/</loc><lastmod>2026-07-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/en/</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/ca/</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/gl/</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/eu/</loc><lastmod>2026-07-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/luz-barata-mediodia/</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/en/electricity-cheapest-midday-why-how-to-take-advantage/</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/ca/llum-mes-barata-migdia-per-que-passa-com-aprofitar-ho/</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/gl/luz-mais-barata-mediodia-por-que-pasa-como-aproveitalo/</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/eu/eguneko-argindar-merkeena-eguerdian/</loc><lastmod>2026-07-10</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://solarvento.es/blog/detectar-que-gasta-luz-en-casa/</loc><lastmod>2026-07-09</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://solarvento.es/blog/en/how-to-find-what-drives-up-your-electricity-bill-at-home/</loc><lastmod>2026-07-09</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://solarvento.es/blog/ca/com-detectar-que-et-dispara-la-llum-a-casa/</loc><lastmod>2026-07-09</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
