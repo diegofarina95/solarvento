@@ -375,7 +375,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             <a
               href={language === 'es' ? '/blog/' : `/blog/${language}/`}
-              className="rounded-lg border border-stone-300 bg-white/70 px-3 py-1.5 text-sm font-medium text-stone-700 backdrop-blur-sm hover:border-amber-500"
+              className="rounded-lg border border-amber-400 bg-white/70 px-3 py-1.5 text-sm font-semibold text-stone-700 backdrop-blur-sm hover:border-amber-600 hover:text-amber-700"
             >
               {t('app.blog')}
             </a>
@@ -562,15 +562,24 @@ export default function App() {
         />
       )}
 
-      <section className="mt-10 card-solar p-5 print:hidden">
-        <h2 className="mb-2 font-display text-xl font-bold text-stone-900">{t('app.guidesTitle')}</h2>
-        <p className="max-w-2xl text-sm text-stone-600">{t('app.guidesLead')}</p>
-        <a
-          href={language === 'es' ? '/blog/' : `/blog/${language}/`}
-          className="btn-solar mt-4 inline-block"
-        >
-          {t('app.guidesCta')}
-        </a>
+      <section className="card-solar card-hero mt-10 p-6 print:hidden">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="section-eyebrow mb-2">{t('app.blog')}</h2>
+            <p className="font-display text-2xl font-bold tracking-tight text-stone-900">
+              {t('app.guidesTitle')}
+            </p>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-stone-600">
+              {t('app.guidesLead')}
+            </p>
+          </div>
+          <a
+            href={language === 'es' ? '/blog/' : `/blog/${language}/`}
+            className="btn-solar shrink-0 self-start whitespace-nowrap px-5 py-3 text-sm sm:self-center"
+          >
+            {t('app.guidesCta')} →
+          </a>
+        </div>
       </section>
 
       <footer className="mt-10 border-t border-stone-200 pt-4 text-center text-xs text-stone-500 print:hidden">
