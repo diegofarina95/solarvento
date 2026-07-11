@@ -1,0 +1,506 @@
+<!doctype html>
+<!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/blog/ — NO EDITAR A MANO -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Energy communities: share solar panels with your neighbours | SolarVento</title>
+    <meta name="description" content="What energy communities and shared self-consumption mean in Spain, how sharing solar panels with neighbours works, the new 5 km radius, and who can benefit even without their own roof." />
+    <meta name="keywords" content="energy communities Spain, shared solar self-consumption, share solar panels with neighbours, collective self-consumption Spain, solar community, solar panels without a roof, 5 km self-consumption radius" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://solarvento.es/blog/en/energy-communities-share-solar-panels-neighbours/" />
+    <link rel="alternate" hreflang="es" href="https://solarvento.es/blog/comunidades-energeticas-compartir-placas/" />
+    <link rel="alternate" hreflang="en" href="https://solarvento.es/blog/en/energy-communities-share-solar-panels-neighbours/" />
+    <link rel="alternate" hreflang="ca" href="https://solarvento.es/blog/ca/comunitats-energetiques-compartir-plaques-solars-veins/" />
+    <link rel="alternate" hreflang="gl" href="https://solarvento.es/blog/gl/comunidades-enerxeticas-compartir-placas-solares-vecinos/" />
+    <link rel="alternate" hreflang="eu" href="https://solarvento.es/blog/eu/energia-komunitateak-eguzki-plakak-auzokideekin-partekatu/" />
+    <link rel="alternate" hreflang="x-default" href="https://solarvento.es/blog/comunidades-energeticas-compartir-placas/" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="https://solarvento.es/blog/en/energy-communities-share-solar-panels-neighbours/" />
+    <meta property="og:title" content="Energy communities: share solar panels with your neighbours | SolarVento" />
+    <meta property="og:description" content="What energy communities and shared self-consumption mean in Spain, how sharing solar panels with neighbours works, the new 5 km radius, and who can benefit even without their own roof." />
+    <meta property="og:image" content="https://solarvento.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="article:published_time" content="2026-07-11" />
+    <meta property="article:modified_time" content="2026-07-11" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Energy communities: share solar panels with your neighbours | SolarVento" />
+    <meta name="twitter:description" content="What energy communities and shared self-consumption mean in Spain, how sharing solar panels with neighbours works, the new 5 km radius, and who can benefit even without their own roof." />
+    <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      (function () {
+        var RAD = Math.PI / 180, TZ = 'Europe/Madrid', LAT = 40.4168, LON = -3.7038
+        function hourInTZ(date) {
+          var p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)
+          function v(t) { return Number(p.find(function (x) { return x.type === t }).value) }
+          return v('hour') + v('minute') / 60
+        }
+        var now = new Date()
+        var jd = now.getTime() / 86400000 + 2440587.5
+        var n = Math.round(jd - 2451545.0 + 0.0008)
+        var jStar = n + -LON / 360
+        var M = (357.5291 + 0.98560028 * jStar) % 360
+        var Mr = M * RAD
+        var C = 1.9148 * Math.sin(Mr) + 0.02 * Math.sin(2 * Mr) + 0.0003 * Math.sin(3 * Mr)
+        var lambda = ((M + C + 180 + 102.9372) % 360) * RAD
+        var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(Mr) - 0.0069 * Math.sin(2 * lambda)
+        var sinDec = Math.sin(lambda) * Math.sin(23.4397 * RAD)
+        var cosDec = Math.cos(Math.asin(sinDec))
+        var cosOmega = (Math.sin(-0.833 * RAD) - Math.sin(LAT * RAD) * sinDec) / (Math.cos(LAT * RAD) * cosDec)
+        var omega = Math.acos(Math.min(1, Math.max(-1, cosOmega))) / RAD
+        function jToDate(j) { return new Date((j - 2440587.5) * 86400000) }
+        var sunrise = hourInTZ(jToDate(jTransit - omega / 360))
+        var sunset = hourInTZ(jToDate(jTransit + omega / 360))
+        var hour = hourInTZ(now)
+        if (!(hour >= sunrise && hour < sunset)) document.documentElement.setAttribute('data-theme', 'night')
+      })()
+    </script>
+    <style>
+      /* Tema del blog = tema de la portada (src/index.css): papel cálido con
+         amanecer, marca en Bricolage Grotesque, botón solar y cards en capas.
+         Única licencia propia del blog: cuerpo serif para lectura larga. */
+      @font-face {
+        font-family: 'Bricolage Grotesque Variable';
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
+      }
+
+      :root {
+        color-scheme: light;
+        /* Tema solar (mismos tokens que la app) */
+        --page: #fbfaf6;
+        --sky-dawn: #fff4de;
+        --sun-400: #fbbf24;
+        --sun-500: #f59e0b;
+        --sun-600: #d97706;
+        --ember: #b45309;
+        --gridline: #ece6d9;
+        /* Categorías del blog (acento; el ámbar de marca sigue dominando) */
+        --cat-guia: #f59e0b;
+        --cat-analisis: #3f7f8f;
+        --cat-divulgacion: #c2703d;
+      }
+      /* Modo noche: mismas variables que :root[data-theme='night'] en la app.
+         Lo activa el script solar del <head> (se pone el sol en España → noche),
+         igual que la portada; el modo claro/oscuro del sistema NO interviene. */
+      :root[data-theme='night'] {
+        color-scheme: dark;
+        --page: #10131a;
+        --sky-dawn: #1b2436; /* resplandor de cielo nocturno en la cabecera */
+        --gridline: #2a2f3a;
+        /* De noche, más claras y desaturadas: los vivos cansan sobre fondo oscuro */
+        --cat-guia: #f0b95d;
+        --cat-analisis: #6bb0be;
+        --cat-divulgacion: #d99668;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        /* Cuerpo serif (lectura larga); titulares y UI en la familia de la app. */
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+        line-height: 1.7;
+        color: #1c1917;
+        /* Amanecer: la página nace en luz cálida y se asienta en papel */
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(255, 243, 220, 0) 420px),
+          var(--page);
+      }
+      h1, h2, .brand { font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif; }
+      h3, .meta, .cta, .cta-block, .cards, footer, .eyebrow, .anatomy li strong {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+      a { color: var(--ember); }
+      a:hover { color: #92400e; }
+      a:focus-visible, .cta:focus-visible {
+        outline: 3px solid var(--sun-500);
+        outline-offset: 2px;
+        border-radius: .15rem;
+      }
+      h1 {
+        font-size: clamp(1.9rem, 4vw, 2.6rem);
+        font-weight: 700;
+        letter-spacing: -.02em;
+        line-height: 1.12;
+        margin: 1.2rem 0 .5rem;
+      }
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 650;
+        letter-spacing: -.01em;
+        line-height: 1.25;
+        margin: 2.2rem 0 .6rem;
+      }
+      h3 { font-size: 1.02rem; margin: 1.4rem 0 .3rem; }
+      p { margin: .55rem 0; }
+      ul, ol { padding-left: 1.4rem; }
+      li { margin: .3rem 0; }
+
+      /* Cabecera: logo + wordmark como en la portada, CTA solar a la derecha */
+      header.site {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gridline);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        font-weight: 700;
+        font-size: 1.35rem;
+        letter-spacing: -.02em;
+        color: #1c1917;
+        text-decoration: none;
+      }
+      .brand b { font-weight: inherit; }
+      .brand span { color: var(--sun-600); }
+      .brand small {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #78716c;
+        align-self: flex-end;
+        margin-bottom: .3rem;
+      }
+
+      /* Botón principal: gradiente solar con texto oscuro (el .btn-solar de la app) */
+      .cta {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--sun-400), var(--sun-500) 55%, var(--sun-600));
+        color: #1c1917;
+        font-weight: 650;
+        font-size: .9rem;
+        padding: .55rem 1rem;
+        border-radius: .75rem;
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 1px 2px rgba(180, 83, 9, .25);
+        transition: box-shadow .15s ease, filter .15s ease;
+      }
+      .cta:hover {
+        color: #1c1917;
+        filter: brightness(1.05);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 3px 10px rgba(217, 119, 6, .35);
+      }
+
+      /* Eyebrow con tick solar (fecha del artículo, etiquetas de sección) */
+      .eyebrow, .meta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        font-weight: 650;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #78716c;
+        margin: 0 0 1.4rem;
+      }
+      .eyebrow::before, .meta::before {
+        content: '';
+        width: .5rem;
+        height: .5rem;
+        border-radius: 9999px;
+        background: radial-gradient(circle at 35% 35%, var(--sun-400), var(--sun-600));
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, .18);
+        flex-shrink: 0;
+      }
+      .lead { font-size: 1.08rem; color: #52514e; }
+
+      /* Selector de idiomas (como FAQ/privacidad): visible, discreto */
+      .langs { font-size: .78rem; color: #78716c; margin: 1rem 0 0;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .langs a { color: #78716c; }
+      .langs strong { color: #1c1917; }
+
+      /* Callout: aviso ámbar (border-amber-200 + bg-amber-50, como en la app) */
+      .callout {
+        border: 1px solid #fde68a;
+        border-left: .3rem solid var(--sun-500);
+        background: #fffbeb;
+        border-radius: .75rem;
+        color: #78350f;
+        padding: .85rem 1.1rem;
+        margin: 1.4rem 0;
+        font-size: .95rem;
+      }
+      .callout strong { color: #92400e; }
+
+      /* Cards: papel sobre papel, borde cálido, profundidad en capas (.card-solar) */
+      .anatomy, .card, .cta-block {
+        background: #fff;
+        border: 1px solid var(--gridline);
+        border-radius: 1rem;
+        box-shadow:
+          0 1px 2px rgba(28, 25, 23, .04),
+          0 6px 16px -8px rgba(120, 90, 20, .08);
+      }
+      .anatomy { padding: 1.1rem 1.25rem; margin: 1.4rem 0; }
+      .anatomy h3 { margin-top: 0; }
+      .anatomy ol { margin: 0; padding-left: 1.3rem; }
+      .anatomy li { margin: .55rem 0; }
+      .anatomy .hint { color: #898781; font-size: .88rem; }
+
+      /* Bloque CTA: card de decisión con el sol encima (.card-hero de la app) */
+      .cta-block {
+        position: relative;
+        overflow: hidden;
+        padding: 1.35rem 1.4rem 1.45rem;
+        margin: 2.2rem 0;
+        text-align: center;
+      }
+      .cta-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--sun-400), var(--sun-600));
+      }
+      .cta-block p { margin: 0 0 .9rem; color: #52514e; }
+      .cta-block .cta { font-size: 1rem; padding: .7rem 1.3rem; }
+
+      /* Índice del blog */
+      .cards { display: grid; gap: 1rem; margin-top: 1.6rem; }
+      .card {
+        padding: 1.15rem 1.3rem;
+        transition: box-shadow .2s ease, transform .2s ease;
+      }
+      .card:hover {
+        box-shadow:
+          0 2px 4px rgba(28, 25, 23, .05),
+          0 16px 32px -12px rgba(120, 90, 20, .14);
+      }
+      .card h2 { margin: 0 0 .35rem; font-size: 1.3rem; }
+      .card h2 a { color: #1c1917; text-decoration: none; }
+      .card h2 a:hover { color: var(--ember); text-decoration: underline; }
+      .card .meta { margin: 0 0 .5rem; }
+      .card p.excerpt {
+        margin: 0;
+        color: #52514e;
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+      }
+
+      /* Categorías: la clase solo fija --cat; etiqueta, punto del eyebrow y borde
+         de card la usan. Sin categoría no existe la clase y nada de esto aplica. */
+      .cat-guia { --cat: var(--cat-guia); }
+      .cat-analisis { --cat: var(--cat-analisis); }
+      .cat-divulgacion { --cat: var(--cat-divulgacion); }
+      .cat-label { color: var(--cat); }
+      article[class*='cat-'] .eyebrow::before {
+        background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--cat) 75%, #fff), var(--cat));
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 18%, transparent);
+      }
+      article[class*='cat-'] > .eyebrow.cat-label { margin: 1.6rem 0 -0.6rem; }
+      .card[class*='cat-'] { border-left: 4px solid var(--cat); }
+
+      footer {
+        margin-top: 3rem;
+        border-top: 1px solid var(--gridline);
+        padding-top: 1rem;
+        font-size: .82rem;
+        color: #78716c;
+      }
+
+      /* Noche: la página se asienta en el azul nocturno de la app y las cards usan
+         la superficie/bordes/sombras de .card-solar en modo noche. */
+      [data-theme='night'] body {
+        color: #e7e5e4;
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(27, 36, 54, 0) 420px),
+          var(--page);
+      }
+      [data-theme='night'] a { color: var(--sun-400); }
+      [data-theme='night'] a:hover { color: #fcd34d; }
+      [data-theme='night'] .brand, [data-theme='night'] .card h2 a { color: #e7e5e4; }
+      [data-theme='night'] .lead,
+      [data-theme='night'] .meta,
+      [data-theme='night'] .eyebrow,
+      [data-theme='night'] .anatomy .hint,
+      [data-theme='night'] .card p.excerpt,
+      [data-theme='night'] .cta-block p,
+      [data-theme='night'] .brand small { color: #a8a29e; }
+      [data-theme='night'] .anatomy,
+      [data-theme='night'] .card,
+      [data-theme='night'] .cta-block {
+        background: #171b23;
+        border-color: #2a2f3a;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, .3),
+          0 6px 16px -8px rgba(0, 0, 0, .5);
+      }
+      [data-theme='night'] .card:hover {
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, .35),
+          0 16px 32px -12px rgba(0, 0, 0, .6);
+      }
+      [data-theme='night'] .card h2 a:hover { color: var(--sun-400); }
+      [data-theme='night'] .langs, [data-theme='night'] .langs a { color: #a8a29e; }
+      [data-theme='night'] .langs strong { color: #e7e5e4; }
+      [data-theme='night'] .callout {
+        background: rgba(245, 158, 11, .12);
+        border-color: rgba(245, 158, 11, .4);
+        border-left-color: var(--sun-500);
+        color: #fde68a;
+      }
+      [data-theme='night'] .callout strong { color: #fde68a; }
+      [data-theme='night'] .cta, [data-theme='night'] .cta:hover { color: #1c1917; }
+      /* El border-color nocturno de .card machacaría el borde de categoría */
+      [data-theme='night'] .card[class*='cat-'] { border-left-color: var(--cat); }
+    </style>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Energy communities: share solar panels with your neighbours",
+  "description": "What energy communities and shared self-consumption mean in Spain, how sharing solar panels with neighbours works, the new 5 km radius, and who can benefit even without their own roof.",
+  "datePublished": "2026-07-11",
+  "dateModified": "2026-07-11",
+  "inLanguage": "en",
+  "mainEntityOfPage": "https://solarvento.es/blog/en/energy-communities-share-solar-panels-neighbours/",
+  "image": "https://solarvento.es/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://solarvento.es/logo-mark.png"
+    }
+  }
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "SolarVento",
+      "item": "https://solarvento.es/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://solarvento.es/blog/en/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Energy communities: share solar panels with your neighbours",
+      "item": "https://solarvento.es/blog/en/energy-communities-share-solar-panels-neighbours/"
+    }
+  ]
+}
+    </script>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="site">
+        <a class="brand" href="/blog/en/">
+          <b>Solar<span>Vento</span></b>
+          <small>Blog</small>
+        </a>
+        <a class="cta" href="/">Calculate my savings</a>
+      </header>
+      <nav class="langs" aria-label="Language"><a href="/blog/comunidades-energeticas-compartir-placas/" hreflang="es" lang="es">Español</a> · <strong>English</strong> · <a href="/blog/ca/comunitats-energetiques-compartir-plaques-solars-veins/" hreflang="ca" lang="ca">Català</a> · <a href="/blog/gl/comunidades-enerxeticas-compartir-placas-solares-vecinos/" hreflang="gl" lang="gl">Galego</a> · <a href="/blog/eu/energia-komunitateak-eguzki-plakak-auzokideekin-partekatu/" hreflang="eu" lang="eu">Euskara</a></nav>
+      <article class="cat-divulgacion">
+        <p class="eyebrow cat-label">DIVULGACIÓN</p>
+        <h1>Energy communities: share solar panels with your neighbours</h1>
+        <p class="meta"><time datetime="2026-07-11">11 July 2026</time></p>
+        <p class="lead">Not everyone can put solar panels on their roof: maybe you live in a flat, your roof is shaded, or you simply don’t have enough space. But that no longer leaves you out of solar energy. Sharing an installation with nearby neighbours or businesses — what is known as shared self-consumption (autoconsumo compartido) and energy communities — is becoming increasingly viable in Spain, and in 2026 the legal framework has become much more favourable. Here’s the plain-English version.</p>
+        
+        <h2>The idea: you don’t need your own roof</h2>
+        
+        <p>The concept is simple: instead of everyone installing their own panels, a group of people or businesses shares <strong>the same solar installation</strong> and divides up the energy it produces. The panels can be on the roof of a residential building, on a nearby industrial unit, or on any suitable roof in the area. Each participant receives a share of the production, which is deducted from their electricity bill.</p>
+        
+        <p>This opens solar up to many people who were previously left out: anyone living in an apartment block, anyone without their own roof, or anyone whose roof has a poor orientation. Instead of giving up on self-consumption, they join a shared scheme.</p>
+        
+        <div class="callout">
+          <strong>The big change in 2026:</strong> the rules have increased the maximum distance between the panels and the people who consume their energy. Previously, participants had to be very close to the installation; under the new framework, that radius has expanded significantly (up to around 5 km in a straight line under the most recent rule), which greatly increases the possibilities for shared projects in neighbourhoods, municipalities and business parks.
+        </div>
+        
+        <h2>Watch the jargon: not everything is the same</h2>
+        
+        <p>This is where almost everyone gets confused, because similar terms are used for different things. Let’s clear them up:</p>
+        
+        <div class="anatomy">
+          <h3>The three concepts people mix up</h3>
+          <ol>
+            <li><strong>Collective self-consumption (or shared self-consumption)</strong> — several consumers share the same installation and divide up its energy. <span class="hint">This is the technical setup: how the electricity is allocated.</span></li>
+            <li><strong>Solar community</strong> — a project where a company promotes the installation and local residents benefit through a subscription, often without investing directly. <span class="hint">A business model for easy access.</span></li>
+            <li><strong>Energy community</strong> — a legal entity in its own right (cooperative, association) where members take part in generation, management and more. <span class="hint">The broader and more participatory model.</span></li>
+          </ol>
+        </div>
+        
+        <p>In practice, for an ordinary resident, the key point is that you can share solar energy in different ways: by financing your share of a common installation, or simply by subscribing to a project that already exists. The legal details are handled by whoever promotes or coordinates the project.</p>
+        
+        <h2>How the energy is shared out</h2>
+        
+        <p>Each participant is assigned an <strong>allocation coefficient</strong>: the percentage of production that belongs to them. This allocation can be fixed or dynamic (adjusting according to each person’s consumption throughout the day), and it is officially registered. The energy allocated to you is deducted from your bill as if it were your own, and surplus energy compensation (compensación de excedentes) can work in the same way as for an individual installation.</p>
+        
+        <p>One important detail: because the energy travels through the distribution grid, small grid access charges (peajes) apply for its use. Even so, they are far lower than buying that electricity directly from the market, so the savings are still real.</p>
+        
+        <h2>The advantages of sharing</h2>
+        
+        <ul>
+          <li><strong>Access without your own roof:</strong> you can use solar even if you live in a flat or your roof is not suitable.</li>
+          <li><strong>Shared investment:</strong> by splitting the cost between several people, your initial contribution is lower.</li>
+          <li><strong>Better performance:</strong> one large, well-oriented shared installation will usually produce more effectively than many small, poorly located ones.</li>
+          <li><strong>The same incentives:</strong> surplus compensation and public grants also apply to these projects.</li>
+        </ul>
+        
+        <h2>And the obstacles, honestly</h2>
+        
+        <p>It is not all straightforward. Setting up a shared project has its complexities: several participants need to agree, the paperwork and administrative steps are more involved than for an individual installation, and coordinating the allocation and billing requires management. That is exactly why the 2026 rules have created the role of the <strong>self-consumption manager (gestor de autoconsumo)</strong>, a person or entity that represents the participants and takes care of the paperwork and coordination, reducing that friction.</p>
+        
+        <div class="callout">
+          <strong>In practical terms:</strong> if you are interested but the management side feels overwhelming, the usual route is to join an existing project (a solar or energy community in your area) rather than setting one up from scratch. That way, you get the benefits without dealing with all the bureaucracy.
+        </div>
+        
+        <h2>In short</h2>
+        
+        <p>Energy communities and shared self-consumption let you enjoy solar energy even if you do not have your own roof: you share an installation with nearby neighbours or businesses and split the production between you. With the wider radius in 2026 and the new self-consumption manager role, setting up or joining these projects is more viable than ever. They are not bureaucracy-free, but they open the door to solar for people who were previously left out.</p>
+        
+        <p>If you have your own roof and first want to see what an individual installation could give you, <a href="/">calculate your case with your bill</a>. And if you do not, you now know that sharing is becoming a more realistic option every year.</p>
+        <div class="cta-block">
+          <p>Want to know how much you could save with solar panels on your roof?</p>
+          <a class="cta" href="/">Calculate my savings</a>
+        </div>
+      </article>
+      <footer>
+        <a href="/blog/en/">Blog</a>
+        <span> · </span>
+        <a href="/faq-en.html">FAQ</a>
+        <span> · </span>
+        <a href="/ayudas.html">Subsidies by region</a>
+        <span> · </span>
+        <a href="/privacidad-en.html">Privacy</a>
+        <p>SolarVento provides indicative estimates based on official data; they are no substitute for a technical survey of your roof.</p>
+      </footer>
+    </main>
+  </body>
+</html>
