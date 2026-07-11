@@ -372,18 +372,26 @@ export default function App() {
             </h1>
             <p className="mt-1.5 max-w-3xl text-stone-600">{t('app.subtitle')}</p>
           </div>
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            aria-label={t('app.language')}
-            className="rounded-lg border border-stone-300 bg-white/70 px-3 py-1.5 text-sm text-stone-700 backdrop-blur-sm"
-          >
-            {LANGUAGE_OPTIONS.map((option) => (
-              <option key={option.code} value={option.code}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2">
+            <a
+              href={language === 'es' ? '/blog/' : `/blog/${language}/`}
+              className="rounded-lg border border-stone-300 bg-white/70 px-3 py-1.5 text-sm font-medium text-stone-700 backdrop-blur-sm hover:border-amber-500"
+            >
+              {t('app.blog')}
+            </a>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              aria-label={t('app.language')}
+              className="rounded-lg border border-stone-300 bg-white/70 px-3 py-1.5 text-sm text-stone-700 backdrop-blur-sm"
+            >
+              {LANGUAGE_OPTIONS.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <p className="mt-3 text-xs leading-relaxed text-stone-500">
           <span className="font-semibold text-stone-600">{t('app.europeNotice')}</span>{' '}
@@ -553,6 +561,17 @@ export default function App() {
           onEdit={editBeforeCalc}
         />
       )}
+
+      <section className="mt-10 card-solar p-5 print:hidden">
+        <h2 className="mb-2 font-display text-xl font-bold text-stone-900">{t('app.guidesTitle')}</h2>
+        <p className="max-w-2xl text-sm text-stone-600">{t('app.guidesLead')}</p>
+        <a
+          href={language === 'es' ? '/blog/' : `/blog/${language}/`}
+          className="btn-solar mt-4 inline-block"
+        >
+          {t('app.guidesCta')}
+        </a>
+      </section>
 
       <footer className="mt-10 border-t border-stone-200 pt-4 text-center text-xs text-stone-500 print:hidden">
         <a href={`/faq${language === 'es' ? '' : `-${language}`}.html`} className="underline hover:text-stone-700">
