@@ -1,0 +1,517 @@
+<!doctype html>
+<!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/blog/ — NO EDITAR A MANO -->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Placas solares: ¿mejor comprarlas o alquilarlas (renting)? Comparativa honesta | SolarVento</title>
+    <meta name="description" content="Comprar, financiar, renting, leasing o PPA de placas solares en España, explicado claro y comparado. Qué te ahorra cada opción, cuál te da las ayudas fiscales y en qué caso compensa alquilar en vez de comprar." />
+    <meta name="keywords" content="comprar o alquilar placas solares, renting placas solares, leasing solar, PPA autoconsumo, alquiler placas solares merece la pena, financiar placas solares, deducción placas solares propiedad" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://solarvento.es/blog/comprar-o-alquilar-placas-solares/" />
+    <link rel="alternate" hreflang="es" href="https://solarvento.es/blog/comprar-o-alquilar-placas-solares/" />
+    <link rel="alternate" hreflang="en" href="https://solarvento.es/blog/en/solar-panels-buy-or-rent-honest-comparison/" />
+    <link rel="alternate" hreflang="ca" href="https://solarvento.es/blog/ca/plaques-solars-comprar-o-llogar-renting/" />
+    <link rel="alternate" hreflang="gl" href="https://solarvento.es/blog/gl/paneis-solares-mercar-ou-alugar-renting-comparativa-honesta/" />
+    <link rel="alternate" hreflang="eu" href="https://solarvento.es/blog/eu/eguzki-plakak-erosi-ala-alokatu-renting/" />
+    <link rel="alternate" hreflang="x-default" href="https://solarvento.es/blog/comprar-o-alquilar-placas-solares/" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:url" content="https://solarvento.es/blog/comprar-o-alquilar-placas-solares/" />
+    <meta property="og:title" content="Placas solares: ¿mejor comprarlas o alquilarlas (renting)? Comparativa honesta | SolarVento" />
+    <meta property="og:description" content="Comprar, financiar, renting, leasing o PPA de placas solares en España, explicado claro y comparado. Qué te ahorra cada opción, cuál te da las ayudas fiscales y en qué caso compensa alquilar en vez de comprar." />
+    <meta property="og:image" content="https://solarvento.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="article:published_time" content="2026-07-13" />
+    <meta property="article:modified_time" content="2026-07-13" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Placas solares: ¿mejor comprarlas o alquilarlas (renting)? Comparativa honesta | SolarVento" />
+    <meta name="twitter:description" content="Comprar, financiar, renting, leasing o PPA de placas solares en España, explicado claro y comparado. Qué te ahorra cada opción, cuál te da las ayudas fiscales y en qué caso compensa alquilar en vez de comprar." />
+    <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      (function () {
+        var RAD = Math.PI / 180, TZ = 'Europe/Madrid', LAT = 40.4168, LON = -3.7038
+        function hourInTZ(date) {
+          var p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)
+          function v(t) { return Number(p.find(function (x) { return x.type === t }).value) }
+          return v('hour') + v('minute') / 60
+        }
+        var now = new Date()
+        var jd = now.getTime() / 86400000 + 2440587.5
+        var n = Math.round(jd - 2451545.0 + 0.0008)
+        var jStar = n + -LON / 360
+        var M = (357.5291 + 0.98560028 * jStar) % 360
+        var Mr = M * RAD
+        var C = 1.9148 * Math.sin(Mr) + 0.02 * Math.sin(2 * Mr) + 0.0003 * Math.sin(3 * Mr)
+        var lambda = ((M + C + 180 + 102.9372) % 360) * RAD
+        var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(Mr) - 0.0069 * Math.sin(2 * lambda)
+        var sinDec = Math.sin(lambda) * Math.sin(23.4397 * RAD)
+        var cosDec = Math.cos(Math.asin(sinDec))
+        var cosOmega = (Math.sin(-0.833 * RAD) - Math.sin(LAT * RAD) * sinDec) / (Math.cos(LAT * RAD) * cosDec)
+        var omega = Math.acos(Math.min(1, Math.max(-1, cosOmega))) / RAD
+        function jToDate(j) { return new Date((j - 2440587.5) * 86400000) }
+        var sunrise = hourInTZ(jToDate(jTransit - omega / 360))
+        var sunset = hourInTZ(jToDate(jTransit + omega / 360))
+        var hour = hourInTZ(now)
+        if (!(hour >= sunrise && hour < sunset)) document.documentElement.setAttribute('data-theme', 'night')
+      })()
+    </script>
+    <style>
+      /* Tema del blog = tema de la portada (src/index.css): papel cálido con
+         amanecer, marca en Bricolage Grotesque, botón solar y cards en capas.
+         Única licencia propia del blog: cuerpo serif para lectura larga. */
+      @font-face {
+        font-family: 'Bricolage Grotesque Variable';
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
+      }
+
+      :root {
+        color-scheme: light;
+        /* Tema solar (mismos tokens que la app) */
+        --page: #fbfaf6;
+        --sky-dawn: #fff4de;
+        --sun-400: #fbbf24;
+        --sun-500: #f59e0b;
+        --sun-600: #d97706;
+        --ember: #b45309;
+        --gridline: #ece6d9;
+        /* Categorías del blog (acento; el ámbar de marca sigue dominando) */
+        --cat-guia: #f59e0b;
+        --cat-analisis: #3f7f8f;
+        --cat-divulgacion: #c2703d;
+      }
+      /* Modo noche: mismas variables que :root[data-theme='night'] en la app.
+         Lo activa el script solar del <head> (se pone el sol en España → noche),
+         igual que la portada; el modo claro/oscuro del sistema NO interviene. */
+      :root[data-theme='night'] {
+        color-scheme: dark;
+        --page: #10131a;
+        --sky-dawn: #1b2436; /* resplandor de cielo nocturno en la cabecera */
+        --gridline: #2a2f3a;
+        /* De noche, más claras y desaturadas: los vivos cansan sobre fondo oscuro */
+        --cat-guia: #f0b95d;
+        --cat-analisis: #6bb0be;
+        --cat-divulgacion: #d99668;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        /* Cuerpo serif (lectura larga); titulares y UI en la familia de la app. */
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+        line-height: 1.7;
+        color: #1c1917;
+        /* Amanecer: la página nace en luz cálida y se asienta en papel */
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(255, 243, 220, 0) 420px),
+          var(--page);
+      }
+      h1, h2, .brand { font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif; }
+      h3, .meta, .cta, .cta-block, .cards, footer, .eyebrow, .anatomy li strong {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+      a { color: var(--ember); }
+      a:hover { color: #92400e; }
+      a:focus-visible, .cta:focus-visible {
+        outline: 3px solid var(--sun-500);
+        outline-offset: 2px;
+        border-radius: .15rem;
+      }
+      h1 {
+        font-size: clamp(1.9rem, 4vw, 2.6rem);
+        font-weight: 700;
+        letter-spacing: -.02em;
+        line-height: 1.12;
+        margin: 1.2rem 0 .5rem;
+      }
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 650;
+        letter-spacing: -.01em;
+        line-height: 1.25;
+        margin: 2.2rem 0 .6rem;
+      }
+      h3 { font-size: 1.02rem; margin: 1.4rem 0 .3rem; }
+      p { margin: .55rem 0; }
+      ul, ol { padding-left: 1.4rem; }
+      li { margin: .3rem 0; }
+
+      /* Cabecera: logo + wordmark como en la portada, CTA solar a la derecha */
+      header.site {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gridline);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        font-weight: 700;
+        font-size: 1.35rem;
+        letter-spacing: -.02em;
+        color: #1c1917;
+        text-decoration: none;
+      }
+      .brand b { font-weight: inherit; }
+      .brand span { color: var(--sun-600); }
+      .brand small {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #78716c;
+        align-self: flex-end;
+        margin-bottom: .3rem;
+      }
+
+      /* Botón principal: gradiente solar con texto oscuro (el .btn-solar de la app) */
+      .cta {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--sun-400), var(--sun-500) 55%, var(--sun-600));
+        color: #1c1917;
+        font-weight: 650;
+        font-size: .9rem;
+        padding: .55rem 1rem;
+        border-radius: .75rem;
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 1px 2px rgba(180, 83, 9, .25);
+        transition: box-shadow .15s ease, filter .15s ease;
+      }
+      .cta:hover {
+        color: #1c1917;
+        filter: brightness(1.05);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 3px 10px rgba(217, 119, 6, .35);
+      }
+
+      /* Eyebrow con tick solar (fecha del artículo, etiquetas de sección) */
+      .eyebrow, .meta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        font-weight: 650;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #78716c;
+        margin: 0 0 1.4rem;
+      }
+      .eyebrow::before, .meta::before {
+        content: '';
+        width: .5rem;
+        height: .5rem;
+        border-radius: 9999px;
+        background: radial-gradient(circle at 35% 35%, var(--sun-400), var(--sun-600));
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, .18);
+        flex-shrink: 0;
+      }
+      .lead { font-size: 1.08rem; color: #52514e; }
+
+      /* Selector de idiomas (como FAQ/privacidad): visible, discreto */
+      .langs { font-size: .78rem; color: #78716c; margin: 1rem 0 0;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .langs a { color: #78716c; }
+      .langs strong { color: #1c1917; }
+
+      /* Callout: aviso ámbar (border-amber-200 + bg-amber-50, como en la app) */
+      .callout {
+        border: 1px solid #fde68a;
+        border-left: .3rem solid var(--sun-500);
+        background: #fffbeb;
+        border-radius: .75rem;
+        color: #78350f;
+        padding: .85rem 1.1rem;
+        margin: 1.4rem 0;
+        font-size: .95rem;
+      }
+      .callout strong { color: #92400e; }
+
+      /* Cards: papel sobre papel, borde cálido, profundidad en capas (.card-solar) */
+      .anatomy, .card, .cta-block {
+        background: #fff;
+        border: 1px solid var(--gridline);
+        border-radius: 1rem;
+        box-shadow:
+          0 1px 2px rgba(28, 25, 23, .04),
+          0 6px 16px -8px rgba(120, 90, 20, .08);
+      }
+      .anatomy { padding: 1.1rem 1.25rem; margin: 1.4rem 0; }
+      .anatomy h3 { margin-top: 0; }
+      .anatomy ol { margin: 0; padding-left: 1.3rem; }
+      .anatomy li { margin: .55rem 0; }
+      .anatomy .hint { color: #898781; font-size: .88rem; }
+
+      /* Bloque CTA: card de decisión con el sol encima (.card-hero de la app) */
+      .cta-block {
+        position: relative;
+        overflow: hidden;
+        padding: 1.35rem 1.4rem 1.45rem;
+        margin: 2.2rem 0;
+        text-align: center;
+      }
+      .cta-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--sun-400), var(--sun-600));
+      }
+      .cta-block p { margin: 0 0 .9rem; color: #52514e; }
+      .cta-block .cta { font-size: 1rem; padding: .7rem 1.3rem; }
+
+      /* Índice del blog */
+      .cards { display: grid; gap: 1rem; margin-top: 1.6rem; }
+      .card {
+        padding: 1.15rem 1.3rem;
+        transition: box-shadow .2s ease, transform .2s ease;
+      }
+      .card:hover {
+        box-shadow:
+          0 2px 4px rgba(28, 25, 23, .05),
+          0 16px 32px -12px rgba(120, 90, 20, .14);
+      }
+      .card h2 { margin: 0 0 .35rem; font-size: 1.3rem; }
+      .card h2 a { color: #1c1917; text-decoration: none; }
+      .card h2 a:hover { color: var(--ember); text-decoration: underline; }
+      .card .meta { margin: 0 0 .5rem; }
+      .card p.excerpt {
+        margin: 0;
+        color: #52514e;
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+      }
+
+      /* Categorías: la clase solo fija --cat; etiqueta, punto del eyebrow y borde
+         de card la usan. Sin categoría no existe la clase y nada de esto aplica. */
+      .cat-guia { --cat: var(--cat-guia); }
+      .cat-analisis { --cat: var(--cat-analisis); }
+      .cat-divulgacion { --cat: var(--cat-divulgacion); }
+      .cat-label { color: var(--cat); }
+      article[class*='cat-'] .eyebrow::before {
+        background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--cat) 75%, #fff), var(--cat));
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 18%, transparent);
+      }
+      article[class*='cat-'] > .eyebrow.cat-label { margin: 1.6rem 0 -0.6rem; }
+      .card[class*='cat-'] { border-left: 4px solid var(--cat); }
+
+      footer {
+        margin-top: 3rem;
+        border-top: 1px solid var(--gridline);
+        padding-top: 1rem;
+        font-size: .82rem;
+        color: #78716c;
+      }
+
+      /* Noche: la página se asienta en el azul nocturno de la app y las cards usan
+         la superficie/bordes/sombras de .card-solar en modo noche. */
+      [data-theme='night'] body {
+        color: #e7e5e4;
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(27, 36, 54, 0) 420px),
+          var(--page);
+      }
+      [data-theme='night'] a { color: var(--sun-400); }
+      [data-theme='night'] a:hover { color: #fcd34d; }
+      [data-theme='night'] .brand, [data-theme='night'] .card h2 a { color: #e7e5e4; }
+      [data-theme='night'] .lead,
+      [data-theme='night'] .meta,
+      [data-theme='night'] .eyebrow,
+      [data-theme='night'] .anatomy .hint,
+      [data-theme='night'] .card p.excerpt,
+      [data-theme='night'] .cta-block p,
+      [data-theme='night'] .brand small { color: #a8a29e; }
+      [data-theme='night'] .anatomy,
+      [data-theme='night'] .card,
+      [data-theme='night'] .cta-block {
+        background: #171b23;
+        border-color: #2a2f3a;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, .3),
+          0 6px 16px -8px rgba(0, 0, 0, .5);
+      }
+      [data-theme='night'] .card:hover {
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, .35),
+          0 16px 32px -12px rgba(0, 0, 0, .6);
+      }
+      [data-theme='night'] .card h2 a:hover { color: var(--sun-400); }
+      [data-theme='night'] .langs, [data-theme='night'] .langs a { color: #a8a29e; }
+      [data-theme='night'] .langs strong { color: #e7e5e4; }
+      [data-theme='night'] .callout {
+        background: rgba(245, 158, 11, .12);
+        border-color: rgba(245, 158, 11, .4);
+        border-left-color: var(--sun-500);
+        color: #fde68a;
+      }
+      [data-theme='night'] .callout strong { color: #fde68a; }
+      [data-theme='night'] .cta, [data-theme='night'] .cta:hover { color: #1c1917; }
+      /* El border-color nocturno de .card machacaría el borde de categoría */
+      [data-theme='night'] .card[class*='cat-'] { border-left-color: var(--cat); }
+    </style>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Placas solares: ¿mejor comprarlas o alquilarlas (renting)? Comparativa honesta",
+  "description": "Comprar, financiar, renting, leasing o PPA de placas solares en España, explicado claro y comparado. Qué te ahorra cada opción, cuál te da las ayudas fiscales y en qué caso compensa alquilar en vez de comprar.",
+  "datePublished": "2026-07-13",
+  "dateModified": "2026-07-13",
+  "inLanguage": "es",
+  "mainEntityOfPage": "https://solarvento.es/blog/comprar-o-alquilar-placas-solares/",
+  "image": "https://solarvento.es/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://solarvento.es/logo-mark.png"
+    }
+  }
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "SolarVento",
+      "item": "https://solarvento.es/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://solarvento.es/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Placas solares: ¿mejor comprarlas o alquilarlas (renting)? Comparativa honesta",
+      "item": "https://solarvento.es/blog/comprar-o-alquilar-placas-solares/"
+    }
+  ]
+}
+    </script>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="site">
+        <a class="brand" href="/blog/">
+          <b>Solar<span>Vento</span></b>
+          <small>Blog</small>
+        </a>
+        <a class="cta" href="/">Calcular mi ahorro</a>
+      </header>
+      <nav class="langs" aria-label="Idioma"><strong>Español</strong> · <a href="/blog/en/solar-panels-buy-or-rent-honest-comparison/" hreflang="en" lang="en">English</a> · <a href="/blog/ca/plaques-solars-comprar-o-llogar-renting/" hreflang="ca" lang="ca">Català</a> · <a href="/blog/gl/paneis-solares-mercar-ou-alugar-renting-comparativa-honesta/" hreflang="gl" lang="gl">Galego</a> · <a href="/blog/eu/eguzki-plakak-erosi-ala-alokatu-renting/" hreflang="eu" lang="eu">Euskara</a></nav>
+      <article class="cat-analisis">
+        <p class="eyebrow cat-label">ANÁLISIS</p>
+        <h1>Placas solares: ¿mejor comprarlas o alquilarlas (renting)? Comparativa honesta</h1>
+        <p class="meta"><time datetime="2026-07-13">13 de julio de 2026</time></p>
+        <p class="lead">Hasta hace poco solo había una forma de tener placas solares: comprarlas. Hoy el mercado ofrece varias alternativas —renting, leasing, suscripción, PPA— que prometen energía solar sin desembolsar miles de euros de golpe. Suenan cómodas, y para algunos casos lo son. Pero la letra pequeña cambia mucho las cuentas, y conviene entender bien cada opción antes de firmar un contrato que puede durar veinte años. Vamos a compararlas sin quedarnos con el discurso de nadie.</p>
+        
+        <h2>Las opciones, de la más a la menos "tuya"</h2>
+        
+        <p>Primero, aclaremos los términos, porque se usan de forma confusa y no significan lo mismo:</p>
+        
+        <div class="anatomy">
+          <h3>Las formas de tener placas solares</h3>
+          <ol>
+            <li><strong>Compra directa</strong> — pagas la instalación y es tuya desde el primer día. <span class="hint">Máximo ahorro a largo plazo; requiere desembolso inicial.</span></li>
+            <li><strong>Compra financiada</strong> — la compras, pero pagas a plazos (préstamo). Es tuya. <span class="hint">Sin gran desembolso inicial, pero con intereses; sigues siendo el propietario.</span></li>
+            <li><strong>Leasing</strong> — alquiler con opción de compra al final. Puede acabar siendo tuya. <span class="hint">A medio camino; al final decides si te la quedas.</span></li>
+            <li><strong>Renting</strong> — alquiler puro, con mantenimiento incluido. Normalmente NO es tuya. <span class="hint">Cuota fija todo incluido, pero no eres el dueño.</span></li>
+            <li><strong>PPA (compra de energía)</strong> — no alquilas las placas: compras la energía que producen a un precio pactado. <span class="hint">La empresa instala y es dueña; tú solo pagas la luz que generan.</span></li>
+          </ol>
+        </div>
+        
+        <h2>Por qué la compra suele ganar a largo plazo</h2>
+        
+        <p>La lógica es la misma que la de comprar frente a alquilar una vivienda: cuando alquilas, una parte de lo que pagas se va en el beneficio de quien te alquila. Con las placas pasa igual. En un renting o un alquiler, buena parte del ahorro que consigues en tu factura de la luz se te va en la cuota mensual, porque esa cuota tiene que cubrir la instalación más el margen de la empresa. El ahorro neto real acaba siendo pequeño.</p>
+        
+        <p>Con la compra, en cambio, tras amortizar la instalación —normalmente entre 5 y 8 años— el resto de su vida útil (hasta 25-30 años) es ahorro puro para ti. Ese es el gran premio que el alquiler no te da: los años de ahorro libre después de amortizar.</p>
+        
+        <div class="callout">
+          <strong>La cuenta que casi nadie hace:</strong> en un alquiler o renting a 20 años, sueles acabar pagando bastante más que el coste de comprar la instalación de partida —y al final, en muchos contratos, las placas ni siquiera son tuyas—. Pagas dos décadas por usar algo que podrías haber comprado y amortizado en menos de la mitad de ese tiempo.
+        </div>
+        
+        <h2>El factor decisivo que suele olvidarse: las ayudas fiscales</h2>
+        
+        <p>Este es el punto más importante y el que menos se menciona, así que subráyalo: <strong>si no eres el propietario de la instalación, no puedes acceder a las subvenciones ni a las deducciones fiscales.</strong></p>
+        
+        <p>Las ayudas al autoconsumo, la deducción en el IRPF y las bonificaciones en el IBI que ofrecen muchos ayuntamientos están pensadas para quien invierte en su propia instalación. En un renting o un PPA, como la instalación es de la empresa, esas ventajas se las queda ella (o simplemente no aplican a tu caso). Renunciar a las ayudas puede suponer perder una parte muy significativa del ahorro, porque en muchos casos cubren un buen pedazo del coste. Es, muchas veces, el argumento que inclina la balanza hacia la compra.</p>
+        
+        <h2>Otros inconvenientes del alquiler que conviene conocer</h2>
+        
+        <ul>
+          <li><strong>Atado a un contrato largo:</strong> los contratos de renting suelen durar hasta 20 años, con penalizaciones si quieres salir antes.</li>
+          <li><strong>Problema al vender la casa:</strong> si vendes la vivienda con un renting en marcha, el nuevo propietario tiene que asumir la cuota, lo que puede complicar la venta.</li>
+          <li><strong>No revaloriza tu casa como algo tuyo:</strong> una instalación en propiedad suma valor a la vivienda; una alquilada, no de la misma forma.</li>
+          <li><strong>Dependencia de la empresa:</strong> quedas vinculado al arrendador durante todo el contrato, para lo bueno y lo malo.</li>
+        </ul>
+        
+        <h2>Entonces, ¿cuándo tiene sentido alquilar?</h2>
+        
+        <p>El alquiler o renting no es un timo: tiene su hueco. Puede compensar si:</p>
+        
+        <ul>
+          <li><strong>No puedes o no quieres asumir la inversión inicial</strong> ni pedir financiación, y prefieres una cuota fija con todo incluido.</li>
+          <li><strong>Valoras mucho la comodidad</strong> de no preocuparte de nada: mantenimiento, averías y gestión corren por cuenta de la empresa.</li>
+          <li><strong>No tributas lo suficiente</strong> como para aprovechar las deducciones fiscales, con lo que pierdes menos al no ser propietario.</li>
+          <li><strong>Es una solución temporal</strong> o no tienes claro cuánto tiempo seguirás en esa vivienda.</li>
+        </ul>
+        
+        <div class="callout">
+          <strong>La regla práctica:</strong> si puedes permitirte comprar (aunque sea financiando), la compra casi siempre sale más rentable a largo plazo y te da acceso a las ayudas. El alquiler tiene sentido sobre todo como vía de entrada para quien no puede invertir de golpe y prioriza comodidad y cuota fija sobre rentabilidad máxima.
+        </div>
+        
+        <h2>Una alternativa intermedia: comprar financiando</h2>
+        
+        <p>Mucha gente descarta la compra porque piensa que exige pagar todo de golpe, y no es así. La compra financiada te permite ser propietario desde el primer día —con acceso a ayudas y deducciones— pagando a plazos, igual que pagarías una cuota de renting. Sueles terminar pagando menos que en un renting equivalente, y la instalación es tuya. Para muchos hogares es el punto dulce: sin gran desembolso inicial, pero con las ventajas de la propiedad.</p>
+        
+        <h2>En resumen</h2>
+        
+        <p>Comprar placas solares —al contado o financiando— suele ser la opción más rentable a largo plazo: amortizas en 5-8 años y luego disfrutas de años de ahorro puro, además de acceder a subvenciones y deducciones fiscales que el alquiler no permite. El renting, leasing o PPA evitan la inversión inicial y quitan preocupaciones de mantenimiento, pero a cambio de un ahorro neto menor, contratos largos y, sobre todo, la pérdida de las ayudas por no ser el propietario. Si puedes comprar (aunque sea a plazos), normalmente compensa; el alquiler es la vía para quien prioriza no invertir y la comodidad sobre la rentabilidad.</p>
+        
+        <p>Antes de decidir cómo pagarla, lo primero es saber si el solar te compensa y de qué tamaño sería tu instalación: <a href="/">calcula tu caso con tu factura</a> y parte de ahí con los números claros.</p>
+        <div class="cta-block">
+          <p>¿Quieres saber cuánto ahorrarías con placas en tu tejado?</p>
+          <a class="cta" href="/">Calcular mi ahorro</a>
+        </div>
+      </article>
+      <footer>
+        <a href="/blog/">Blog</a>
+        <span> · </span>
+        <a href="/faq.html">Preguntas frecuentes</a>
+        <span> · </span>
+        <a href="/ayudas.html">Ayudas por comunidad</a>
+        <span> · </span>
+        <a href="/privacidad.html">Privacidad</a>
+        <p>SolarVento ofrece estimaciones orientativas basadas en datos oficiales; no sustituyen a un estudio técnico en tu tejado.</p>
+      </footer>
+    </main>
+  </body>
+</html>
