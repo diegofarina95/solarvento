@@ -239,3 +239,59 @@ def test_reemplazo_despues_del_payback_no_lo_toca_pero_baja_el_van():
     )
     assert late["payback_years"] == base["payback_years"] == 4.0
     assert late["npv_eur"] < base["npv_eur"]
+
+
+def test_escalada_cero_alarga_el_ajustado_por_encima_del_simple():
+    """Verificación pedida por el usuario (jul-2026): si la escalada del precio
+    de la luz es 0%, el payback AJUSTADO debe quedar POR ENCIMA del simple.
+
+    Es la prueba de que los cuatro factores entran en el flujo de caja del
+    payback (no solo en el ahorro a 25 años): sin escalada solo quedan efectos
+    que ALARGAN (degradación de paneles, O&M e inversor), así que el ajustado
+    tiene que ser estrictamente mayor que el simple (inversión / ahorro año 1).
+    """
+    investment = 7642.72
+    savings_year1 = 1616.97
+    om = round(investment * cashflow.OM_PCT_PER_YEAR, 2)
+    yearly = cashflow.simple_yearly_savings(savings_year1, price_escalation=0.0)
+    analysis = cashflow.cashflow_analysis(
+        yearly,
+        investment_eur=investment,
+        om_eur_per_year=om,
+        replacements={cashflow.INVERTER_REPLACEMENT_YEAR: 900.0},
+    )
+    simple = round(investment / savings_year1, 1)
+    assert analysis["payback_years"] > simple
+
+
+def test_cada_factor_entra_en_el_payback_ajustado():
+    """Cada uno de los cuatro factores mueve el payback ajustado en su sentido:
+    la escalada lo acorta; degradación, O&M e inversor (si cae antes) lo alargan.
+    Si alguno dejara de aplicarse al flujo, uno de estos asserts fallaría.
+    """
+    investment = 1000.0
+    year1 = 250.0  # simple: 4,0 años, así el inversor del año 3 sí lo toca
+    base = cashflow.cashflow_analysis(
+        cashflow.simple_yearly_savings(year1, panel_degradation=0.0, price_escalation=0.0),
+        investment_eur=investment,
+    )
+    escalada = cashflow.cashflow_analysis(
+        cashflow.simple_yearly_savings(year1, panel_degradation=0.0, price_escalation=0.05),
+        investment_eur=investment,
+    )
+    degradacion = cashflow.cashflow_analysis(
+        cashflow.simple_yearly_savings(year1, panel_degradation=0.03, price_escalation=0.0),
+        investment_eur=investment,
+    )
+    om = cashflow.cashflow_analysis(
+        cashflow.simple_yearly_savings(year1, panel_degradation=0.0, price_escalation=0.0),
+        investment_eur=investment, om_eur_per_year=50.0,
+    )
+    inversor = cashflow.cashflow_analysis(
+        cashflow.simple_yearly_savings(year1, panel_degradation=0.0, price_escalation=0.0),
+        investment_eur=investment, replacements={3: 200.0},
+    )
+    assert escalada["payback_years"] < base["payback_years"]
+    assert degradacion["payback_years"] > base["payback_years"]
+    assert om["payback_years"] > base["payback_years"]
+    assert inversor["payback_years"] > base["payback_years"]
