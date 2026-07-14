@@ -455,6 +455,21 @@ class TestAggregateBills:
         result = aggregate_bills([{"month": 1, "kwh": 300, "energy_eur": 45.0, "amount_eur": 60.0}])
         assert result["energy_price_eur_kwh"] == result["avg_price_eur_kwh"] == pytest.approx(0.15, rel=0.01)
 
+    def test_panel_and_engine_energy_price_same_source(self):
+        # El panel (contract_to_bill) y el motor (aggregate_bills) derivan el
+        # precio de energía de la MISMA función: no pueden desincronizarse.
+        from app.bill_normalise import contract_to_bill
+        bill = contract_to_bill({
+            "tariff": "2.0TD", "currency": "EUR", "country_code": "ES",
+            "period_total_kwh": "400",
+            "period_split": {"p1_punta": "200", "p2_llano": None, "p3_valle": "200"},
+            "period_split_prices": {"p1_punta": "0,146045", "p2_llano": None, "p3_valle": "0,144798"},
+            "energy_term_eur": "72,40", "total_amount_eur": "72,40",
+        })
+        agg = aggregate_bills([bill])
+        assert bill["energy_price_eur_kwh"] == agg["energy_price_eur_kwh"] == pytest.approx(0.1454, abs=0.0005)
+        assert agg["avg_price_eur_kwh"] == pytest.approx(0.181, abs=0.001)  # medio total, aparte
+
     # --- BUG 1: bono social — financiación no cuenta, mercado libre lo excluye ---
     def test_financiacion_bono_social_is_not_a_discount(self):
         from app.bills import detect_bono_social

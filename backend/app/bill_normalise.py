@@ -344,6 +344,18 @@ def contract_to_bill(contract: dict) -> dict:
         "parser": "openai-contract",
     }
 
+    # (Layer 5) Precio del TÉRMINO DE ENERGÍA por factura, con la MISMA función
+    # que el motor usa al agregar: así el panel "Datos detectados" y el cálculo
+    # muestran el mismo €/kWh (no el precio medio total = importe÷kWh).
+    _energy_fallback = (
+        bill["energy_eur"] / bill["kwh"]
+        if bill.get("energy_eur") and bill.get("kwh")
+        else None
+    )
+    bill["energy_price_eur_kwh"] = bills.weighted_energy_price(
+        bill["consumption_period_prices"], bill["consumption_periods"], fallback=_energy_fallback
+    )
+
     # (Layer 4) Resolutor del ANUAL — anual impreso > histórico > declarado > estimación.
     rolling_annual = _val(contract.get("rolling_annual_kwh"))
     if rolling_annual is not None and not (0 < rolling_annual <= bills.MAX_BILL_KWH):

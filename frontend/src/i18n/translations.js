@@ -308,6 +308,8 @@ export const translations = {
       detectedPeriod: 'Periodo',
       detectedMonths: ({ n }) => `${n} meses`,
       detectedPrice: 'Precio energía estimado',
+      detectedEnergyPrice: 'Precio de energía (término de energía)',
+      detectedAvgPrice: 'Precio medio de la factura',
       detectedBonoSocial: 'bono social',
       singleMonthWarning:
         'Es el consumo de un solo mes. Una factura no basta para dimensionar con fiabilidad por la estacionalidad; sube el histórico anual (gráfico de 12 meses) o varias facturas del año.',
@@ -882,6 +884,8 @@ export const translations = {
       detectedPeriod: 'Period',
       detectedMonths: ({ n }) => `${n} months`,
       detectedPrice: 'Estimated energy price',
+      detectedEnergyPrice: 'Energy price (energy term)',
+      detectedAvgPrice: 'Average bill price',
       detectedBonoSocial: 'social discount',
       singleMonthWarning:
         'This is a single month of consumption. One bill is not enough to size reliably because of seasonality; upload the 12-month history chart or several bills across the year.',
@@ -1456,6 +1460,8 @@ export const translations = {
       detectedPeriod: 'Período',
       detectedMonths: ({ n }) => `${n} meses`,
       detectedPrice: 'Prezo enerxía estimado',
+      detectedEnergyPrice: 'Prezo de enerxía (termo de enerxía)',
+      detectedAvgPrice: 'Prezo medio da factura',
       detectedBonoSocial: 'bono social',
       singleMonthWarning:
         'É o consumo dun só mes. Unha factura non abonda para dimensionar con fiabilidade pola estacionalidade; sobe o histórico anual (gráfico de 12 meses) ou varias facturas do ano.',
@@ -2030,6 +2036,8 @@ export const translations = {
       detectedPeriod: 'Període',
       detectedMonths: ({ n }) => `${n} mesos`,
       detectedPrice: 'Preu energia estimat',
+      detectedEnergyPrice: "Preu d'energia (terme d'energia)",
+      detectedAvgPrice: 'Preu mitjà de la factura',
       detectedBonoSocial: 'bo social',
       singleMonthWarning:
         'És el consum d’un sol mes. Una factura no n’hi ha prou per dimensionar amb fiabilitat per l’estacionalitat; puja l’històric anual (gràfic de 12 mesos) o diverses factures de l’any.',
@@ -2604,6 +2612,8 @@ export const translations = {
       detectedPeriod: 'Aldia',
       detectedMonths: ({ n }) => `${n} hilabete`,
       detectedPrice: 'Energiaren prezio estimatua',
+      detectedEnergyPrice: 'Energiaren prezioa (energia-terminoa)',
+      detectedAvgPrice: 'Fakturaren batez besteko prezioa',
       detectedBonoSocial: 'gizarte-bonua',
       singleMonthWarning:
         'Hilabete bakar bateko kontsumoa da. Faktura bat ez da nahikoa fidagarritasunez dimentsionatzeko sasoikotasunagatik; igo urteko historikoa (12 hilabeteko grafikoa) edo urteko hainbat faktura.',

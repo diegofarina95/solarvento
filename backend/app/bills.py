@@ -1660,6 +1660,30 @@ def _dedupe_bills(bills: list[dict]) -> list[dict]:
     return out
 
 
+def _energy_price_terms(period_prices: object, period_kwh: object) -> tuple[float, float]:
+    """(numerador, denominador) para la media del precio del término de energía
+    ponderada por kWh de cada tramo. Base compartida por el precio por factura
+    (panel) y el agregado (motor), para que NUNCA se desincronicen."""
+    num = den = 0.0
+    if isinstance(period_prices, dict):
+        for key, price in period_prices.items():
+            if price and price > 0:
+                weight = (period_kwh.get(key) if isinstance(period_kwh, dict) else None) or 1.0
+                num += float(price) * weight
+                den += weight
+    return num, den
+
+
+def weighted_energy_price(
+    period_prices: object, period_kwh: object, fallback: float | None = None
+) -> float | None:
+    """Precio del término de energía (media ponderada por kWh de los precios por
+    tramo del detalle 'Facturación del Consumo … Eur/kWh'). `fallback` si la
+    factura no trae el detalle por tramos (p. ej. energy_eur/kWh)."""
+    num, den = _energy_price_terms(period_prices, period_kwh)
+    return round(num / den, 4) if den > 0 else fallback
+
+
 def aggregate_bills(
     bills: list[dict],
     default_currency: str | None = None,
@@ -1919,15 +1943,11 @@ def aggregate_bills(
     # término por importe (energy_eur/kWh) si la factura no trae el detalle.
     energy_num = energy_den = 0.0
     for bill in bills:
-        prices = bill.get("consumption_period_prices")
-        periods = bill.get("consumption_periods")
-        if not isinstance(prices, dict):
-            continue
-        for key, unit_price in prices.items():
-            if unit_price and unit_price > 0:
-                weight = (periods.get(key) if isinstance(periods, dict) else None) or 1.0
-                energy_num += unit_price * weight
-                energy_den += weight
+        n, d = _energy_price_terms(
+            bill.get("consumption_period_prices"), bill.get("consumption_periods")
+        )
+        energy_num += n
+        energy_den += d
     energy_price_eur_kwh = round(energy_num / energy_den, 4) if energy_den > 0 else price
 
     # Fuente única de consumo: el mismo annual_kwh alimenta precio y dimensionado.

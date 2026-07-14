@@ -574,6 +574,9 @@ class ParsedBill(BaseModel):
     existing_pv: bool = False
     bono_social: bool = False
     rolling_annual_kwh: float | None = None
+    # Precio del término de energía (€/kWh); el MISMO que usa el motor. El panel
+    # "Datos detectados" lo muestra en vez del precio medio total (importe÷kWh).
+    energy_price_eur_kwh: float | None = None
     # Máquina de 3 estados: valid (calcula) | needs_review (confirmar) |
     # extraction_failed (introducir a mano). Nunca hay un 4º que invente números.
     state: str = "valid"

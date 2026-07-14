@@ -78,7 +78,8 @@ function mergeDetected(prev, rawEntries) {
         isAnnual: false,
         tariff: null,
         bonoSocial: false,
-        price: null,
+        energyPrice: null,
+        avgPrice: null,
         currency: e.currency,
         lastFallbackAnnual: null,
       }
@@ -93,7 +94,8 @@ function mergeDetected(prev, rawEntries) {
     if (e.isAnnual) g.isAnnual = true
     if (e.tariff) g.tariff = e.tariff
     if (e.bonoSocial) g.bonoSocial = true
-    if (e.price != null) g.price = e.price
+    if (e.energyPrice != null) g.energyPrice = e.energyPrice
+    if (e.avgPrice != null) g.avgPrice = e.avgPrice
     if (e.currency) g.currency = e.currency
     g.lastFallbackAnnual = e.fallbackAnnual
   }
@@ -108,7 +110,8 @@ function mergeDetected(prev, rawEntries) {
     isAnnual: g.isAnnual,
     tariff: g.tariff,
     bonoSocial: g.bonoSocial,
-    price: g.price,
+    energyPrice: g.energyPrice,
+    avgPrice: g.avgPrice,
     currency: g.currency,
     lastFallbackAnnual: g.lastFallbackAnnual,
   }))
@@ -282,7 +285,10 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
           isAnnual,
           tariff: parsed.tariff ?? null,
           bonoSocial: !!parsed.bono_social,
-          price: total && parsed.kwh ? total / parsed.kwh : null,
+          // Precio de ENERGÍA (término de energía), el mismo que usa el motor.
+          energyPrice: parsed.energy_price_eur_kwh ?? null,
+          // Precio MEDIO de la factura (importe÷kWh): informativo, aparte.
+          avgPrice: total && parsed.kwh ? total / parsed.kwh : null,
           currency: parsed.currency || '€',
         })
       }
@@ -495,12 +501,20 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
                       <dd className="text-right font-medium">{d.tariff}</dd>
                     </>
                   )}
-                  {d.price != null && (
+                  {d.energyPrice != null && (
                     <>
-                      <dt className="text-emerald-700">{t('bills.detectedPrice')}</dt>
+                      <dt className="text-emerald-700">{t('bills.detectedEnergyPrice')}</dt>
                       <dd className="text-right font-medium">
-                        {pfmt.format(d.price)} {d.currency}/kWh
+                        {pfmt.format(d.energyPrice)} {d.currency}/kWh
                         {d.bonoSocial ? ` · ${t('bills.detectedBonoSocial')}` : ''}
+                      </dd>
+                    </>
+                  )}
+                  {d.avgPrice != null && (
+                    <>
+                      <dt className="text-emerald-700">{t('bills.detectedAvgPrice')}</dt>
+                      <dd className="text-right font-medium">
+                        {pfmt.format(d.avgPrice)} {d.currency}/kWh
                       </dd>
                     </>
                   )}
