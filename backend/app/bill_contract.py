@@ -161,9 +161,11 @@ BILL_CONTRACT_SCHEMA: dict[str, Any] = {
         "bono_social": {
             "type": ["boolean", "null"],
             "description": (
-                "true if the bill applies the Spanish social discount: any of 'PVPC con bono "
-                "social', 'Descuento por Bono Social', 'Bono Social de Electricidad'. With it the "
-                "effective €/kWh is legitimately much lower."
+                "true ONLY if the bill applies the Spanish social discount as an explicit "
+                "reduction: 'PVPC con bono social', a 'Descuento por Bono Social' line (negative "
+                "amount), or 'Bono social aplicado'. IMPORTANT: a 'Financiación (del) Bono Social' "
+                "line is NOT this — it is a regulated charge every consumer pays, so it must be "
+                "ignored. Always false on 'mercado libre' contracts (incompatible by regulation)."
             ),
         },
         "billing_period": _BILLING_PERIOD,

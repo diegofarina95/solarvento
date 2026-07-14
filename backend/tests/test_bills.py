@@ -439,6 +439,47 @@ class TestAggregateBills:
         result = aggregate_bills([{"kwh": 300, "days": 30, "bono_social": True}])
         assert result["bono_social"] is True
 
+    # --- BUG 2: precio de energía del detalle, no el medio total ---
+    def test_energy_price_from_period_detail_not_total(self):
+        # energy_eur contaminado (72,40/400 = 0,181, el "precio medio"), pero los
+        # precios por tramo del detalle dan ≈0,1454 (media ponderada por kWh).
+        result = aggregate_bills([{
+            "month": 1, "kwh": 400, "energy_eur": 72.40, "amount_eur": 72.40,
+            "consumption_periods": {"punta": 200, "valle": 200},
+            "consumption_period_prices": {"punta": 0.146045, "valle": 0.144798},
+        }])
+        assert result["energy_price_eur_kwh"] == pytest.approx(0.1454, abs=0.0005)
+        assert result["avg_price_eur_kwh"] == pytest.approx(0.181, abs=0.001)  # medio, se conserva
+
+    def test_energy_price_falls_back_to_avg_without_detail(self):
+        result = aggregate_bills([{"month": 1, "kwh": 300, "energy_eur": 45.0, "amount_eur": 60.0}])
+        assert result["energy_price_eur_kwh"] == result["avg_price_eur_kwh"] == pytest.approx(0.15, rel=0.01)
+
+    # --- BUG 1: bono social — financiación no cuenta, mercado libre lo excluye ---
+    def test_financiacion_bono_social_is_not_a_discount(self):
+        from app.bills import detect_bono_social
+        assert detect_bono_social("Financiación Bono Social 64 días x 0,019121 Eur/día") is False
+        assert detect_bono_social("Financiación del Bono Social ......... 1,22 €") is False
+
+    def test_mercado_libre_excludes_bono(self):
+        from app.bills import detect_bono_social, detect_mercado_libre
+        txt = "Contrato de mercado libre\nFinanciación Bono Social 0,019121 Eur/día"
+        assert detect_mercado_libre(txt) is True
+        assert detect_bono_social(txt) is False
+
+    def test_real_bono_discount_still_detected(self):
+        from app.bills import detect_bono_social
+        assert detect_bono_social("PVPC con bono social\nDescuento por Bono Social -12,34 €") is True
+        assert detect_bono_social("Aplicado Bono Social") is True
+
+    def test_augment_bono_authoritative_from_text(self):
+        from app.bills import augment_contract_from_text
+        # falso positivo del modelo por "Financiación Bono Social" → se corrige a False
+        endesa = "Conecta Endesa · Contrato de mercado libre\nFinanciación Bono Social 64 días x 0,019121 Eur/día"
+        assert augment_contract_from_text({"bono_social": True}, endesa)["bono_social"] is False
+        # descuento real → True
+        assert augment_contract_from_text({}, "PVPC\nDescuento por Bono Social -10,00 €")["bono_social"] is True
+
     def test_distinct_cups_flagged(self):
         bills = [
             {"month": 1, "kwh": 300, "days": 30, "cups": "ES0031ABC"},

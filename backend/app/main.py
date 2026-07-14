@@ -826,7 +826,7 @@ def _enforce_resolved_sanity(
     if req.electricity_price_eur_kwh is not None:
         price = req.electricity_price_eur_kwh
     elif summary is not None:
-        avg = summary.get("avg_price_eur_kwh")
+        avg = summary.get("energy_price_eur_kwh") or summary.get("avg_price_eur_kwh")
         if avg:
             # MISMO precio efectivo que aguas abajo: si la factura no trae factor
             # marginal (facturas EUR no-ES sin líneas de impuestos), se usa el
@@ -881,6 +881,7 @@ def _resolve_consumption(
             "marginal_price_eur_kwh": agg["marginal_price_eur_kwh"],
             "marginal_price_factor": agg["marginal_price_factor"],
             "valle_price_eur_kwh": agg["valle_price_eur_kwh"],
+            "energy_price_eur_kwh": agg["energy_price_eur_kwh"],
             "tax_rates_source": agg["tax_rates_source"],
             "bill_count": agg["bill_count"],
             "priced_bill_count": agg["priced_bill_count"],
@@ -1204,12 +1205,14 @@ def _resolve_electricity_price(
 ) -> tuple[float, str, int]:
     if req.electricity_price_eur_kwh is not None:
         return req.electricity_price_eur_kwh, "manual", 0
-    if consumption_summary and consumption_summary.get("avg_price_eur_kwh") is not None:
-        return (
-            consumption_summary["avg_price_eur_kwh"],
-            "bills",
-            consumption_summary.get("priced_bill_count", 0),
+    if consumption_summary is not None:
+        # El ahorro solar usa el precio del TÉRMINO DE ENERGÍA (del detalle), no
+        # el precio medio total (que incluye potencia, impuestos y contador).
+        base = consumption_summary.get("energy_price_eur_kwh") or consumption_summary.get(
+            "avg_price_eur_kwh"
         )
+        if base is not None:
+            return base, "bills", consumption_summary.get("priced_bill_count", 0)
     return default_price, "default", 0
 
 

@@ -1050,11 +1050,26 @@ def extract_text(pdf_bytes: bytes) -> str:
         raise BillParseError(f"No se pudo leer el PDF: {exc}") from exc
 
 
-# Bono social en las 4 lenguas oficiales (es/ca/gl + euskera mejor esfuerzo).
+# "Financiación (del) Bono Social": cargo REGULADO que pagan TODOS los
+# consumidores para financiar el bono de otros. Aparece en casi todas las
+# facturas y NO indica que el titular tenga bono social — se ignora antes de
+# detectar.
+_FINANCIACION_BONO_RE = re.compile(
+    r"financia(?:ci[oó]n|ment)\s+(?:del?\s+|do\s+)?bo(?:no)?\s+social",
+    re.IGNORECASE,
+)
+# Mercado libre: el bono social es INCOMPATIBLE por normativa (solo PVPC/COR).
+_MERCADO_LIBRE_RE = re.compile(
+    r"mercado\s+libre|mercat\s+lliure|merkatu\s+libre", re.IGNORECASE
+)
+# Descuento EXPLÍCITO por bono social (no la mera mención). es/ca/gl + euskera,
+# en ambos órdenes ("Descuento … bono social" / "bono social aplicado").
 _BONO_SOCIAL_RE = re.compile(
-    r"bono\s+social|bo\s+social|gizarte[-\s]?bonu"
-    r"|descuento\s+por\s+bono|descompte\s+per\s+bo|desconto\s+por\s+bono"
-    r"|pvpc\s+(?:con|amb)\s+bo"
+    r"(?:descuento|descompte|desconto)[^\n]{0,30}\bbo(?:no)?\s+social"
+    r"|\bbo(?:no)?\s+social[^\n]{0,20}aplica[dt]"
+    r"|aplica[dt]\w*[^\n]{0,20}\bbo(?:no)?\s+social"
+    r"|pvpc\s+(?:con|amb)\s+bo(?:no)?\s+social"
+    r"|gizarte[-\s]?bonu"
     r"|consumidor[a]?\s+vulnerable|kontsumitzaile\s+ahul",
     re.IGNORECASE,
 )
@@ -1073,9 +1088,19 @@ _ROLLING_ANNUAL_RE = re.compile(
 )
 
 
+def detect_mercado_libre(text: str | None) -> bool:
+    """True si la factura es de mercado libre (bono social incompatible)."""
+    return bool(text and _MERCADO_LIBRE_RE.search(text))
+
+
 def detect_bono_social(text: str | None) -> bool:
-    """True si el texto de la factura menciona el bono social."""
-    return bool(text and _BONO_SOCIAL_RE.search(text))
+    """True SOLO si hay un descuento explícito por bono social. Ignora
+    'Financiación (del) Bono Social' (cargo regulado que pagan todos) y descarta
+    el mercado libre (incompatible por normativa)."""
+    if not text or detect_mercado_libre(text):
+        return False
+    cleaned = _FINANCIACION_BONO_RE.sub(" ", text)  # fuera el cargo de financiación
+    return bool(_BONO_SOCIAL_RE.search(cleaned))
 
 
 def detect_rolling_annual_kwh(text: str | None) -> float | None:
@@ -1137,8 +1162,9 @@ def augment_contract_from_text(contract: dict, text: str | None) -> dict:
     omitió (refuerzo determinista; no pisa lo que el modelo sí detectó)."""
     if not isinstance(contract, dict) or not text:
         return contract
-    if not contract.get("bono_social") and detect_bono_social(text):
-        contract["bono_social"] = True
+    # Bono social DETERMINISTA: con texto disponible manda la detección estricta
+    # (el modelo se equivoca marcándolo por la línea "Financiación Bono Social").
+    contract["bono_social"] = detect_bono_social(text)
     if contract.get("rolling_annual_kwh") in (None, ""):
         rolling = detect_rolling_annual_kwh(text)
         if rolling is not None:
@@ -1886,6 +1912,24 @@ def aggregate_bills(
             valle_den += weight
     valle_price_eur_kwh = round(valle_num / valle_den, 4) if valle_den > 0 else None
 
+    # Precio del TÉRMINO DE ENERGÍA (pre-impuestos): media ponderada por kWh de
+    # los precios por tramo del DETALLE ("Facturación del Consumo … Eur/kWh").
+    # Es el precio de la energía real; el ahorro solar debe usar ESTE, no el
+    # medio total (que incluye potencia, impuestos y contador). Fallback al
+    # término por importe (energy_eur/kWh) si la factura no trae el detalle.
+    energy_num = energy_den = 0.0
+    for bill in bills:
+        prices = bill.get("consumption_period_prices")
+        periods = bill.get("consumption_periods")
+        if not isinstance(prices, dict):
+            continue
+        for key, unit_price in prices.items():
+            if unit_price and unit_price > 0:
+                weight = (periods.get(key) if isinstance(periods, dict) else None) or 1.0
+                energy_num += unit_price * weight
+                energy_den += weight
+    energy_price_eur_kwh = round(energy_num / energy_den, 4) if energy_den > 0 else price
+
     # Fuente única de consumo: el mismo annual_kwh alimenta precio y dimensionado.
     # Si el importe/precio implica un consumo muy distinto, algo se detectó mal.
     currency_out = currencies[0] if currencies else (default_currency or DEFAULT_CURRENCY)
@@ -1949,6 +1993,7 @@ def aggregate_bills(
         "bono_social": any_bono_social,
         "annual_from_printed": use_rolling,
         "valle_price_eur_kwh": valle_price_eur_kwh,
+        "energy_price_eur_kwh": energy_price_eur_kwh,
         "avg_price_eur_kwh": price,
         "avg_price_kwh": price,
         "marginal_price_eur_kwh": marginal_price,
