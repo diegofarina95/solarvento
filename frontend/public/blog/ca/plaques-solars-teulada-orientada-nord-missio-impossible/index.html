@@ -1,0 +1,502 @@
+<!doctype html>
+<!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/blog/ — NO EDITAR A MANO -->
+<html lang="ca">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plaques solars en una teulada orientada al nord: missió impossible? | SolarVento</title>
+    <meta name="description" content="Serveix una teulada orientada al nord per posar-hi plaques solars? Desmuntem el mite de l’orientació amb dades reals: quant es perd al nord, a l’est o a l’oest, i per què no necessites una teulada perfecta al sud perquè l’autoconsum compensi." />
+    <meta name="keywords" content="plaques solars teulada nord, orientació plaques solars, plaques solars sense orientació sud, quant perd una placa orientada al nord, plaques est oest, orientació òptima panells solars Espanya" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://solarvento.es/blog/ca/plaques-solars-teulada-orientada-nord-missio-impossible/" />
+    <link rel="alternate" hreflang="es" href="https://solarvento.es/blog/placas-tejado-norte/" />
+    <link rel="alternate" hreflang="en" href="https://solarvento.es/blog/en/solar-panels-north-facing-roof/" />
+    <link rel="alternate" hreflang="ca" href="https://solarvento.es/blog/ca/plaques-solars-teulada-orientada-nord-missio-impossible/" />
+    <link rel="alternate" hreflang="gl" href="https://solarvento.es/blog/gl/placas-solares-tellado-norte-mision-imposible/" />
+    <link rel="alternate" hreflang="eu" href="https://solarvento.es/blog/eu/eguzki-plakak-iparraldera-begira-teilatuan/" />
+    <link rel="alternate" hreflang="x-default" href="https://solarvento.es/blog/placas-tejado-norte/" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="ca_ES" />
+    <meta property="og:url" content="https://solarvento.es/blog/ca/plaques-solars-teulada-orientada-nord-missio-impossible/" />
+    <meta property="og:title" content="Plaques solars en una teulada orientada al nord: missió impossible? | SolarVento" />
+    <meta property="og:description" content="Serveix una teulada orientada al nord per posar-hi plaques solars? Desmuntem el mite de l’orientació amb dades reals: quant es perd al nord, a l’est o a l’oest, i per què no necessites una teulada perfecta al sud perquè l’autoconsum compensi." />
+    <meta property="og:image" content="https://solarvento.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="article:published_time" content="2026-07-14" />
+    <meta property="article:modified_time" content="2026-07-14" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Plaques solars en una teulada orientada al nord: missió impossible? | SolarVento" />
+    <meta name="twitter:description" content="Serveix una teulada orientada al nord per posar-hi plaques solars? Desmuntem el mite de l’orientació amb dades reals: quant es perd al nord, a l’est o a l’oest, i per què no necessites una teulada perfecta al sud perquè l’autoconsum compensi." />
+    <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      (function () {
+        var RAD = Math.PI / 180, TZ = 'Europe/Madrid', LAT = 40.4168, LON = -3.7038
+        function hourInTZ(date) {
+          var p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)
+          function v(t) { return Number(p.find(function (x) { return x.type === t }).value) }
+          return v('hour') + v('minute') / 60
+        }
+        var now = new Date()
+        var jd = now.getTime() / 86400000 + 2440587.5
+        var n = Math.round(jd - 2451545.0 + 0.0008)
+        var jStar = n + -LON / 360
+        var M = (357.5291 + 0.98560028 * jStar) % 360
+        var Mr = M * RAD
+        var C = 1.9148 * Math.sin(Mr) + 0.02 * Math.sin(2 * Mr) + 0.0003 * Math.sin(3 * Mr)
+        var lambda = ((M + C + 180 + 102.9372) % 360) * RAD
+        var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(Mr) - 0.0069 * Math.sin(2 * lambda)
+        var sinDec = Math.sin(lambda) * Math.sin(23.4397 * RAD)
+        var cosDec = Math.cos(Math.asin(sinDec))
+        var cosOmega = (Math.sin(-0.833 * RAD) - Math.sin(LAT * RAD) * sinDec) / (Math.cos(LAT * RAD) * cosDec)
+        var omega = Math.acos(Math.min(1, Math.max(-1, cosOmega))) / RAD
+        function jToDate(j) { return new Date((j - 2440587.5) * 86400000) }
+        var sunrise = hourInTZ(jToDate(jTransit - omega / 360))
+        var sunset = hourInTZ(jToDate(jTransit + omega / 360))
+        var hour = hourInTZ(now)
+        if (!(hour >= sunrise && hour < sunset)) document.documentElement.setAttribute('data-theme', 'night')
+      })()
+    </script>
+    <style>
+      /* Tema del blog = tema de la portada (src/index.css): papel cálido con
+         amanecer, marca en Bricolage Grotesque, botón solar y cards en capas.
+         Única licencia propia del blog: cuerpo serif para lectura larga. */
+      @font-face {
+        font-family: 'Bricolage Grotesque Variable';
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
+      }
+
+      :root {
+        color-scheme: light;
+        /* Tema solar (mismos tokens que la app) */
+        --page: #fbfaf6;
+        --sky-dawn: #fff4de;
+        --sun-400: #fbbf24;
+        --sun-500: #f59e0b;
+        --sun-600: #d97706;
+        --ember: #b45309;
+        --gridline: #ece6d9;
+        /* Categorías del blog (acento; el ámbar de marca sigue dominando) */
+        --cat-guia: #f59e0b;
+        --cat-analisis: #3f7f8f;
+        --cat-divulgacion: #c2703d;
+      }
+      /* Modo noche: mismas variables que :root[data-theme='night'] en la app.
+         Lo activa el script solar del <head> (se pone el sol en España → noche),
+         igual que la portada; el modo claro/oscuro del sistema NO interviene. */
+      :root[data-theme='night'] {
+        color-scheme: dark;
+        --page: #10131a;
+        --sky-dawn: #1b2436; /* resplandor de cielo nocturno en la cabecera */
+        --gridline: #2a2f3a;
+        /* De noche, más claras y desaturadas: los vivos cansan sobre fondo oscuro */
+        --cat-guia: #f0b95d;
+        --cat-analisis: #6bb0be;
+        --cat-divulgacion: #d99668;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        /* Cuerpo serif (lectura larga); titulares y UI en la familia de la app. */
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+        line-height: 1.7;
+        color: #1c1917;
+        /* Amanecer: la página nace en luz cálida y se asienta en papel */
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(255, 243, 220, 0) 420px),
+          var(--page);
+      }
+      h1, h2, .brand { font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif; }
+      h3, .meta, .cta, .cta-block, .cards, footer, .eyebrow, .anatomy li strong {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+      a { color: var(--ember); }
+      a:hover { color: #92400e; }
+      a:focus-visible, .cta:focus-visible {
+        outline: 3px solid var(--sun-500);
+        outline-offset: 2px;
+        border-radius: .15rem;
+      }
+      h1 {
+        font-size: clamp(1.9rem, 4vw, 2.6rem);
+        font-weight: 700;
+        letter-spacing: -.02em;
+        line-height: 1.12;
+        margin: 1.2rem 0 .5rem;
+      }
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 650;
+        letter-spacing: -.01em;
+        line-height: 1.25;
+        margin: 2.2rem 0 .6rem;
+      }
+      h3 { font-size: 1.02rem; margin: 1.4rem 0 .3rem; }
+      p { margin: .55rem 0; }
+      ul, ol { padding-left: 1.4rem; }
+      li { margin: .3rem 0; }
+
+      /* Cabecera: logo + wordmark como en la portada, CTA solar a la derecha */
+      header.site {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gridline);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        font-weight: 700;
+        font-size: 1.35rem;
+        letter-spacing: -.02em;
+        color: #1c1917;
+        text-decoration: none;
+      }
+      .brand b { font-weight: inherit; }
+      .brand span { color: var(--sun-600); }
+      .brand small {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #78716c;
+        align-self: flex-end;
+        margin-bottom: .3rem;
+      }
+
+      /* Botón principal: gradiente solar con texto oscuro (el .btn-solar de la app) */
+      .cta {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--sun-400), var(--sun-500) 55%, var(--sun-600));
+        color: #1c1917;
+        font-weight: 650;
+        font-size: .9rem;
+        padding: .55rem 1rem;
+        border-radius: .75rem;
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 1px 2px rgba(180, 83, 9, .25);
+        transition: box-shadow .15s ease, filter .15s ease;
+      }
+      .cta:hover {
+        color: #1c1917;
+        filter: brightness(1.05);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 3px 10px rgba(217, 119, 6, .35);
+      }
+
+      /* Eyebrow con tick solar (fecha del artículo, etiquetas de sección) */
+      .eyebrow, .meta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        font-weight: 650;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #78716c;
+        margin: 0 0 1.4rem;
+      }
+      .eyebrow::before, .meta::before {
+        content: '';
+        width: .5rem;
+        height: .5rem;
+        border-radius: 9999px;
+        background: radial-gradient(circle at 35% 35%, var(--sun-400), var(--sun-600));
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, .18);
+        flex-shrink: 0;
+      }
+      .lead { font-size: 1.08rem; color: #52514e; }
+
+      /* Selector de idiomas (como FAQ/privacidad): visible, discreto */
+      .langs { font-size: .78rem; color: #78716c; margin: 1rem 0 0;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .langs a { color: #78716c; }
+      .langs strong { color: #1c1917; }
+
+      /* Callout: aviso ámbar (border-amber-200 + bg-amber-50, como en la app) */
+      .callout {
+        border: 1px solid #fde68a;
+        border-left: .3rem solid var(--sun-500);
+        background: #fffbeb;
+        border-radius: .75rem;
+        color: #78350f;
+        padding: .85rem 1.1rem;
+        margin: 1.4rem 0;
+        font-size: .95rem;
+      }
+      .callout strong { color: #92400e; }
+
+      /* Cards: papel sobre papel, borde cálido, profundidad en capas (.card-solar) */
+      .anatomy, .card, .cta-block {
+        background: #fff;
+        border: 1px solid var(--gridline);
+        border-radius: 1rem;
+        box-shadow:
+          0 1px 2px rgba(28, 25, 23, .04),
+          0 6px 16px -8px rgba(120, 90, 20, .08);
+      }
+      .anatomy { padding: 1.1rem 1.25rem; margin: 1.4rem 0; }
+      .anatomy h3 { margin-top: 0; }
+      .anatomy ol { margin: 0; padding-left: 1.3rem; }
+      .anatomy li { margin: .55rem 0; }
+      .anatomy .hint { color: #898781; font-size: .88rem; }
+
+      /* Bloque CTA: card de decisión con el sol encima (.card-hero de la app) */
+      .cta-block {
+        position: relative;
+        overflow: hidden;
+        padding: 1.35rem 1.4rem 1.45rem;
+        margin: 2.2rem 0;
+        text-align: center;
+      }
+      .cta-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--sun-400), var(--sun-600));
+      }
+      .cta-block p { margin: 0 0 .9rem; color: #52514e; }
+      .cta-block .cta { font-size: 1rem; padding: .7rem 1.3rem; }
+
+      /* Índice del blog */
+      .cards { display: grid; gap: 1rem; margin-top: 1.6rem; }
+      .card {
+        padding: 1.15rem 1.3rem;
+        transition: box-shadow .2s ease, transform .2s ease;
+      }
+      .card:hover {
+        box-shadow:
+          0 2px 4px rgba(28, 25, 23, .05),
+          0 16px 32px -12px rgba(120, 90, 20, .14);
+      }
+      .card h2 { margin: 0 0 .35rem; font-size: 1.3rem; }
+      .card h2 a { color: #1c1917; text-decoration: none; }
+      .card h2 a:hover { color: var(--ember); text-decoration: underline; }
+      .card .meta { margin: 0 0 .5rem; }
+      .card p.excerpt {
+        margin: 0;
+        color: #52514e;
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+      }
+
+      /* Categorías: la clase solo fija --cat; etiqueta, punto del eyebrow y borde
+         de card la usan. Sin categoría no existe la clase y nada de esto aplica. */
+      .cat-guia { --cat: var(--cat-guia); }
+      .cat-analisis { --cat: var(--cat-analisis); }
+      .cat-divulgacion { --cat: var(--cat-divulgacion); }
+      .cat-label { color: var(--cat); }
+      article[class*='cat-'] .eyebrow::before {
+        background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--cat) 75%, #fff), var(--cat));
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 18%, transparent);
+      }
+      article[class*='cat-'] > .eyebrow.cat-label { margin: 1.6rem 0 -0.6rem; }
+      .card[class*='cat-'] { border-left: 4px solid var(--cat); }
+
+      footer {
+        margin-top: 3rem;
+        border-top: 1px solid var(--gridline);
+        padding-top: 1rem;
+        font-size: .82rem;
+        color: #78716c;
+      }
+
+      /* Noche: la página se asienta en el azul nocturno de la app y las cards usan
+         la superficie/bordes/sombras de .card-solar en modo noche. */
+      [data-theme='night'] body {
+        color: #e7e5e4;
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(27, 36, 54, 0) 420px),
+          var(--page);
+      }
+      [data-theme='night'] a { color: var(--sun-400); }
+      [data-theme='night'] a:hover { color: #fcd34d; }
+      [data-theme='night'] .brand, [data-theme='night'] .card h2 a { color: #e7e5e4; }
+      [data-theme='night'] .lead,
+      [data-theme='night'] .meta,
+      [data-theme='night'] .eyebrow,
+      [data-theme='night'] .anatomy .hint,
+      [data-theme='night'] .card p.excerpt,
+      [data-theme='night'] .cta-block p,
+      [data-theme='night'] .brand small { color: #a8a29e; }
+      [data-theme='night'] .anatomy,
+      [data-theme='night'] .card,
+      [data-theme='night'] .cta-block {
+        background: #171b23;
+        border-color: #2a2f3a;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, .3),
+          0 6px 16px -8px rgba(0, 0, 0, .5);
+      }
+      [data-theme='night'] .card:hover {
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, .35),
+          0 16px 32px -12px rgba(0, 0, 0, .6);
+      }
+      [data-theme='night'] .card h2 a:hover { color: var(--sun-400); }
+      [data-theme='night'] .langs, [data-theme='night'] .langs a { color: #a8a29e; }
+      [data-theme='night'] .langs strong { color: #e7e5e4; }
+      [data-theme='night'] .callout {
+        background: rgba(245, 158, 11, .12);
+        border-color: rgba(245, 158, 11, .4);
+        border-left-color: var(--sun-500);
+        color: #fde68a;
+      }
+      [data-theme='night'] .callout strong { color: #fde68a; }
+      [data-theme='night'] .cta, [data-theme='night'] .cta:hover { color: #1c1917; }
+      /* El border-color nocturno de .card machacaría el borde de categoría */
+      [data-theme='night'] .card[class*='cat-'] { border-left-color: var(--cat); }
+    </style>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Plaques solars en una teulada orientada al nord: missió impossible?",
+  "description": "Serveix una teulada orientada al nord per posar-hi plaques solars? Desmuntem el mite de l’orientació amb dades reals: quant es perd al nord, a l’est o a l’oest, i per què no necessites una teulada perfecta al sud perquè l’autoconsum compensi.",
+  "datePublished": "2026-07-14",
+  "dateModified": "2026-07-14",
+  "inLanguage": "ca",
+  "mainEntityOfPage": "https://solarvento.es/blog/ca/plaques-solars-teulada-orientada-nord-missio-impossible/",
+  "image": "https://solarvento.es/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://solarvento.es/logo-mark.png"
+    }
+  }
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "SolarVento",
+      "item": "https://solarvento.es/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://solarvento.es/blog/ca/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Plaques solars en una teulada orientada al nord: missió impossible?",
+      "item": "https://solarvento.es/blog/ca/plaques-solars-teulada-orientada-nord-missio-impossible/"
+    }
+  ]
+}
+    </script>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="site">
+        <a class="brand" href="/blog/ca/">
+          <b>Solar<span>Vento</span></b>
+          <small>Blog</small>
+        </a>
+        <a class="cta" href="/">Calcular el meu estalvi</a>
+      </header>
+      <nav class="langs" aria-label="Idioma"><a href="/blog/placas-tejado-norte/" hreflang="es" lang="es">Español</a> · <a href="/blog/en/solar-panels-north-facing-roof/" hreflang="en" lang="en">English</a> · <strong>Català</strong> · <a href="/blog/gl/placas-solares-tellado-norte-mision-imposible/" hreflang="gl" lang="gl">Galego</a> · <a href="/blog/eu/eguzki-plakak-iparraldera-begira-teilatuan/" hreflang="eu" lang="eu">Euskara</a></nav>
+      <article class="cat-divulgacion">
+        <p class="eyebrow cat-label">DIVULGACIÓN</p>
+        <h1>Plaques solars en una teulada orientada al nord: missió impossible?</h1>
+        <p class="meta"><time datetime="2026-07-14">14 de juliol de 2026</time></p>
+        <p class="lead">"La meva teulada no està orientada al sud, així que les plaques no em serveixen." És una de les frases més repetides quan algú es planteja l’autoconsum, i amaga un mite que convé desmuntar amb dades. L’orientació importa, sí, però molt menys del que la gent es pensa —excepte en un cas concret—. Vegem, amb números reals, què passa segons cap a on miri la teva teulada, i si el temut nord és de debò una missió impossible.</p>
+        
+        <h2>Primer, per què el sud és l’ideal</h2>
+        
+        <p>A Espanya, com a tot l’hemisferi nord, el sol descriu el seu arc pel sud: surt per l’est, arriba al punt més alt mirant al sud, i es pon per l’oest. Per això un panell orientat al sud rep llum de manera més directa i durant més hores al llarg del dia. És l’orientació que maximitza la producció anual, i per això es pren com a referència (el 100%) amb què es comparen les altres.</p>
+        
+        <h2>El mite: "si no és sud, no val la pena"</h2>
+        
+        <p>Aquí hi ha l’error. Molta gent creu que qualsevol desviació del sud arruïna la instal·lació, i ni de bon tros és així. Mira què passa realment segons l’orientació:</p>
+        
+        <div class="anatomy">
+          <h3>Quant produeix cada orientació (respecte al sud = 100%)</h3>
+          <ol>
+            <li><strong>Sud</strong> — el 100%, la referència. <span class="hint">Producció màxima anual.</span></li>
+            <li><strong>Sud-est o sud-oest</strong> — al voltant del 95-98%. <span class="hint">Desviar-se fins a 45° del sud amb prou feines costa un 1-5%. Pràcticament igual que el sud.</span></li>
+            <li><strong>Est o oest pur</strong> — al voltant del 80-85%. <span class="hint">Perds un 10-20%, però continua sent perfectament rendible.</span></li>
+            <li><strong>Nord</strong> — entre un 50-60% menys que el sud. <span class="hint">Aquí sí, la pèrdua és gran. L’únic cas realment problemàtic.</span></li>
+          </ol>
+        </div>
+        
+        <p>La conclusió salta a la vista: <strong>tot el que no sigui nord és viable.</strong> Una teulada al sud-est o al sud-oest produeix gairebé el mateix que una al sud. I fins i tot una teulada orientada a l’est o a l’oest pur, que sona "dolenta", només perd un 10-20% —una minva que moltes vegades es compensa posant un o dos panells més, i que no impedeix que la instal·lació sigui rendible.</p>
+        
+        <div class="callout">
+          <strong>El matís que canvia la decisió:</strong> amb orientació est o oest no només perds poc, sinó que la producció es reparteix de manera diferent. L’est produeix més al matí i l’oest a la tarda. Si el teu consum més alt és en aquestes hores (per exemple, si arribes a casa a la tarda), una orientació oest pot aprofitar-se fins i tot millor que el sud, perquè produeix just quan la gastes.
+        </div>
+        
+        <h2>Aleshores, el nord és missió impossible?</h2>
+        
+        <p>Siguem honestos: el nord és, amb diferència, la pitjor orientació, i en la majoria de casos <strong>no és recomanable</strong>. Perdre més de la meitat de la producció fa que la instal·lació trigui molt més a amortitzar-se, i sovint no surt a compte. Si l’única superfície disponible mira al nord, el primer és plantejar-se alternatives.</p>
+        
+        <p>Però "no recomanable" no és exactament "impossible", i hi ha matisos:</p>
+        
+        <ul>
+          <li><strong>Si la teulada és plana</strong>, l’orientació de la teulada és igual: els panells es munten sobre una estructura inclinada orientada al sud, i llestos. La "teulada al nord" només és un problema real en cobertes inclinades on els panells van enganxats al pendent.</li>
+          <li><strong>Amb una estructura correctora</strong> en una teulada inclinada al nord es pot millorar l’angle, tot i que encareix la instal·lació i no sempre surt a compte.</li>
+          <li><strong>Si tens una altra superfície</strong> —un altre vessant de la teulada, un cobert, el terra del jardí— gairebé sempre és millor fer-la servir que entestar-se amb el nord.</li>
+        </ul>
+        
+        <div class="callout">
+          <strong>La resposta honesta:</strong> una teulada inclinada que només mira al nord és l’únic cas en què l’autoconsum es complica de debò, i aquí convé estudiar-ho bé o buscar alternatives. Però si la teva teulada mira a l’est, a l’oest, al sud-est o al sud-oest —o és plana—, el mite de "necessito el sud perfecte" és només això, un mite. La teva instal·lació serà rendible.
+        </div>
+        
+        <h2>El que importa més que l’orientació exacta</h2>
+        
+        <p>Un últim apunt per posar les coses en perspectiva. Un cop descartat el nord, l’orientació fina influeix bastant menys que altres factors en si la solar et compensa: quant pagues de llum, quanta energia consumeixes durant el dia (autoconsum directe), si hi ha ombres de xemeneies o arbres —que sí que poden penalitzar molt— i la mida de la instal·lació. Obsessionar-se amb tenir exactament el sud, quan la teva teulada dona al sud-oest, és preocupar-se per un 3% mentre s’ignora el que de veritat mou els números.</p>
+        
+        <h2>En resum</h2>
+        
+        <p>El sud és l’orientació ideal, però el mite que "sense sud no val la pena" és fals: sud-est i sud-oest produeixen gairebé el mateix (95-98%), i est o oest continuen sent rendibles (perden només un 10-20%, de vegades compensat pel perfil de consum). L’únic cas realment problemàtic és una teulada inclinada que només miri al nord, on es perd el 50-60% —i tot i així, si la teulada és plana o hi ha una altra superfície, té solució. Abans de descartar l’energia solar per l’orientació, mira què pesa de veritat: la teva factura, el teu consum diürn i les ombres.</p>
+        
+        <p>La millor manera de sortir de dubtes és veure-ho amb les teves dades: <a href="/">calcula la teva instal·lació amb la teva factura</a> i comprova si, amb la teva orientació real, et compensa.</p>
+        <div class="cta-block">
+          <p>Vols saber quant estalviaries amb plaques al teu teulat?</p>
+          <a class="cta" href="/">Calcular el meu estalvi</a>
+        </div>
+      </article>
+      <footer>
+        <a href="/blog/ca/">Blog</a>
+        <span> · </span>
+        <a href="/faq-ca.html">Preguntes freqüents</a>
+        <span> · </span>
+        <a href="/ayudas.html">Ajuts per comunitat</a>
+        <span> · </span>
+        <a href="/privacidad-ca.html">Privacitat</a>
+        <p>SolarVento ofereix estimacions orientatives basades en dades oficials; no substitueixen un estudi tècnic al teu teulat.</p>
+      </footer>
+    </main>
+  </body>
+</html>

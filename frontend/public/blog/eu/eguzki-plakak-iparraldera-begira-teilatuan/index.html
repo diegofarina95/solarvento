@@ -1,0 +1,502 @@
+<!doctype html>
+<!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/blog/ — NO EDITAR A MANO -->
+<html lang="eu">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eguzki-plakak iparraldera begira dagoen teilatuan: misio ezinezkoa? | SolarVento</title>
+    <meta name="description" content="Balio al du iparraldera begira dagoen teilatu batek eguzki-plakak jartzeko? Orientazioaren mitoa datu errealekin argitzen dugu: zenbat galtzen den iparraldean, ekialdean edo mendebaldean, eta zergatik ez duzun hegoaldera perfektu begiratzen duen teilaturik behar autokontsumoa errentagarria izateko." />
+    <meta name="keywords" content="eguzki plakak iparraldeko teilatua, eguzki plaken orientazioa, eguzki plakak hegoalderik gabe, zenbat galtzen du iparraldera begira dagoen plakak, ekialde mendebalde eguzki plakak, eguzki panelen orientazio onena Espainian" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://solarvento.es/blog/eu/eguzki-plakak-iparraldera-begira-teilatuan/" />
+    <link rel="alternate" hreflang="es" href="https://solarvento.es/blog/placas-tejado-norte/" />
+    <link rel="alternate" hreflang="en" href="https://solarvento.es/blog/en/solar-panels-north-facing-roof/" />
+    <link rel="alternate" hreflang="ca" href="https://solarvento.es/blog/ca/plaques-solars-teulada-orientada-nord-missio-impossible/" />
+    <link rel="alternate" hreflang="gl" href="https://solarvento.es/blog/gl/placas-solares-tellado-norte-mision-imposible/" />
+    <link rel="alternate" hreflang="eu" href="https://solarvento.es/blog/eu/eguzki-plakak-iparraldera-begira-teilatuan/" />
+    <link rel="alternate" hreflang="x-default" href="https://solarvento.es/blog/placas-tejado-norte/" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="eu_ES" />
+    <meta property="og:url" content="https://solarvento.es/blog/eu/eguzki-plakak-iparraldera-begira-teilatuan/" />
+    <meta property="og:title" content="Eguzki-plakak iparraldera begira dagoen teilatuan: misio ezinezkoa? | SolarVento" />
+    <meta property="og:description" content="Balio al du iparraldera begira dagoen teilatu batek eguzki-plakak jartzeko? Orientazioaren mitoa datu errealekin argitzen dugu: zenbat galtzen den iparraldean, ekialdean edo mendebaldean, eta zergatik ez duzun hegoaldera perfektu begiratzen duen teilaturik behar autokontsumoa errentagarria izateko." />
+    <meta property="og:image" content="https://solarvento.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="article:published_time" content="2026-07-14" />
+    <meta property="article:modified_time" content="2026-07-14" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Eguzki-plakak iparraldera begira dagoen teilatuan: misio ezinezkoa? | SolarVento" />
+    <meta name="twitter:description" content="Balio al du iparraldera begira dagoen teilatu batek eguzki-plakak jartzeko? Orientazioaren mitoa datu errealekin argitzen dugu: zenbat galtzen den iparraldean, ekialdean edo mendebaldean, eta zergatik ez duzun hegoaldera perfektu begiratzen duen teilaturik behar autokontsumoa errentagarria izateko." />
+    <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      (function () {
+        var RAD = Math.PI / 180, TZ = 'Europe/Madrid', LAT = 40.4168, LON = -3.7038
+        function hourInTZ(date) {
+          var p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)
+          function v(t) { return Number(p.find(function (x) { return x.type === t }).value) }
+          return v('hour') + v('minute') / 60
+        }
+        var now = new Date()
+        var jd = now.getTime() / 86400000 + 2440587.5
+        var n = Math.round(jd - 2451545.0 + 0.0008)
+        var jStar = n + -LON / 360
+        var M = (357.5291 + 0.98560028 * jStar) % 360
+        var Mr = M * RAD
+        var C = 1.9148 * Math.sin(Mr) + 0.02 * Math.sin(2 * Mr) + 0.0003 * Math.sin(3 * Mr)
+        var lambda = ((M + C + 180 + 102.9372) % 360) * RAD
+        var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(Mr) - 0.0069 * Math.sin(2 * lambda)
+        var sinDec = Math.sin(lambda) * Math.sin(23.4397 * RAD)
+        var cosDec = Math.cos(Math.asin(sinDec))
+        var cosOmega = (Math.sin(-0.833 * RAD) - Math.sin(LAT * RAD) * sinDec) / (Math.cos(LAT * RAD) * cosDec)
+        var omega = Math.acos(Math.min(1, Math.max(-1, cosOmega))) / RAD
+        function jToDate(j) { return new Date((j - 2440587.5) * 86400000) }
+        var sunrise = hourInTZ(jToDate(jTransit - omega / 360))
+        var sunset = hourInTZ(jToDate(jTransit + omega / 360))
+        var hour = hourInTZ(now)
+        if (!(hour >= sunrise && hour < sunset)) document.documentElement.setAttribute('data-theme', 'night')
+      })()
+    </script>
+    <style>
+      /* Tema del blog = tema de la portada (src/index.css): papel cálido con
+         amanecer, marca en Bricolage Grotesque, botón solar y cards en capas.
+         Única licencia propia del blog: cuerpo serif para lectura larga. */
+      @font-face {
+        font-family: 'Bricolage Grotesque Variable';
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
+      }
+
+      :root {
+        color-scheme: light;
+        /* Tema solar (mismos tokens que la app) */
+        --page: #fbfaf6;
+        --sky-dawn: #fff4de;
+        --sun-400: #fbbf24;
+        --sun-500: #f59e0b;
+        --sun-600: #d97706;
+        --ember: #b45309;
+        --gridline: #ece6d9;
+        /* Categorías del blog (acento; el ámbar de marca sigue dominando) */
+        --cat-guia: #f59e0b;
+        --cat-analisis: #3f7f8f;
+        --cat-divulgacion: #c2703d;
+      }
+      /* Modo noche: mismas variables que :root[data-theme='night'] en la app.
+         Lo activa el script solar del <head> (se pone el sol en España → noche),
+         igual que la portada; el modo claro/oscuro del sistema NO interviene. */
+      :root[data-theme='night'] {
+        color-scheme: dark;
+        --page: #10131a;
+        --sky-dawn: #1b2436; /* resplandor de cielo nocturno en la cabecera */
+        --gridline: #2a2f3a;
+        /* De noche, más claras y desaturadas: los vivos cansan sobre fondo oscuro */
+        --cat-guia: #f0b95d;
+        --cat-analisis: #6bb0be;
+        --cat-divulgacion: #d99668;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        /* Cuerpo serif (lectura larga); titulares y UI en la familia de la app. */
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+        line-height: 1.7;
+        color: #1c1917;
+        /* Amanecer: la página nace en luz cálida y se asienta en papel */
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(255, 243, 220, 0) 420px),
+          var(--page);
+      }
+      h1, h2, .brand { font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif; }
+      h3, .meta, .cta, .cta-block, .cards, footer, .eyebrow, .anatomy li strong {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+      a { color: var(--ember); }
+      a:hover { color: #92400e; }
+      a:focus-visible, .cta:focus-visible {
+        outline: 3px solid var(--sun-500);
+        outline-offset: 2px;
+        border-radius: .15rem;
+      }
+      h1 {
+        font-size: clamp(1.9rem, 4vw, 2.6rem);
+        font-weight: 700;
+        letter-spacing: -.02em;
+        line-height: 1.12;
+        margin: 1.2rem 0 .5rem;
+      }
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 650;
+        letter-spacing: -.01em;
+        line-height: 1.25;
+        margin: 2.2rem 0 .6rem;
+      }
+      h3 { font-size: 1.02rem; margin: 1.4rem 0 .3rem; }
+      p { margin: .55rem 0; }
+      ul, ol { padding-left: 1.4rem; }
+      li { margin: .3rem 0; }
+
+      /* Cabecera: logo + wordmark como en la portada, CTA solar a la derecha */
+      header.site {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gridline);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        font-weight: 700;
+        font-size: 1.35rem;
+        letter-spacing: -.02em;
+        color: #1c1917;
+        text-decoration: none;
+      }
+      .brand b { font-weight: inherit; }
+      .brand span { color: var(--sun-600); }
+      .brand small {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #78716c;
+        align-self: flex-end;
+        margin-bottom: .3rem;
+      }
+
+      /* Botón principal: gradiente solar con texto oscuro (el .btn-solar de la app) */
+      .cta {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--sun-400), var(--sun-500) 55%, var(--sun-600));
+        color: #1c1917;
+        font-weight: 650;
+        font-size: .9rem;
+        padding: .55rem 1rem;
+        border-radius: .75rem;
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 1px 2px rgba(180, 83, 9, .25);
+        transition: box-shadow .15s ease, filter .15s ease;
+      }
+      .cta:hover {
+        color: #1c1917;
+        filter: brightness(1.05);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 3px 10px rgba(217, 119, 6, .35);
+      }
+
+      /* Eyebrow con tick solar (fecha del artículo, etiquetas de sección) */
+      .eyebrow, .meta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        font-weight: 650;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #78716c;
+        margin: 0 0 1.4rem;
+      }
+      .eyebrow::before, .meta::before {
+        content: '';
+        width: .5rem;
+        height: .5rem;
+        border-radius: 9999px;
+        background: radial-gradient(circle at 35% 35%, var(--sun-400), var(--sun-600));
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, .18);
+        flex-shrink: 0;
+      }
+      .lead { font-size: 1.08rem; color: #52514e; }
+
+      /* Selector de idiomas (como FAQ/privacidad): visible, discreto */
+      .langs { font-size: .78rem; color: #78716c; margin: 1rem 0 0;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .langs a { color: #78716c; }
+      .langs strong { color: #1c1917; }
+
+      /* Callout: aviso ámbar (border-amber-200 + bg-amber-50, como en la app) */
+      .callout {
+        border: 1px solid #fde68a;
+        border-left: .3rem solid var(--sun-500);
+        background: #fffbeb;
+        border-radius: .75rem;
+        color: #78350f;
+        padding: .85rem 1.1rem;
+        margin: 1.4rem 0;
+        font-size: .95rem;
+      }
+      .callout strong { color: #92400e; }
+
+      /* Cards: papel sobre papel, borde cálido, profundidad en capas (.card-solar) */
+      .anatomy, .card, .cta-block {
+        background: #fff;
+        border: 1px solid var(--gridline);
+        border-radius: 1rem;
+        box-shadow:
+          0 1px 2px rgba(28, 25, 23, .04),
+          0 6px 16px -8px rgba(120, 90, 20, .08);
+      }
+      .anatomy { padding: 1.1rem 1.25rem; margin: 1.4rem 0; }
+      .anatomy h3 { margin-top: 0; }
+      .anatomy ol { margin: 0; padding-left: 1.3rem; }
+      .anatomy li { margin: .55rem 0; }
+      .anatomy .hint { color: #898781; font-size: .88rem; }
+
+      /* Bloque CTA: card de decisión con el sol encima (.card-hero de la app) */
+      .cta-block {
+        position: relative;
+        overflow: hidden;
+        padding: 1.35rem 1.4rem 1.45rem;
+        margin: 2.2rem 0;
+        text-align: center;
+      }
+      .cta-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--sun-400), var(--sun-600));
+      }
+      .cta-block p { margin: 0 0 .9rem; color: #52514e; }
+      .cta-block .cta { font-size: 1rem; padding: .7rem 1.3rem; }
+
+      /* Índice del blog */
+      .cards { display: grid; gap: 1rem; margin-top: 1.6rem; }
+      .card {
+        padding: 1.15rem 1.3rem;
+        transition: box-shadow .2s ease, transform .2s ease;
+      }
+      .card:hover {
+        box-shadow:
+          0 2px 4px rgba(28, 25, 23, .05),
+          0 16px 32px -12px rgba(120, 90, 20, .14);
+      }
+      .card h2 { margin: 0 0 .35rem; font-size: 1.3rem; }
+      .card h2 a { color: #1c1917; text-decoration: none; }
+      .card h2 a:hover { color: var(--ember); text-decoration: underline; }
+      .card .meta { margin: 0 0 .5rem; }
+      .card p.excerpt {
+        margin: 0;
+        color: #52514e;
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+      }
+
+      /* Categorías: la clase solo fija --cat; etiqueta, punto del eyebrow y borde
+         de card la usan. Sin categoría no existe la clase y nada de esto aplica. */
+      .cat-guia { --cat: var(--cat-guia); }
+      .cat-analisis { --cat: var(--cat-analisis); }
+      .cat-divulgacion { --cat: var(--cat-divulgacion); }
+      .cat-label { color: var(--cat); }
+      article[class*='cat-'] .eyebrow::before {
+        background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--cat) 75%, #fff), var(--cat));
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 18%, transparent);
+      }
+      article[class*='cat-'] > .eyebrow.cat-label { margin: 1.6rem 0 -0.6rem; }
+      .card[class*='cat-'] { border-left: 4px solid var(--cat); }
+
+      footer {
+        margin-top: 3rem;
+        border-top: 1px solid var(--gridline);
+        padding-top: 1rem;
+        font-size: .82rem;
+        color: #78716c;
+      }
+
+      /* Noche: la página se asienta en el azul nocturno de la app y las cards usan
+         la superficie/bordes/sombras de .card-solar en modo noche. */
+      [data-theme='night'] body {
+        color: #e7e5e4;
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(27, 36, 54, 0) 420px),
+          var(--page);
+      }
+      [data-theme='night'] a { color: var(--sun-400); }
+      [data-theme='night'] a:hover { color: #fcd34d; }
+      [data-theme='night'] .brand, [data-theme='night'] .card h2 a { color: #e7e5e4; }
+      [data-theme='night'] .lead,
+      [data-theme='night'] .meta,
+      [data-theme='night'] .eyebrow,
+      [data-theme='night'] .anatomy .hint,
+      [data-theme='night'] .card p.excerpt,
+      [data-theme='night'] .cta-block p,
+      [data-theme='night'] .brand small { color: #a8a29e; }
+      [data-theme='night'] .anatomy,
+      [data-theme='night'] .card,
+      [data-theme='night'] .cta-block {
+        background: #171b23;
+        border-color: #2a2f3a;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, .3),
+          0 6px 16px -8px rgba(0, 0, 0, .5);
+      }
+      [data-theme='night'] .card:hover {
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, .35),
+          0 16px 32px -12px rgba(0, 0, 0, .6);
+      }
+      [data-theme='night'] .card h2 a:hover { color: var(--sun-400); }
+      [data-theme='night'] .langs, [data-theme='night'] .langs a { color: #a8a29e; }
+      [data-theme='night'] .langs strong { color: #e7e5e4; }
+      [data-theme='night'] .callout {
+        background: rgba(245, 158, 11, .12);
+        border-color: rgba(245, 158, 11, .4);
+        border-left-color: var(--sun-500);
+        color: #fde68a;
+      }
+      [data-theme='night'] .callout strong { color: #fde68a; }
+      [data-theme='night'] .cta, [data-theme='night'] .cta:hover { color: #1c1917; }
+      /* El border-color nocturno de .card machacaría el borde de categoría */
+      [data-theme='night'] .card[class*='cat-'] { border-left-color: var(--cat); }
+    </style>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Eguzki-plakak iparraldera begira dagoen teilatuan: misio ezinezkoa?",
+  "description": "Balio al du iparraldera begira dagoen teilatu batek eguzki-plakak jartzeko? Orientazioaren mitoa datu errealekin argitzen dugu: zenbat galtzen den iparraldean, ekialdean edo mendebaldean, eta zergatik ez duzun hegoaldera perfektu begiratzen duen teilaturik behar autokontsumoa errentagarria izateko.",
+  "datePublished": "2026-07-14",
+  "dateModified": "2026-07-14",
+  "inLanguage": "eu",
+  "mainEntityOfPage": "https://solarvento.es/blog/eu/eguzki-plakak-iparraldera-begira-teilatuan/",
+  "image": "https://solarvento.es/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://solarvento.es/logo-mark.png"
+    }
+  }
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "SolarVento",
+      "item": "https://solarvento.es/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Bloga",
+      "item": "https://solarvento.es/blog/eu/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Eguzki-plakak iparraldera begira dagoen teilatuan: misio ezinezkoa?",
+      "item": "https://solarvento.es/blog/eu/eguzki-plakak-iparraldera-begira-teilatuan/"
+    }
+  ]
+}
+    </script>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="site">
+        <a class="brand" href="/blog/eu/">
+          <b>Solar<span>Vento</span></b>
+          <small>Bloga</small>
+        </a>
+        <a class="cta" href="/">Nire aurrezpena kalkulatu</a>
+      </header>
+      <nav class="langs" aria-label="Hizkuntza"><a href="/blog/placas-tejado-norte/" hreflang="es" lang="es">Español</a> · <a href="/blog/en/solar-panels-north-facing-roof/" hreflang="en" lang="en">English</a> · <a href="/blog/ca/plaques-solars-teulada-orientada-nord-missio-impossible/" hreflang="ca" lang="ca">Català</a> · <a href="/blog/gl/placas-solares-tellado-norte-mision-imposible/" hreflang="gl" lang="gl">Galego</a> · <strong>Euskara</strong></nav>
+      <article class="cat-divulgacion">
+        <p class="eyebrow cat-label">DIVULGACIÓN</p>
+        <h1>Eguzki-plakak iparraldera begira dagoen teilatuan: misio ezinezkoa?</h1>
+        <p class="meta"><time datetime="2026-07-14">2026ko uztailaren 14a</time></p>
+        <p class="lead">"Nire teilatua ez dago hegoaldera orientatuta; beraz, plakek ez didate balio." Autokontsumoa aztertzen hasten denean gehien errepikatzen den esaldietako bat da, eta datuekin desmuntatzea komeni den mito bat gordetzen du. Orientazioak badu garrantzia, bai, baina jendeak uste duena baino askoz txikiagoa —kasu zehatz batean izan ezik—. Ikus dezagun, zenbaki errealekin, zer gertatzen den zure teilatuak norantz begiratzen duenaren arabera, eta hainbeste beldur ematen duen iparraldea benetan misio ezinezkoa ote den.</p>
+        
+        <h2>Lehenik, zergatik den hegoaldea ideala</h2>
+        
+        <p>Espainian, ipar hemisferio osoan bezala, eguzkiak bere arkua hegoaldetik egiten du: ekialdetik ateratzen da, punturik altuenera hegoaldera begira iristen da, eta mendebaldetik sartzen da. Horregatik, hegoaldera orientatutako panel batek argia modu zuzenagoan eta eguneko ordu gehiagotan jasotzen du. Urteko ekoizpena maximizatzen duen orientazioa da, eta horregatik hartzen da erreferentziatzat (%100), gainerakoekin alderatzeko.</p>
+        
+        <h2>Mitoa: "hegoaldera ez bada, ez du merezi"</h2>
+        
+        <p>Hor dago akatsa. Jende askok uste du hegoaldetik edozein desbideratzek instalazioa hondatzen duela, baina ez da hala, ezta gutxiago ere. Begira zer gertatzen den benetan orientazioaren arabera:</p>
+        
+        <div class="anatomy">
+          <h3>Zenbat ekoizten du orientazio bakoitzak (hegoaldearekiko = %100)</h3>
+          <ol>
+            <li><strong>Hegoa</strong> — %100, erreferentzia. <span class="hint">Urteko ekoizpen handiena.</span></li>
+            <li><strong>Hego-ekialdea edo hego-mendebaldea</strong> — %95-98 inguruan. <span class="hint">Hegoaldetik 45° arte desbideratzeak apenas kostatzen du %1-5. Ia hegoaldearen parekoa.</span></li>
+            <li><strong>Ekialde edo mendebalde garbia</strong> — %80-85 inguruan. <span class="hint">%10-20 galtzen duzu, baina erabat errentagarria izaten jarraitzen du.</span></li>
+            <li><strong>Iparra</strong> — hegoaldeak baino %50-60 gutxiago. <span class="hint">Hemen bai, galera handia da. Benetan arazo bihurtzen den kasu bakarra.</span></li>
+          </ol>
+        </div>
+        
+        <p>Ondorioa begi-bistakoa da: <strong>iparraldea ez den guztia bideragarria da.</strong> Hego-ekialdera edo hego-mendebaldera begira dagoen teilatu batek hegoaldera begira dagoen batek ia adina ekoizten du. Eta ekialde edo mendebalde garbira orientatutako teilatu batek ere, "txarra" dirudien arren, %10-20 baino ez du galtzen —askotan panel bat edo bi gehiago jarrita konpentsatzen den murrizketa—, eta ez du eragozten instalazioa errentagarria izatea.</p>
+        
+        <div class="callout">
+          <strong>Erabakia aldatzen duen ñabardura:</strong> ekialdeko edo mendebaldeko orientazioarekin ez duzu gutxi bakarrik galtzen; ekoizpena beste modu batean banatzen da. Ekialdeak gehiago ekoizten du goizean, eta mendebaldeak arratsaldean. Zure kontsumo handiena ordu horietan bada (adibidez, arratsaldean etxera iristen bazara), mendebaldeko orientazioa hegoaldekoa baino are hobeto aprobetxa daiteke, kontsumitzen duzun unean bertan ekoizten duelako.
+        </div>
+        
+        <h2>Orduan, iparraldea misio ezinezkoa al da?</h2>
+        
+        <p>Zintzoak izan gaitezen: iparraldea da, alde handiz, orientaziorik txarrena, eta kasu gehienetan <strong>ez da gomendagarria</strong>. Ekoizpenaren erdia baino gehiago galtzeak instalazioa amortizatzeko epea asko luzatzen du, eta askotan ez du merezi. Eskura duzun azalera bakarrak iparraldera begiratzen badu, lehenengo pausoa alternatibak aztertzea da.</p>
+        
+        <p>Baina "ez da gomendagarria" ez da zehazki "ezinezkoa", eta badira ñabardurak:</p>
+        
+        <ul>
+          <li><strong>Teilatu laua bada</strong>, teilatuaren orientazioak ez du axola: panelak hegoaldera orientatutako egitura inklinatu batean muntatzen dira, eta kitto. "Iparraldeko teilatua" benetako arazoa teilatu inklinatuetan bakarrik da, panelak maldari itsatsita doazenean.</li>
+          <li><strong>Zuzentzeko egitura batekin</strong>, iparraldera inklinatutako teilatu batean angelua hobetu daiteke, nahiz eta instalazioa garestitu eta beti ez den kontura ateratzen.</li>
+          <li><strong>Beste azalera bat baduzu</strong> —teilatuaren beste isurialde bat, estalpe bat, lorategiko lurra— ia beti hobe da hura erabiltzea iparraldearekin tematu ordez.</li>
+        </ul>
+        
+        <div class="callout">
+          <strong>Erantzun zintzoa:</strong> iparraldera bakarrik begiratzen duen teilatu inklinatua da autokontsumoa benetan zailtzen den kasu bakarra, eta hor ondo aztertzea edo alternatibak bilatzea komeni da. Baina zure teilatuak ekialdera, mendebaldera, hego-ekialdera edo hego-mendebaldera begiratzen badu —edo laua bada—, "hegoalde perfektua behar dut" dioen mitoa hori besterik ez da: mito bat. Zure instalazioa errentagarria izango da.
+        </div>
+        
+        <h2>Orientazio zehatza baino garrantzitsuagoa dena</h2>
+        
+        <p>Azken ohar bat, gauzak perspektiban jartzeko. Iparraldea baztertuta, orientazio finak beste faktore batzuek baino askoz gutxiago eragiten du eguzki-energiak konpentsatzen dizun ala ez erabakitzeko: zenbat ordaintzen duzun argindarragatik, egunez zenbat energia kontsumitzen duzun (autokontsumo zuzena), tximiniek edo zuhaitzek itzalik egiten duten —horiek bai, asko zigortu dezakete—, eta instalazioaren tamaina. Zure teilatua hego-mendebaldera begira dagoenean hegoalde zehatza edukitzearekin obsesionatzea %3 batez kezkatzea da, benetan zenbakiak mugitzen dituena albo batera utzita.</p>
+        
+        <h2>Laburbilduz</h2>
+        
+        <p>Hegoaldea orientazio ideala da, baina "hegoalderik gabe ez du merezi" dioen mitoa faltsua da: hego-ekialdeak eta hego-mendebaldeak ia gauza bera ekoizten dute (%95-98), eta ekialdea edo mendebaldea ere errentagarriak dira (%10-20 baino ez dute galtzen, eta batzuetan kontsumo-profilak konpentsatzen du). Benetan arazo den kasu bakarra iparraldera bakarrik begiratzen duen teilatu inklinatua da, non %50-60 galtzen den —eta hala ere, teilatua laua bada edo beste azalera bat badago, badu irtenbidea—. Orientazioagatik eguzki-energia baztertu aurretik, begiratu benetan pisua duenari: zure faktura, eguneko kontsumoa eta itzalak.</p>
+        
+        <p>Zalantzak argitzeko modurik onena zure datuekin ikustea da: <a href="/">kalkulatu zure instalazioa zure fakturarekin</a> eta egiaztatu ea, zure orientazio errealarekin, konpentsatzen dizun.</p>
+        <div class="cta-block">
+          <p>Jakin nahi duzu zenbat aurreztuko zenukeen zure teilatuan plakak jarrita?</p>
+          <a class="cta" href="/">Nire aurrezpena kalkulatu</a>
+        </div>
+      </article>
+      <footer>
+        <a href="/blog/eu/">Bloga</a>
+        <span> · </span>
+        <a href="/faq-eu.html">Ohiko galderak</a>
+        <span> · </span>
+        <a href="/ayudas.html">Laguntzak erkidegoka</a>
+        <span> · </span>
+        <a href="/privacidad-eu.html">Pribatutasuna</a>
+        <p>SolarVentok datu ofizialetan oinarritutako gutxi gorabeherako estimazioak eskaintzen ditu; ez dute zure teilatuko azterketa tekniko bat ordezkatzen.</p>
+      </footer>
+    </main>
+  </body>
+</html>
