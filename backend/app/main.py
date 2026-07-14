@@ -1308,15 +1308,32 @@ def _confidence_summary(
     observed_months = (
         consumption_summary.get("observed_months", []) if consumption_summary else []
     )
-    # La confianza depende de cuántos MESES REALES de consumo se cubren, no de
-    # cuántos ficheros se suban: una sola factura anual con su detalle mensual
-    # aporta 12 meses reales. La producción (PVGIS) es fiable de por sí y los
-    # precios de mercado son orientativos; el feed de proveedores suma pero no
-    # es condición necesaria.
-    real_months = len(set(observed_months))
-    seasonal_spread = real_months >= 2
+    # La confianza del PERFIL de consumo depende de qué ESTACIONES cubren las
+    # facturas, no de cuántos ficheros se suban ni de si llevan importe (eso
+    # afecta al PRECIO, no a la forma del consumo). Dos facturas de estaciones
+    # OPUESTAS —frío nov-feb y cálido jun-sep— fijan la forma (invierno alto /
+    # verano bajo o A/A) y bastan para confianza alta; dos del mismo verano, no.
+    # Un año completo de meses reales (o el detalle mensual de una anual) manda
+    # siempre. La producción (PVGIS) es fiable de por sí.
+    observed = set(observed_months)
+    real_months = len(observed)
+    cold_months = {11, 12, 1, 2}
+    warm_months = {6, 7, 8, 9}
+    covers_cold = bool(observed & cold_months)
+    covers_warm = bool(observed & warm_months)
+    opposite_seasons = covers_cold and covers_warm
+    # "Consumo último año" impreso en la factura: es el anual REAL de la casa;
+    # con ≥2 facturas que lo confirmen da confianza alta aunque no cubran ambas
+    # estaciones (la forma la pone el perfil residencial por defecto).
+    annual_declared = bool(
+        consumption_summary and consumption_summary.get("annual_from_printed")
+    )
 
-    if real_months >= 12 or (priced_bill_count >= 2 and seasonal_spread):
+    if (
+        real_months >= 12
+        or (bill_count >= 2 and opposite_seasons)
+        or (annual_declared and bill_count >= 2)
+    ):
         level = "high"
     elif priced_bill_count >= 1 or (
         consumption_summary is not None and price_source in {"manual", "bills"}
@@ -1328,12 +1345,18 @@ def _confidence_summary(
         level = "low"
 
     hints = []
-    # Con un año completo de datos reales no tiene sentido pedir más meses.
+    # Con datos suficientes (nivel alto) no tiene sentido pedir más facturas.
     if level != "high" and real_months < 12:
-        if priced_bill_count == 0:
+        if bill_count == 0:
             hints.append("add_priced_bills")
-        elif priced_bill_count < 2 or not seasonal_spread:
+        elif not opposite_seasons and not annual_declared:
+            # Solo se pide "invierno + verano" cuando falta de verdad cubrir la
+            # estación opuesta; nunca cuando ambas ya están presentes.
             hints.append("add_seasonal_bills")
+        elif priced_bill_count == 0:
+            # Estaciones (o anual) cubiertas pero sin importe: se pide para
+            # afinar el precio, no la forma del consumo.
+            hints.append("add_priced_bills")
 
     return {
         "level": level,
