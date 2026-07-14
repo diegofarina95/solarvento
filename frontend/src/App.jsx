@@ -602,6 +602,14 @@ export default function App() {
           {t('app.privacyPolicy')}
         </a>
         <span className="mx-2">·</span>
+        <button
+          type="button"
+          onClick={() => window.googlefc?.showRevocationMessage?.()}
+          className="underline hover:text-stone-700"
+        >
+          {t('app.manageCookies')}
+        </button>
+        <span className="mx-2">·</span>
         <span>© SolarVento</span>
       </footer>
     </div>

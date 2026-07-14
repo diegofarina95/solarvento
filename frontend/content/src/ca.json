@@ -102,12 +102,12 @@
     "description": "Política de privadesa de SolarVento: quines dades tractem, galetes, anuncis de Google i els teus drets (RGPD).",
     "back": "&larr; Torna a la calculadora",
     "h1": "Política de privadesa",
-    "updated": "Última actualització: 6 de juliol de 2026",
+    "updated": "Última actualització: 14 de juliol de 2026",
     "introHtml": "Aquesta política explica quines dades tracta <strong>SolarVento</strong> (d'ara endavant, «el lloc», accessible a <a href=\"https://solarvento.es/\">solarvento.es</a>) quan fas servir la calculadora d'autoconsum solar, amb quina finalitat, en quina base legal i quins drets tens. SolarVento és una eina gratuïta que estima plaques solars, bateries i estalvi a partir de la teva factura de la llum, <strong>sense registre ni creació de compte</strong>.",
     "sections": [
       {
         "h2": "1. Responsable del tractament",
-        "bodyHtml": "<p>Responsable: <strong>SolarVento</strong>. Per a qualsevol consulta sobre privadesa o per exercir els teus drets pots escriure a <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>.</p>"
+        "bodyHtml": "<p>Responsable del tractament: <strong>Diego Fariña Fernández</strong>, titular i operador de <strong>SolarVento</strong> (<a href=\"https://solarvento.es/\">solarvento.es</a>), a títol particular des del Regne Unit. Per a qualsevol consulta sobre privadesa o per exercir els teus drets: <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>.</p>"
       },
       {
         "h2": "2. Quines dades tractem i amb quina finalitat",
@@ -115,7 +115,7 @@
       },
       {
         "h2": "3. Galetes",
-        "bodyHtml": "<ul> <li> <strong>Galeta de sessió necessària</strong> (<code>solvento_bill_session</code>): permet associar les factures que analitzes a la teva sessió. No té data de caducitat: desapareix en tancar el navegador. </li> <li> <strong>Galetes publicitàries de tercers (Google AdSense):</strong> es fan servir per mostrar anuncis. <strong>Només s'activen si dones el teu consentiment.</strong> Per defecte, les galetes de publicitat estan <em>denegades</em> (Consent Mode) fins que acceptis al missatge de consentiment. </li> </ul>"
+        "bodyHtml": "<p>Distingim tres tipus de galetes:</p><ul><li><strong>Necessària (de sessió)</strong> (<code>solvento_bill_session</code>): associa les factures que analitzes a la teva sessió. No requereix consentiment; desapareix en tancar el navegador.</li><li><strong>Analítiques (Google Analytics)</strong>: ens ajuden a entendre de forma agregada com s'usa el lloc. Només s'activen amb el teu consentiment; per defecte estan denegades (Consent Mode). Tercer: Google. Durada: fins a 24 mesos.</li><li><strong>Publicitàries (Google AdSense)</strong>: permeten mostrar anuncis. Només s'activen amb el teu consentiment; denegades per defecte. Tercer: Google.</li></ul><p>Pots acceptar o rebutjar les galetes no necessàries a l'avís que apareix en entrar i <strong>canviar la teva decisió quan vulguis</strong> des de «Configurar galetes», al peu de pàgina.</p>"
       },
       {
         "h2": "4. Publicitat de Google",

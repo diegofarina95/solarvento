@@ -61,6 +61,7 @@ export const translations = {
       guidesTitle: 'Guías de autoconsumo solar',
       guidesLead: 'Aprende a leer tu factura, dimensionar las placas, elegir batería y entender las ayudas. Guías prácticas con números y normativa española, sin humo.',
       guidesCta: 'Ver todas las guías',
+      manageCookies: 'Configurar cookies',
     },
     errors: {
       invalidNumber: ({ label }) => `Valor no válido en ${label}.`,
@@ -633,6 +634,7 @@ export const translations = {
       guidesTitle: 'Solar self-consumption guides',
       guidesLead: 'Learn to read your bill, size your panels, choose a battery and understand the subsidies. Practical guides with numbers and Spanish regulations, no hype.',
       guidesCta: 'See all the guides',
+      manageCookies: 'Manage cookies',
     },
     errors: {
       invalidNumber: ({ label }) => `Invalid value for ${label}.`,
@@ -1205,6 +1207,7 @@ export const translations = {
       guidesTitle: 'Guías de autoconsumo solar',
       guidesLead: 'Aprende a ler a túa factura, dimensionar as placas, elixir batería e entender as axudas. Guías prácticas con números e normativa española, sen fume.',
       guidesCta: 'Ver todas as guías',
+      manageCookies: 'Configurar cookies',
     },
     errors: {
       invalidNumber: ({ label }) => `Valor non válido en ${label}.`,
@@ -1777,6 +1780,7 @@ export const translations = {
       guidesTitle: "Guies d'autoconsum solar",
       guidesLead: 'Aprèn a llegir la factura, dimensionar les plaques, triar bateria i entendre els ajuts. Guies pràctiques amb números i normativa espanyola, sense fum.',
       guidesCta: 'Veure totes les guies',
+      manageCookies: 'Configurar galetes',
     },
     errors: {
       invalidNumber: ({ label }) => `Valor no vàlid a ${label}.`,
@@ -2349,6 +2353,7 @@ export const translations = {
       guidesTitle: 'Eguzki-autokontsumorako gidak',
       guidesLead: 'Ikasi zure faktura irakurtzen, plakak dimentsionatzen, bateria aukeratzen eta laguntzak ulertzen. Gida praktikoak, zenbakiekin eta Espainiako araudiarekin.',
       guidesCta: 'Ikusi gida guztiak',
+      manageCookies: 'Cookieak konfiguratu',
     },
     errors: {
       invalidNumber: ({ label }) => `Balio baliogabea hemen: ${label}.`,

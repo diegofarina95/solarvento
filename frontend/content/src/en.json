@@ -102,12 +102,12 @@
     "description": "SolarVento privacy policy: what data we process, cookies, Google ads and your rights (GDPR).",
     "back": "&larr; Back to the calculator",
     "h1": "Privacy policy",
-    "updated": "Last updated: 6 July 2026",
+    "updated": "Last updated: 14 July 2026",
     "introHtml": "This policy explains what data <strong>SolarVento</strong> (hereinafter, \"the site\", accessible at <a href=\"https://solarvento.es/\">solarvento.es</a>) processes when you use the solar self-consumption calculator, for what purpose, on what legal basis and what rights you have. SolarVento is a free tool that estimates solar panels, batteries and savings from your electricity bill, <strong>with no registration or account creation</strong>.",
     "sections": [
       {
         "h2": "1. Data controller",
-        "bodyHtml": "<p> Controller: <strong>SolarVento</strong>. For any query about privacy or to exercise your rights you can write to <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>. </p>"
+        "bodyHtml": "<p>Data controller: <strong>Diego Fariña Fernández</strong>, owner and operator of <strong>SolarVento</strong> (<a href=\"https://solarvento.es/\">solarvento.es</a>), as an individual based in the United Kingdom. For any privacy query or to exercise your rights: <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>.</p>"
       },
       {
         "h2": "2. What data we process and for what purpose",
@@ -115,7 +115,7 @@
       },
       {
         "h2": "3. Cookies",
-        "bodyHtml": "<ul> <li> <strong>Necessary session cookie</strong> (<code>solvento_bill_session</code>): allows the bills you analyse to be associated with your session. It has no expiry date: it disappears when the browser is closed. </li> <li> <strong>Third-party advertising cookies (Google AdSense):</strong> used to display ads. <strong>They are only activated if you give your consent.</strong> By default, advertising cookies are <em>denied</em> (Consent Mode) until you accept in the consent message. </li> </ul>"
+        "bodyHtml": "<p>We use three types of cookies:</p><ul><li><strong>Necessary (session)</strong> (<code>solvento_bill_session</code>): links the bills you analyse to your session. No consent required; it disappears when you close the browser.</li><li><strong>Analytics (Google Analytics)</strong>: help us understand, in aggregate, how the site is used. Enabled only with your consent; denied by default (Consent Mode). Third party: Google. Duration: up to 24 months.</li><li><strong>Advertising (Google AdSense)</strong>: used to show ads. Enabled only with your consent; denied by default. Third party: Google.</li></ul><p>You can accept or reject non-essential cookies in the banner shown on entry and <strong>change your choice at any time</strong> via “Manage cookies” in the footer.</p>"
       },
       {
         "h2": "4. Google advertising",

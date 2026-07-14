@@ -102,12 +102,12 @@
     "description": "Política de privacidade de SolarVento: que datos tratamos, cookies, anuncios de Google e os teus dereitos (RGPD).",
     "back": "&larr; Volver á calculadora",
     "h1": "Política de privacidade",
-    "updated": "Última actualización: 6 de xullo de 2026",
+    "updated": "Última actualización: 14 de xullo de 2026",
     "introHtml": "Esta política explica que datos trata <strong>SolarVento</strong> (en diante, «o sitio», accesible en <a href=\"https://solarvento.es/\">solarvento.es</a>) cando usas a calculadora de autoconsumo solar, con que finalidade, en que base legal e que dereitos tes. SolarVento é unha ferramenta gratuíta que estima placas solares, baterías e aforro a partir da túa factura da luz, <strong>sen rexistro nin creación de conta</strong>.",
     "sections": [
       {
         "h2": "1. Responsable do tratamento",
-        "bodyHtml": "<p>Responsable: <strong>SolarVento</strong>. Para calquera consulta sobre privacidade ou para exercer os teus dereitos podes escribir a <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>.</p>"
+        "bodyHtml": "<p>Responsable do tratamento: <strong>Diego Fariña Fernández</strong>, titular e operador de <strong>SolarVento</strong> (<a href=\"https://solarvento.es/\">solarvento.es</a>), a título particular desde o Reino Unido. Para calquera consulta sobre privacidade ou para exercer os teus dereitos: <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>.</p>"
       },
       {
         "h2": "2. Que datos tratamos e con que fin",
@@ -115,7 +115,7 @@
       },
       {
         "h2": "3. Cookies",
-        "bodyHtml": "<ul><li><strong>Cookie de sesión necesaria</strong> (<code>solvento_bill_session</code>): permite asociar as facturas que analizas á túa sesión. Non ten data de caducidade: desaparece ao pechar o navegador.</li><li><strong>Cookies publicitarias de terceiros (Google AdSense):</strong> utilízanse para amosar anuncios. <strong>Só se activan se dás o teu consentimento.</strong> Por defecto, as cookies de publicidade están <em>denegadas</em> (Consent Mode) ata que aceptes na mensaxe de consentimento.</li></ul>"
+        "bodyHtml": "<p>Distinguimos tres tipos de cookies:</p><ul><li><strong>Necesaria (de sesión)</strong> (<code>solvento_bill_session</code>): asocia as facturas que analizas á túa sesión. Non require consentimento; desaparece ao pechar o navegador.</li><li><strong>Analíticas (Google Analytics)</strong>: axúdannos a entender de forma agregada como se usa o sitio. Só se activan co teu consentimento; por defecto están denegadas (Consent Mode). Terceiro: Google. Duración: ata 24 meses.</li><li><strong>Publicitarias (Google AdSense)</strong>: permiten mostrar anuncios. Só se activan co teu consentimento; denegadas por defecto. Terceiro: Google.</li></ul><p>Podes aceptar ou rexeitar as cookies non necesarias no aviso que aparece ao entrar e <strong>cambiar a túa decisión cando queiras</strong> desde «Configurar cookies», no pé de páxina.</p>"
       },
       {
         "h2": "4. Publicidade de Google",

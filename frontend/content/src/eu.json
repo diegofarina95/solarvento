@@ -102,12 +102,12 @@
     "description": "SolarVentoren pribatutasun-politika: zein datu tratatzen ditugun, cookieak, Google-ren iragarkiak eta zure eskubideak (RGPD).",
     "back": "&larr; Kalkulagailura itzuli",
     "h1": "Pribatutasun-politika",
-    "updated": "Azken eguneratzea: 2026ko uztailaren 6a",
+    "updated": "Azken eguneratzea: 2026ko uztailaren 14a",
     "introHtml": "Politika honek azaltzen du <strong>SolarVentok</strong> (aurrerantzean, «gunea», <a href=\"https://solarvento.es/\">solarvento.es</a> helbidean eskuragarri) zein datu tratatzen dituen eguzki-autokontsumoaren kalkulagailua erabiltzen duzunean, zer helbururekin, zein oinarri legaletan eta zein eskubide dituzun. SolarVento zure argindarraren fakturatik abiatuta eguzki-plakak, bateriak eta aurrezpena estimatzen dituen doako tresna bat da, <strong>izena eman edo konturik sortu gabe</strong>.",
     "sections": [
       {
         "h2": "1. Tratamenduaren arduraduna",
-        "bodyHtml": "<p> Arduraduna: <strong>SolarVento</strong>. Pribatutasunari buruzko edozein kontsultarako edo zure eskubideak baliatzeko <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a> helbidera idatz dezakezu. </p>"
+        "bodyHtml": "<p>Tratamenduaren arduraduna: <strong>Diego Fariña Fernández</strong>, <strong>SolarVento</strong>-ren (<a href=\"https://solarvento.es/\">solarvento.es</a>) titular eta operadorea, norbanako gisa Erresuma Batutik. Pribatutasunari buruzko edozein galderatarako edo zure eskubideak baliatzeko: <a href=\"mailto:diegofarina95@gmail.com\">diegofarina95@gmail.com</a>.</p>"
       },
       {
         "h2": "2. Zein datu tratatzen ditugun eta zer helbururekin",
@@ -115,7 +115,7 @@
       },
       {
         "h2": "3. Cookieak",
-        "bodyHtml": "<ul> <li> <strong>Beharrezkoa den saio-cookiea</strong> (<code>solvento_bill_session</code>): aztertzen dituzun fakturak zure saioari lotzeko aukera ematen du. Ez du iraungitze-datarik: nabigatzailea ixtean desagertzen da. </li> <li> <strong>Hirugarrenen publizitate-cookieak (Google AdSense):</strong> iragarkiak erakusteko erabiltzen dira. <strong>Zure baimena ematen baduzu soilik aktibatzen dira.</strong> Lehenetsita, publizitate-cookieak <em>ukatuta</em> daude (Consent Mode) baimen-mezuan onartu arte. </li> </ul>"
+        "bodyHtml": "<p>Hiru cookie mota bereizten ditugu:</p><ul><li><strong>Beharrezkoa (saiokoa)</strong> (<code>solvento_bill_session</code>): aztertzen dituzun fakturak zure saioarekin lotzen ditu. Ez du baimenik behar; nabigatzailea ixtean desagertzen da.</li><li><strong>Analitikoak (Google Analytics)</strong>: gunea nola erabiltzen den modu agregatuan ulertzen laguntzen digute. Zure baimenarekin bakarrik aktibatzen dira; lehenetsita ukatuta daude (Consent Mode). Hirugarrena: Google. Iraupena: 24 hilabete arte.</li><li><strong>Publizitatekoak (Google AdSense)</strong>: iragarkiak erakusteko. Zure baimenarekin bakarrik; lehenetsita ukatuta. Hirugarrena: Google.</li></ul><p>Sartzean agertzen den oharrean onar edo uka ditzakezu beharrezkoak ez diren cookieak, eta <strong>zure erabakia noiznahi alda dezakezu</strong> orri-oineko «Cookieak konfiguratu» estekatik.</p>"
       },
       {
         "h2": "4. Google-ren publizitatea",
