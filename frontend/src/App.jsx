@@ -257,6 +257,9 @@ export default function App() {
           // de precio efectivo más baja.
           cups: b.cups ?? null,
           bono_social: b.bonoSocial ?? null,
+          // Consumo anual declarado en la factura: el backend lo prioriza sobre
+          // la extrapolación de facturas parciales (jerarquía de consumo anual).
+          rolling_annual_kwh: b.rollingAnnualKwh ?? null,
         }))
       }
       if (advanced) {

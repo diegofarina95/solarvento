@@ -733,6 +733,12 @@ export default function Results({ data, i18n }) {
                           value: data.consumption.ignored_price_bill_count,
                         })
                       : null,
+                    // Anual declarado en la factura con facturas parciales (<~10
+                    // meses): se usa ese anual; los meses subidos son orientativos.
+                    data.consumption.annual_from_printed &&
+                    (data.consumption.months_covered ?? 12) < 10
+                      ? t('results.printedAnnualUsed')
+                      : null,
                   ]
                     .filter(Boolean)
                     .join(' · ')

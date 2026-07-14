@@ -225,6 +225,9 @@ export default function BillsInput({ bills, setBills, i18n, onLocationDetected }
         // CUPS y bono social: consolidación por suministro y banda de precio.
         cups: parsed.cups ?? null,
         bonoSocial: parsed.bono_social ?? false,
+        // Consumo anual declarado ("último año"): manda sobre la extrapolación
+        // de meses parciales. Sin esto, el cálculo lo perdía y extrapolaba.
+        rollingAnnualKwh: parsed.rolling_annual_kwh ?? null,
       }))
       if (parsed.needs_review && (parsed.review_notes?.length || parsed.review_reasons?.length)) {
         // Guarda de reconciliación/precio efectivo: el consumo detectado es
