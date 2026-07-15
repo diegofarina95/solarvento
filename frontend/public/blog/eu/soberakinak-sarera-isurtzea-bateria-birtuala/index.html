@@ -1,0 +1,510 @@
+<!doctype html>
+<!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/blog/ — NO EDITAR A MANO -->
+<html lang="eu">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nola funtzionatzen duen soberakinak sarera isurtzeak eta zer den bateria birtuala | SolarVento</title>
+    <meta name="description" content="Zer gertatzen den ekoizten duzun eta kontsumitzen ez duzun eguzki-energiarekin, nola funtzionatzen duen soberakinen konpentsazioak Espainian, zergatik faktura ez den zerora jaisten eta zer den bateria birtuala: zure soberako energiaren balioa gordetzen duen diru-zorroa." />
+    <meta name="keywords" content="eguzki soberakinak sarera isurtzea, autokontsumoko soberakinen konpentsazioa, eguzki bateria birtuala, nola funtzionatzen du soberakinen konpentsazioak, eguzki plaken soberakinak fakturan, zer da bateria birtuala" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://solarvento.es/blog/eu/soberakinak-sarera-isurtzea-bateria-birtuala/" />
+    <link rel="alternate" hreflang="es" href="https://solarvento.es/blog/vertido-excedentes-bateria-virtual/" />
+    <link rel="alternate" hreflang="en" href="https://solarvento.es/blog/en/how-solar-surplus-export-to-the-grid-works-virtual-battery/" />
+    <link rel="alternate" hreflang="ca" href="https://solarvento.es/blog/ca/com-funciona-abocament-excedents-xarxa-bateria-virtual/" />
+    <link rel="alternate" hreflang="gl" href="https://solarvento.es/blog/gl/como-funciona-vertido-excedentes-rede-bateria-virtual/" />
+    <link rel="alternate" hreflang="eu" href="https://solarvento.es/blog/eu/soberakinak-sarera-isurtzea-bateria-birtuala/" />
+    <link rel="alternate" hreflang="x-default" href="https://solarvento.es/blog/vertido-excedentes-bateria-virtual/" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="eu_ES" />
+    <meta property="og:url" content="https://solarvento.es/blog/eu/soberakinak-sarera-isurtzea-bateria-birtuala/" />
+    <meta property="og:title" content="Nola funtzionatzen duen soberakinak sarera isurtzeak eta zer den bateria birtuala | SolarVento" />
+    <meta property="og:description" content="Zer gertatzen den ekoizten duzun eta kontsumitzen ez duzun eguzki-energiarekin, nola funtzionatzen duen soberakinen konpentsazioak Espainian, zergatik faktura ez den zerora jaisten eta zer den bateria birtuala: zure soberako energiaren balioa gordetzen duen diru-zorroa." />
+    <meta property="og:image" content="https://solarvento.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="article:published_time" content="2026-07-15" />
+    <meta property="article:modified_time" content="2026-07-15" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Nola funtzionatzen duen soberakinak sarera isurtzeak eta zer den bateria birtuala | SolarVento" />
+    <meta name="twitter:description" content="Zer gertatzen den ekoizten duzun eta kontsumitzen ez duzun eguzki-energiarekin, nola funtzionatzen duen soberakinen konpentsazioak Espainian, zergatik faktura ez den zerora jaisten eta zer den bateria birtuala: zure soberako energiaren balioa gordetzen duen diru-zorroa." />
+    <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      (function () {
+        var RAD = Math.PI / 180, TZ = 'Europe/Madrid', LAT = 40.4168, LON = -3.7038
+        function hourInTZ(date) {
+          var p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)
+          function v(t) { return Number(p.find(function (x) { return x.type === t }).value) }
+          return v('hour') + v('minute') / 60
+        }
+        var now = new Date()
+        var jd = now.getTime() / 86400000 + 2440587.5
+        var n = Math.round(jd - 2451545.0 + 0.0008)
+        var jStar = n + -LON / 360
+        var M = (357.5291 + 0.98560028 * jStar) % 360
+        var Mr = M * RAD
+        var C = 1.9148 * Math.sin(Mr) + 0.02 * Math.sin(2 * Mr) + 0.0003 * Math.sin(3 * Mr)
+        var lambda = ((M + C + 180 + 102.9372) % 360) * RAD
+        var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(Mr) - 0.0069 * Math.sin(2 * lambda)
+        var sinDec = Math.sin(lambda) * Math.sin(23.4397 * RAD)
+        var cosDec = Math.cos(Math.asin(sinDec))
+        var cosOmega = (Math.sin(-0.833 * RAD) - Math.sin(LAT * RAD) * sinDec) / (Math.cos(LAT * RAD) * cosDec)
+        var omega = Math.acos(Math.min(1, Math.max(-1, cosOmega))) / RAD
+        function jToDate(j) { return new Date((j - 2440587.5) * 86400000) }
+        var sunrise = hourInTZ(jToDate(jTransit - omega / 360))
+        var sunset = hourInTZ(jToDate(jTransit + omega / 360))
+        var hour = hourInTZ(now)
+        if (!(hour >= sunrise && hour < sunset)) document.documentElement.setAttribute('data-theme', 'night')
+      })()
+    </script>
+    <style>
+      /* Tema del blog = tema de la portada (src/index.css): papel cálido con
+         amanecer, marca en Bricolage Grotesque, botón solar y cards en capas.
+         Única licencia propia del blog: cuerpo serif para lectura larga. */
+      @font-face {
+        font-family: 'Bricolage Grotesque Variable';
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
+      }
+
+      :root {
+        color-scheme: light;
+        /* Tema solar (mismos tokens que la app) */
+        --page: #fbfaf6;
+        --sky-dawn: #fff4de;
+        --sun-400: #fbbf24;
+        --sun-500: #f59e0b;
+        --sun-600: #d97706;
+        --ember: #b45309;
+        --gridline: #ece6d9;
+        /* Categorías del blog (acento; el ámbar de marca sigue dominando) */
+        --cat-guia: #f59e0b;
+        --cat-analisis: #3f7f8f;
+        --cat-divulgacion: #c2703d;
+      }
+      /* Modo noche: mismas variables que :root[data-theme='night'] en la app.
+         Lo activa el script solar del <head> (se pone el sol en España → noche),
+         igual que la portada; el modo claro/oscuro del sistema NO interviene. */
+      :root[data-theme='night'] {
+        color-scheme: dark;
+        --page: #10131a;
+        --sky-dawn: #1b2436; /* resplandor de cielo nocturno en la cabecera */
+        --gridline: #2a2f3a;
+        /* De noche, más claras y desaturadas: los vivos cansan sobre fondo oscuro */
+        --cat-guia: #f0b95d;
+        --cat-analisis: #6bb0be;
+        --cat-divulgacion: #d99668;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        /* Cuerpo serif (lectura larga); titulares y UI en la familia de la app. */
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+        line-height: 1.7;
+        color: #1c1917;
+        /* Amanecer: la página nace en luz cálida y se asienta en papel */
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(255, 243, 220, 0) 420px),
+          var(--page);
+      }
+      h1, h2, .brand { font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif; }
+      h3, .meta, .cta, .cta-block, .cards, footer, .eyebrow, .anatomy li strong {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+      a { color: var(--ember); }
+      a:hover { color: #92400e; }
+      a:focus-visible, .cta:focus-visible {
+        outline: 3px solid var(--sun-500);
+        outline-offset: 2px;
+        border-radius: .15rem;
+      }
+      h1 {
+        font-size: clamp(1.9rem, 4vw, 2.6rem);
+        font-weight: 700;
+        letter-spacing: -.02em;
+        line-height: 1.12;
+        margin: 1.2rem 0 .5rem;
+      }
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 650;
+        letter-spacing: -.01em;
+        line-height: 1.25;
+        margin: 2.2rem 0 .6rem;
+      }
+      h3 { font-size: 1.02rem; margin: 1.4rem 0 .3rem; }
+      p { margin: .55rem 0; }
+      ul, ol { padding-left: 1.4rem; }
+      li { margin: .3rem 0; }
+
+      /* Cabecera: logo + wordmark como en la portada, CTA solar a la derecha */
+      header.site {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gridline);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        font-weight: 700;
+        font-size: 1.35rem;
+        letter-spacing: -.02em;
+        color: #1c1917;
+        text-decoration: none;
+      }
+      .brand b { font-weight: inherit; }
+      .brand span { color: var(--sun-600); }
+      .brand small {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #78716c;
+        align-self: flex-end;
+        margin-bottom: .3rem;
+      }
+
+      /* Botón principal: gradiente solar con texto oscuro (el .btn-solar de la app) */
+      .cta {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--sun-400), var(--sun-500) 55%, var(--sun-600));
+        color: #1c1917;
+        font-weight: 650;
+        font-size: .9rem;
+        padding: .55rem 1rem;
+        border-radius: .75rem;
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 1px 2px rgba(180, 83, 9, .25);
+        transition: box-shadow .15s ease, filter .15s ease;
+      }
+      .cta:hover {
+        color: #1c1917;
+        filter: brightness(1.05);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 3px 10px rgba(217, 119, 6, .35);
+      }
+
+      /* Eyebrow con tick solar (fecha del artículo, etiquetas de sección) */
+      .eyebrow, .meta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        font-weight: 650;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #78716c;
+        margin: 0 0 1.4rem;
+      }
+      .eyebrow::before, .meta::before {
+        content: '';
+        width: .5rem;
+        height: .5rem;
+        border-radius: 9999px;
+        background: radial-gradient(circle at 35% 35%, var(--sun-400), var(--sun-600));
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, .18);
+        flex-shrink: 0;
+      }
+      .lead { font-size: 1.08rem; color: #52514e; }
+
+      /* Selector de idiomas (como FAQ/privacidad): visible, discreto */
+      .langs { font-size: .78rem; color: #78716c; margin: 1rem 0 0;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .langs a { color: #78716c; }
+      .langs strong { color: #1c1917; }
+
+      /* Callout: aviso ámbar (border-amber-200 + bg-amber-50, como en la app) */
+      .callout {
+        border: 1px solid #fde68a;
+        border-left: .3rem solid var(--sun-500);
+        background: #fffbeb;
+        border-radius: .75rem;
+        color: #78350f;
+        padding: .85rem 1.1rem;
+        margin: 1.4rem 0;
+        font-size: .95rem;
+      }
+      .callout strong { color: #92400e; }
+
+      /* Cards: papel sobre papel, borde cálido, profundidad en capas (.card-solar) */
+      .anatomy, .card, .cta-block {
+        background: #fff;
+        border: 1px solid var(--gridline);
+        border-radius: 1rem;
+        box-shadow:
+          0 1px 2px rgba(28, 25, 23, .04),
+          0 6px 16px -8px rgba(120, 90, 20, .08);
+      }
+      .anatomy { padding: 1.1rem 1.25rem; margin: 1.4rem 0; }
+      .anatomy h3 { margin-top: 0; }
+      .anatomy ol { margin: 0; padding-left: 1.3rem; }
+      .anatomy li { margin: .55rem 0; }
+      .anatomy .hint { color: #898781; font-size: .88rem; }
+
+      /* Bloque CTA: card de decisión con el sol encima (.card-hero de la app) */
+      .cta-block {
+        position: relative;
+        overflow: hidden;
+        padding: 1.35rem 1.4rem 1.45rem;
+        margin: 2.2rem 0;
+        text-align: center;
+      }
+      .cta-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--sun-400), var(--sun-600));
+      }
+      .cta-block p { margin: 0 0 .9rem; color: #52514e; }
+      .cta-block .cta { font-size: 1rem; padding: .7rem 1.3rem; }
+
+      /* Índice del blog */
+      .cards { display: grid; gap: 1rem; margin-top: 1.6rem; }
+      .card {
+        padding: 1.15rem 1.3rem;
+        transition: box-shadow .2s ease, transform .2s ease;
+      }
+      .card:hover {
+        box-shadow:
+          0 2px 4px rgba(28, 25, 23, .05),
+          0 16px 32px -12px rgba(120, 90, 20, .14);
+      }
+      .card h2 { margin: 0 0 .35rem; font-size: 1.3rem; }
+      .card h2 a { color: #1c1917; text-decoration: none; }
+      .card h2 a:hover { color: var(--ember); text-decoration: underline; }
+      .card .meta { margin: 0 0 .5rem; }
+      .card p.excerpt {
+        margin: 0;
+        color: #52514e;
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+      }
+
+      /* Categorías: la clase solo fija --cat; etiqueta, punto del eyebrow y borde
+         de card la usan. Sin categoría no existe la clase y nada de esto aplica. */
+      .cat-guia { --cat: var(--cat-guia); }
+      .cat-analisis { --cat: var(--cat-analisis); }
+      .cat-divulgacion { --cat: var(--cat-divulgacion); }
+      .cat-label { color: var(--cat); }
+      article[class*='cat-'] .eyebrow::before {
+        background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--cat) 75%, #fff), var(--cat));
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 18%, transparent);
+      }
+      article[class*='cat-'] > .eyebrow.cat-label { margin: 1.6rem 0 -0.6rem; }
+      .card[class*='cat-'] { border-left: 4px solid var(--cat); }
+
+      footer {
+        margin-top: 3rem;
+        border-top: 1px solid var(--gridline);
+        padding-top: 1rem;
+        font-size: .82rem;
+        color: #78716c;
+      }
+
+      /* Noche: la página se asienta en el azul nocturno de la app y las cards usan
+         la superficie/bordes/sombras de .card-solar en modo noche. */
+      [data-theme='night'] body {
+        color: #e7e5e4;
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(27, 36, 54, 0) 420px),
+          var(--page);
+      }
+      [data-theme='night'] a { color: var(--sun-400); }
+      [data-theme='night'] a:hover { color: #fcd34d; }
+      [data-theme='night'] .brand, [data-theme='night'] .card h2 a { color: #e7e5e4; }
+      [data-theme='night'] .lead,
+      [data-theme='night'] .meta,
+      [data-theme='night'] .eyebrow,
+      [data-theme='night'] .anatomy .hint,
+      [data-theme='night'] .card p.excerpt,
+      [data-theme='night'] .cta-block p,
+      [data-theme='night'] .brand small { color: #a8a29e; }
+      [data-theme='night'] .anatomy,
+      [data-theme='night'] .card,
+      [data-theme='night'] .cta-block {
+        background: #171b23;
+        border-color: #2a2f3a;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, .3),
+          0 6px 16px -8px rgba(0, 0, 0, .5);
+      }
+      [data-theme='night'] .card:hover {
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, .35),
+          0 16px 32px -12px rgba(0, 0, 0, .6);
+      }
+      [data-theme='night'] .card h2 a:hover { color: var(--sun-400); }
+      [data-theme='night'] .langs, [data-theme='night'] .langs a { color: #a8a29e; }
+      [data-theme='night'] .langs strong { color: #e7e5e4; }
+      [data-theme='night'] .callout {
+        background: rgba(245, 158, 11, .12);
+        border-color: rgba(245, 158, 11, .4);
+        border-left-color: var(--sun-500);
+        color: #fde68a;
+      }
+      [data-theme='night'] .callout strong { color: #fde68a; }
+      [data-theme='night'] .cta, [data-theme='night'] .cta:hover { color: #1c1917; }
+      /* El border-color nocturno de .card machacaría el borde de categoría */
+      [data-theme='night'] .card[class*='cat-'] { border-left-color: var(--cat); }
+    </style>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Nola funtzionatzen duen soberakinak sarera isurtzeak eta zer den bateria birtuala",
+  "description": "Zer gertatzen den ekoizten duzun eta kontsumitzen ez duzun eguzki-energiarekin, nola funtzionatzen duen soberakinen konpentsazioak Espainian, zergatik faktura ez den zerora jaisten eta zer den bateria birtuala: zure soberako energiaren balioa gordetzen duen diru-zorroa.",
+  "datePublished": "2026-07-15",
+  "dateModified": "2026-07-15",
+  "inLanguage": "eu",
+  "mainEntityOfPage": "https://solarvento.es/blog/eu/soberakinak-sarera-isurtzea-bateria-birtuala/",
+  "image": "https://solarvento.es/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://solarvento.es/logo-mark.png"
+    }
+  }
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "SolarVento",
+      "item": "https://solarvento.es/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Bloga",
+      "item": "https://solarvento.es/blog/eu/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Nola funtzionatzen duen soberakinak sarera isurtzeak eta zer den bateria birtuala",
+      "item": "https://solarvento.es/blog/eu/soberakinak-sarera-isurtzea-bateria-birtuala/"
+    }
+  ]
+}
+    </script>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="site">
+        <a class="brand" href="/blog/eu/">
+          <b>Solar<span>Vento</span></b>
+          <small>Bloga</small>
+        </a>
+        <a class="cta" href="/">Nire aurrezpena kalkulatu</a>
+      </header>
+      <nav class="langs" aria-label="Hizkuntza"><a href="/blog/vertido-excedentes-bateria-virtual/" hreflang="es" lang="es">Español</a> · <a href="/blog/en/how-solar-surplus-export-to-the-grid-works-virtual-battery/" hreflang="en" lang="en">English</a> · <a href="/blog/ca/com-funciona-abocament-excedents-xarxa-bateria-virtual/" hreflang="ca" lang="ca">Català</a> · <a href="/blog/gl/como-funciona-vertido-excedentes-rede-bateria-virtual/" hreflang="gl" lang="gl">Galego</a> · <strong>Euskara</strong></nav>
+      <article class="cat-divulgacion">
+        <p class="eyebrow cat-label">DIVULGACIÓN</p>
+        <h1>Nola funtzionatzen duen soberakinak sarera isurtzeak eta zer den bateria birtuala</h1>
+        <p class="meta"><time datetime="2026-07-15">2026ko uztailaren 15a</time></p>
+        <p class="lead">Zure plakek eguerdian topera ekoizten dute, agian etxean inor kontsumitzen ari ez denean. Sobera duzun energia hori sarera doa. Eta hemen datoz zalantzak: ordaintzen dizute?, oparitu egiten duzu?, zer da konpainiek iragartzen duten “bateria birtual” hori, azkenean bateria bat ere ez dena? Dena argituko dugu, normalean nahasteko erabiltzen duten jargoirik gabe.</p>
+        
+        <h2>Zer diren soberakinak</h2>
+        
+        <p>Zure plakek une horretan kontsumitzen ari zarena baino elektrizitate gehiago ekoizten dutenean, soberako energia hori ez da airean galtzen: <strong>sare elektrikoan injektatzen da</strong>. Horri soberakina esaten zaio. Zure kontagailuak (noranzko bikoa da, bi noranzkoetan neurtzen du) isurtzen duzun kWh bakoitza erregistratzen du. Galdera da zer jasotzen duzun trukean.</p>
+        
+        <h2>Soberakinen konpentsazioa: nola ordaintzen dizuten</h2>
+        
+        <p>Espainian badago legezko mekanismo bat: <strong>soberakinen konpentsazio sinplifikatua (compensación simplificada de excedentes)</strong>. Horrela funtzionatzen du: zure merkaturatzaileak isurtzen duzun energia erregistratzen du, prezio bat jartzen dio (2026an, 0,05 eta 0,12 € inguru kWh bakoitzeko, konpainiaren eta kontratuaren arabera), eta zenbateko hori fakturan deskontatzen dizu.</p>
+        
+        <p>Kontuz ia inork ondo azaltzen ez duen ñabardura garrantzitsu batekin: <strong>ez da energia saltzea bezalakoa.</strong> Zure fakturako deskontu bat da, ez bankura iristen zaizun diru-sarrera bat. Eta ulertzea komeni den muga erabakigarri bat dauka.</p>
+        
+        <div class="callout">
+          <strong>Ezagutu beharreko muga:</strong> konpentsazioak hilabete horretan saretik kontsumitzen duzun energiaren balioraino bakarrik deskonta dezake. Hau da, zure energia-terminoa (término de energía) zeron utz dezake, baina ez hortik behera jaitsi. Hilabete batean gastatzen duzuna baino askoz gehiago ekoizten baduzu, zure kontsumoaren gainetik dagoen soberakin hori EZ da ordaintzen: galdu egiten da. Elektrizitate hori sareari oparituko bazenio bezala da.
+        </div>
+        
+        <h2>Zergatik faktura ez den guztiz zerora iristen</h2>
+        
+        <p>Hemen beste ezusteko ohiko bat dago. Zure energia-kontsumo osoa konpentsatzen baduzu ere, zure faktura <strong>ez da inoiz zerora iristen</strong>, konpentsazioak ukitu ezin dituen kontzeptuak daudelako: potentzia-terminoa (término de potencia) (kontratatutako potentzia edukitzeagatik ordaintzen duzuna), bidesariak (peajes), kontagailuaren alokairua eta kontzeptu horien gaineko zergak. Hori guztia ordaintzen jarraitzen duzu, nahiz eta zure plakek energia guztia estali. Konpentsazioak kontsumitutako energiaren osagaiaren gainean bakarrik eragiten du, ez kostu finkoen gainean.</p>
+        
+        <h2>Eta hemen sartzen da “bateria birtuala”</h2>
+        
+        <p>Bateria birtuala galtzen den soberakinaren arazoa konpontzeko sortu da, hain zuzen. Eta lehenik esan behar dena da zer <strong>ez</strong> den:</p>
+        
+        <div class="callout">
+          <strong>Ez da bateria bat:</strong> bateria birtuala EZ da gailu bat eta EZ du elektrizitaterik biltegiratzen. Zure merkaturatzailearen kontabilitate-zerbitzu bat da. Energia gorde beharrean, zure soberakinen <em>balio ekonomikoa</em> eurotan dagoen saldo gisa gordetzen du —diru-zorro edo itsulapiko digital baten antzera—, aurrerago erabiltzeko.
+        </div>
+        
+        <p>Konpentsazio arruntarekiko aldea da gakoa:</p>
+        
+        <div class="anatomy">
+          <h3>Konpentsazio sinplea vs. bateria birtuala</h3>
+          <ol>
+            <li><strong>Konpentsazio sinplifikatua</strong> — zure soberakinak HILABETE horretako fakturan bakarrik deskontatzen ditu, eta energia-terminoan zerora iritsi arte soilik. <span class="hint">Gainetik geratzen dena galdu egiten da.</span></li>
+            <li><strong>Bateria birtuala</strong> — zure soberakinen balioa saldo gisa pilatzen da eta EZ da hilero iraungitzen. <span class="hint">Eguzki gutxiagoko hilabeteetarako gordetzen duzu, negurako adibidez.</span></li>
+            <li><strong>Saldoaren erabilera</strong> — bateria birtual askorekin saldo hori beste kontzeptu batzuetarako edo beste etxebizitza baterako ere erabil dezakezu. <span class="hint">Adibidez, hondartzako etxearen faktura etxebizitza nagusiko eguzkiarekin ordaintzea.</span></li>
+            <li><strong>Emaitza</strong> — urteko hainbat hilabetetan zero inguruko fakturetara hurbiltzea ahalbidetzen du. <span class="hint">Udako soberakina gordetzen duzu neguan gastatzeko.</span></li>
+          </ol>
+        </div>
+        
+        <p>Adibide tipikoa: udan gastatzen duzuna baino askoz gehiago ekoizten duzu. Konpentsazio arruntarekin, soberakin hori galduko litzateke. Bateria birtualarekin, saldo gisa gordetzen da eta neguan erabiltzen duzu, gutxi ekoizten duzunean eta gehiago kontsumitzen duzunean. Horrela, zure energia ia osoa aprobetxatzen duzu urte osoan zehar.</p>
+        
+        <h2>Ñabardura zintzoa: autokontsumitzea beti da isurtzea baino baliotsuagoa</h2>
+        
+        <p>Eta orain merkaturatzaileek hainbeste azpimarratzen ez duten egia: <strong>zure plaketatik zuzenean kontsumitzen duzun kWh bakoitzak sarera isurtzen duzun kWh bakoitzak baino gehiago balio du.</strong> Zergatik? Autokontsumitzen duzunean, elektrizitate hori erostearen prezio osoa aurrezten duzulako (0,15-0,18 €/kWh). Isurtzen duzunean, askoz gutxiago konpentsatzen dizutelako (0,05-0,12 €/kWh). Aldea handia da.</p>
+        
+        <div class="callout">
+          <strong>Lehentasun zuzena:</strong> lehenengo gauza zure energia ekoizten duzun unean kontsumitzea da (garbigailua, termo elektrikoa edo autoa eguerdian jartzea/kargatzea). Horrek aurrezten du gehien. Sarera isurtzea eta konpentsatzea B plana da autokontsumitu ezin duzunarentzat. Bateria birtuala osagarri ona da soberakin hori ez galtzeko, baina ez du ordezkatzen estrategia nagusia: zure eguzkia duzunean gastatzea.
+        </div>
+        
+        <h2>Orduan, komeni al zait bateria birtuala?</h2>
+        
+        <p>Zure profilaren araberakoa da. Bereziki interesatzen zaizu kontsumitzen duzuna baino dezente gehiago ekoizten baduzu (plaka handiak, egunez kontsumo txikia), merkaturatzaile berarekin bigarren etxebizitza bat baduzu, edo zure kontsumoa eta ekoizpena urtaroen artean desorekatuta badaude. Ekoizten duzun ia guztia autokontsumitzen baduzu, aldiz, abantaila txikiagoa da. Eta kontuz letra txikiarekin: batzuek hileko kuota kobratzen dute, eta saldoa normalean galdu egiten da merkaturatzailea aldatzen baduzu; beraz, komeni da aldatu aurretik gastatzea.</p>
+        
+        <h2>Laburbilduz</h2>
+        
+        <p>Zure plakek behar baino gehiago ekoizten dutenean, soberakin hori sarera isurtzen da eta zure merkaturatzaileak fakturako deskontu gisa konpentsatzen dizu (0,05-0,12 €/kWh), baina muga batekin: ezin du zure faktura zerotik behera jaitsi, ezta kostu finkoak ukitu ere, eta zure kontsumoaren gainetik dagoen soberakina galdu egiten da. Bateria birtualak hori konpontzen du, zure soberakinen balioa eurotan dagoen saldo gisa gordez —ez da gailu bat, diru-zorro digital bat baizik— beste hilabete edo etxebizitza batzuetan erabiltzeko. Baina gogoratu urrezko araua: zure energia unean bertan autokontsumitzeak beti balio du gehiago isurtzeak baino. Ekoitzi, eta gastatu zure eguzkia duzunean.</p>
+        
+        <p>Ikusi nahi duzu zure kasuan zenbat energia autokontsumituko zenukeen eta zenbat isuriko zenukeen? <a href="/">Kalkulatu zure fakturarekin</a> eta lortu zure aurrezkiaren ideia errealista.</p>
+        <div class="cta-block">
+          <p>Jakin nahi duzu zenbat aurreztuko zenukeen zure teilatuan plakak jarrita?</p>
+          <a class="cta" href="/">Nire aurrezpena kalkulatu</a>
+        </div>
+      </article>
+      <footer>
+        <a href="/blog/eu/">Bloga</a>
+        <span> · </span>
+        <a href="/faq-eu.html">Ohiko galderak</a>
+        <span> · </span>
+        <a href="/ayudas.html">Laguntzak erkidegoka</a>
+        <span> · </span>
+        <a href="/privacidad-eu.html">Pribatutasuna</a>
+        <p>SolarVentok datu ofizialetan oinarritutako gutxi gorabeherako estimazioak eskaintzen ditu; ez dute zure teilatuko azterketa tekniko bat ordezkatzen.</p>
+      </footer>
+    </main>
+  </body>
+</html>
