@@ -1,0 +1,509 @@
+<!doctype html>
+<!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/blog/ — NO EDITAR A MANO -->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>La huella de carbono de tu casa: de dónde sale de verdad | SolarVento</title>
+    <meta name="description" content="Qué es la huella de carbono de una vivienda, de dónde salen realmente las emisiones de tu hogar (spoiler: no son las pajitas ni el reciclaje) y cómo reducirla de verdad centrándote en lo que pesa: climatización, agua caliente y transporte." />
+    <meta name="keywords" content="huella de carbono hogar, huella carbono vivienda, emisiones CO2 casa, de dónde salen emisiones hogar, reducir huella carbono casa, cuánto CO2 emite una vivienda" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://solarvento.es/blog/huella-carbono-casa/" />
+    <link rel="alternate" hreflang="es" href="https://solarvento.es/blog/huella-carbono-casa/" />
+    <link rel="alternate" hreflang="en" href="https://solarvento.es/blog/en/your-homes-carbon-footprint-where-it-really-comes-from/" />
+    <link rel="alternate" hreflang="ca" href="https://solarvento.es/blog/ca/empremta-carboni-casa-teva-don-surt/" />
+    <link rel="alternate" hreflang="gl" href="https://solarvento.es/blog/gl/pegada-carbono-casa-de-onde-sae/" />
+    <link rel="alternate" hreflang="eu" href="https://solarvento.es/blog/eu/zure-etxearen-karbono-aztarna-nondik-dator-benetan/" />
+    <link rel="alternate" hreflang="x-default" href="https://solarvento.es/blog/huella-carbono-casa/" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:url" content="https://solarvento.es/blog/huella-carbono-casa/" />
+    <meta property="og:title" content="La huella de carbono de tu casa: de dónde sale de verdad | SolarVento" />
+    <meta property="og:description" content="Qué es la huella de carbono de una vivienda, de dónde salen realmente las emisiones de tu hogar (spoiler: no son las pajitas ni el reciclaje) y cómo reducirla de verdad centrándote en lo que pesa: climatización, agua caliente y transporte." />
+    <meta property="og:image" content="https://solarvento.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="article:published_time" content="2026-07-15" />
+    <meta property="article:modified_time" content="2026-07-15" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="La huella de carbono de tu casa: de dónde sale de verdad | SolarVento" />
+    <meta name="twitter:description" content="Qué es la huella de carbono de una vivienda, de dónde salen realmente las emisiones de tu hogar (spoiler: no son las pajitas ni el reciclaje) y cómo reducirla de verdad centrándote en lo que pesa: climatización, agua caliente y transporte." />
+    <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      (function () {
+        var RAD = Math.PI / 180, TZ = 'Europe/Madrid', LAT = 40.4168, LON = -3.7038
+        function hourInTZ(date) {
+          var p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)
+          function v(t) { return Number(p.find(function (x) { return x.type === t }).value) }
+          return v('hour') + v('minute') / 60
+        }
+        var now = new Date()
+        var jd = now.getTime() / 86400000 + 2440587.5
+        var n = Math.round(jd - 2451545.0 + 0.0008)
+        var jStar = n + -LON / 360
+        var M = (357.5291 + 0.98560028 * jStar) % 360
+        var Mr = M * RAD
+        var C = 1.9148 * Math.sin(Mr) + 0.02 * Math.sin(2 * Mr) + 0.0003 * Math.sin(3 * Mr)
+        var lambda = ((M + C + 180 + 102.9372) % 360) * RAD
+        var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(Mr) - 0.0069 * Math.sin(2 * lambda)
+        var sinDec = Math.sin(lambda) * Math.sin(23.4397 * RAD)
+        var cosDec = Math.cos(Math.asin(sinDec))
+        var cosOmega = (Math.sin(-0.833 * RAD) - Math.sin(LAT * RAD) * sinDec) / (Math.cos(LAT * RAD) * cosDec)
+        var omega = Math.acos(Math.min(1, Math.max(-1, cosOmega))) / RAD
+        function jToDate(j) { return new Date((j - 2440587.5) * 86400000) }
+        var sunrise = hourInTZ(jToDate(jTransit - omega / 360))
+        var sunset = hourInTZ(jToDate(jTransit + omega / 360))
+        var hour = hourInTZ(now)
+        if (!(hour >= sunrise && hour < sunset)) document.documentElement.setAttribute('data-theme', 'night')
+      })()
+    </script>
+    <style>
+      /* Tema del blog = tema de la portada (src/index.css): papel cálido con
+         amanecer, marca en Bricolage Grotesque, botón solar y cards en capas.
+         Única licencia propia del blog: cuerpo serif para lectura larga. */
+      @font-face {
+        font-family: 'Bricolage Grotesque Variable';
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
+      }
+
+      :root {
+        color-scheme: light;
+        /* Tema solar (mismos tokens que la app) */
+        --page: #fbfaf6;
+        --sky-dawn: #fff4de;
+        --sun-400: #fbbf24;
+        --sun-500: #f59e0b;
+        --sun-600: #d97706;
+        --ember: #b45309;
+        --gridline: #ece6d9;
+        /* Categorías del blog (acento; el ámbar de marca sigue dominando) */
+        --cat-guia: #f59e0b;
+        --cat-analisis: #3f7f8f;
+        --cat-divulgacion: #c2703d;
+      }
+      /* Modo noche: mismas variables que :root[data-theme='night'] en la app.
+         Lo activa el script solar del <head> (se pone el sol en España → noche),
+         igual que la portada; el modo claro/oscuro del sistema NO interviene. */
+      :root[data-theme='night'] {
+        color-scheme: dark;
+        --page: #10131a;
+        --sky-dawn: #1b2436; /* resplandor de cielo nocturno en la cabecera */
+        --gridline: #2a2f3a;
+        /* De noche, más claras y desaturadas: los vivos cansan sobre fondo oscuro */
+        --cat-guia: #f0b95d;
+        --cat-analisis: #6bb0be;
+        --cat-divulgacion: #d99668;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        /* Cuerpo serif (lectura larga); titulares y UI en la familia de la app. */
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+        line-height: 1.7;
+        color: #1c1917;
+        /* Amanecer: la página nace en luz cálida y se asienta en papel */
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(255, 243, 220, 0) 420px),
+          var(--page);
+      }
+      h1, h2, .brand { font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif; }
+      h3, .meta, .cta, .cta-block, .cards, footer, .eyebrow, .anatomy li strong {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+      a { color: var(--ember); }
+      a:hover { color: #92400e; }
+      a:focus-visible, .cta:focus-visible {
+        outline: 3px solid var(--sun-500);
+        outline-offset: 2px;
+        border-radius: .15rem;
+      }
+      h1 {
+        font-size: clamp(1.9rem, 4vw, 2.6rem);
+        font-weight: 700;
+        letter-spacing: -.02em;
+        line-height: 1.12;
+        margin: 1.2rem 0 .5rem;
+      }
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 650;
+        letter-spacing: -.01em;
+        line-height: 1.25;
+        margin: 2.2rem 0 .6rem;
+      }
+      h3 { font-size: 1.02rem; margin: 1.4rem 0 .3rem; }
+      p { margin: .55rem 0; }
+      ul, ol { padding-left: 1.4rem; }
+      li { margin: .3rem 0; }
+
+      /* Cabecera: logo + wordmark como en la portada, CTA solar a la derecha */
+      header.site {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gridline);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        font-weight: 700;
+        font-size: 1.35rem;
+        letter-spacing: -.02em;
+        color: #1c1917;
+        text-decoration: none;
+      }
+      .brand b { font-weight: inherit; }
+      .brand span { color: var(--sun-600); }
+      .brand small {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #78716c;
+        align-self: flex-end;
+        margin-bottom: .3rem;
+      }
+
+      /* Botón principal: gradiente solar con texto oscuro (el .btn-solar de la app) */
+      .cta {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--sun-400), var(--sun-500) 55%, var(--sun-600));
+        color: #1c1917;
+        font-weight: 650;
+        font-size: .9rem;
+        padding: .55rem 1rem;
+        border-radius: .75rem;
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 1px 2px rgba(180, 83, 9, .25);
+        transition: box-shadow .15s ease, filter .15s ease;
+      }
+      .cta:hover {
+        color: #1c1917;
+        filter: brightness(1.05);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 3px 10px rgba(217, 119, 6, .35);
+      }
+
+      /* Eyebrow con tick solar (fecha del artículo, etiquetas de sección) */
+      .eyebrow, .meta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        font-weight: 650;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #78716c;
+        margin: 0 0 1.4rem;
+      }
+      .eyebrow::before, .meta::before {
+        content: '';
+        width: .5rem;
+        height: .5rem;
+        border-radius: 9999px;
+        background: radial-gradient(circle at 35% 35%, var(--sun-400), var(--sun-600));
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, .18);
+        flex-shrink: 0;
+      }
+      .lead { font-size: 1.08rem; color: #52514e; }
+
+      /* Selector de idiomas (como FAQ/privacidad): visible, discreto */
+      .langs { font-size: .78rem; color: #78716c; margin: 1rem 0 0;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .langs a { color: #78716c; }
+      .langs strong { color: #1c1917; }
+
+      /* Callout: aviso ámbar (border-amber-200 + bg-amber-50, como en la app) */
+      .callout {
+        border: 1px solid #fde68a;
+        border-left: .3rem solid var(--sun-500);
+        background: #fffbeb;
+        border-radius: .75rem;
+        color: #78350f;
+        padding: .85rem 1.1rem;
+        margin: 1.4rem 0;
+        font-size: .95rem;
+      }
+      .callout strong { color: #92400e; }
+
+      /* Cards: papel sobre papel, borde cálido, profundidad en capas (.card-solar) */
+      .anatomy, .card, .cta-block {
+        background: #fff;
+        border: 1px solid var(--gridline);
+        border-radius: 1rem;
+        box-shadow:
+          0 1px 2px rgba(28, 25, 23, .04),
+          0 6px 16px -8px rgba(120, 90, 20, .08);
+      }
+      .anatomy { padding: 1.1rem 1.25rem; margin: 1.4rem 0; }
+      .anatomy h3 { margin-top: 0; }
+      .anatomy ol { margin: 0; padding-left: 1.3rem; }
+      .anatomy li { margin: .55rem 0; }
+      .anatomy .hint { color: #898781; font-size: .88rem; }
+
+      /* Bloque CTA: card de decisión con el sol encima (.card-hero de la app) */
+      .cta-block {
+        position: relative;
+        overflow: hidden;
+        padding: 1.35rem 1.4rem 1.45rem;
+        margin: 2.2rem 0;
+        text-align: center;
+      }
+      .cta-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--sun-400), var(--sun-600));
+      }
+      .cta-block p { margin: 0 0 .9rem; color: #52514e; }
+      .cta-block .cta { font-size: 1rem; padding: .7rem 1.3rem; }
+
+      /* Índice del blog */
+      .cards { display: grid; gap: 1rem; margin-top: 1.6rem; }
+      .card {
+        padding: 1.15rem 1.3rem;
+        transition: box-shadow .2s ease, transform .2s ease;
+      }
+      .card:hover {
+        box-shadow:
+          0 2px 4px rgba(28, 25, 23, .05),
+          0 16px 32px -12px rgba(120, 90, 20, .14);
+      }
+      .card h2 { margin: 0 0 .35rem; font-size: 1.3rem; }
+      .card h2 a { color: #1c1917; text-decoration: none; }
+      .card h2 a:hover { color: var(--ember); text-decoration: underline; }
+      .card .meta { margin: 0 0 .5rem; }
+      .card p.excerpt {
+        margin: 0;
+        color: #52514e;
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+      }
+
+      /* Categorías: la clase solo fija --cat; etiqueta, punto del eyebrow y borde
+         de card la usan. Sin categoría no existe la clase y nada de esto aplica. */
+      .cat-guia { --cat: var(--cat-guia); }
+      .cat-analisis { --cat: var(--cat-analisis); }
+      .cat-divulgacion { --cat: var(--cat-divulgacion); }
+      .cat-label { color: var(--cat); }
+      article[class*='cat-'] .eyebrow::before {
+        background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--cat) 75%, #fff), var(--cat));
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 18%, transparent);
+      }
+      article[class*='cat-'] > .eyebrow.cat-label { margin: 1.6rem 0 -0.6rem; }
+      .card[class*='cat-'] { border-left: 4px solid var(--cat); }
+
+      footer {
+        margin-top: 3rem;
+        border-top: 1px solid var(--gridline);
+        padding-top: 1rem;
+        font-size: .82rem;
+        color: #78716c;
+      }
+
+      /* Noche: la página se asienta en el azul nocturno de la app y las cards usan
+         la superficie/bordes/sombras de .card-solar en modo noche. */
+      [data-theme='night'] body {
+        color: #e7e5e4;
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(27, 36, 54, 0) 420px),
+          var(--page);
+      }
+      [data-theme='night'] a { color: var(--sun-400); }
+      [data-theme='night'] a:hover { color: #fcd34d; }
+      [data-theme='night'] .brand, [data-theme='night'] .card h2 a { color: #e7e5e4; }
+      [data-theme='night'] .lead,
+      [data-theme='night'] .meta,
+      [data-theme='night'] .eyebrow,
+      [data-theme='night'] .anatomy .hint,
+      [data-theme='night'] .card p.excerpt,
+      [data-theme='night'] .cta-block p,
+      [data-theme='night'] .brand small { color: #a8a29e; }
+      [data-theme='night'] .anatomy,
+      [data-theme='night'] .card,
+      [data-theme='night'] .cta-block {
+        background: #171b23;
+        border-color: #2a2f3a;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, .3),
+          0 6px 16px -8px rgba(0, 0, 0, .5);
+      }
+      [data-theme='night'] .card:hover {
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, .35),
+          0 16px 32px -12px rgba(0, 0, 0, .6);
+      }
+      [data-theme='night'] .card h2 a:hover { color: var(--sun-400); }
+      [data-theme='night'] .langs, [data-theme='night'] .langs a { color: #a8a29e; }
+      [data-theme='night'] .langs strong { color: #e7e5e4; }
+      [data-theme='night'] .callout {
+        background: rgba(245, 158, 11, .12);
+        border-color: rgba(245, 158, 11, .4);
+        border-left-color: var(--sun-500);
+        color: #fde68a;
+      }
+      [data-theme='night'] .callout strong { color: #fde68a; }
+      [data-theme='night'] .cta, [data-theme='night'] .cta:hover { color: #1c1917; }
+      /* El border-color nocturno de .card machacaría el borde de categoría */
+      [data-theme='night'] .card[class*='cat-'] { border-left-color: var(--cat); }
+    </style>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "La huella de carbono de tu casa: de dónde sale de verdad",
+  "description": "Qué es la huella de carbono de una vivienda, de dónde salen realmente las emisiones de tu hogar (spoiler: no son las pajitas ni el reciclaje) y cómo reducirla de verdad centrándote en lo que pesa: climatización, agua caliente y transporte.",
+  "datePublished": "2026-07-15",
+  "dateModified": "2026-07-15",
+  "inLanguage": "es",
+  "mainEntityOfPage": "https://solarvento.es/blog/huella-carbono-casa/",
+  "image": "https://solarvento.es/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://solarvento.es/logo-mark.png"
+    }
+  }
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "SolarVento",
+      "item": "https://solarvento.es/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://solarvento.es/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "La huella de carbono de tu casa: de dónde sale de verdad",
+      "item": "https://solarvento.es/blog/huella-carbono-casa/"
+    }
+  ]
+}
+    </script>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="site">
+        <a class="brand" href="/blog/">
+          <b>Solar<span>Vento</span></b>
+          <small>Blog</small>
+        </a>
+        <a class="cta" href="/">Calcular mi ahorro</a>
+      </header>
+      <nav class="langs" aria-label="Idioma"><strong>Español</strong> · <a href="/blog/en/your-homes-carbon-footprint-where-it-really-comes-from/" hreflang="en" lang="en">English</a> · <a href="/blog/ca/empremta-carboni-casa-teva-don-surt/" hreflang="ca" lang="ca">Català</a> · <a href="/blog/gl/pegada-carbono-casa-de-onde-sae/" hreflang="gl" lang="gl">Galego</a> · <a href="/blog/eu/zure-etxearen-karbono-aztarna-nondik-dator-benetan/" hreflang="eu" lang="eu">Euskara</a></nav>
+      <article class="cat-divulgacion">
+        <p class="eyebrow cat-label">DIVULGACIÓN</p>
+        <h1>La huella de carbono de tu casa: de dónde sale de verdad</h1>
+        <p class="meta"><time datetime="2026-07-15">15 de julio de 2026</time></p>
+        <p class="lead">Reciclas concienzudamente, has desterrado las pajitas de plástico y apagas las luces al salir de casa. Está bien, pero si tu objetivo es reducir de verdad la huella de carbono de tu hogar, tengo una noticia incómoda: esos gestos, por bienintencionados que sean, apenas mueven la aguja. La mayor parte de las emisiones de tu casa vienen de sitios muy concretos, y no son los que la conciencia popular suele señalar. Vamos a ver de dónde salen de verdad.</p>
+        
+        <h2>Cuánto emite una casa española</h2>
+        
+        <p>Para situarnos: una vivienda media en España emite <strong>entre 3 y 5 toneladas de CO2 al año</strong>. Para que te hagas una idea de lo que significa, esas emisiones equivalen aproximadamente a lo que absorben unos 150-250 árboles adultos en un año. No es una cifra menor, y por eso importa saber de dónde sale, porque ahí está la palanca para reducirla.</p>
+        
+        <h2>De dónde salen las emisiones de verdad</h2>
+        
+        <p>Aquí está la clave que desmonta muchos mitos. El grueso de la huella de un hogar no está en los pequeños gestos, sino en unos pocos focos que pesan muchísimo más:</p>
+        
+        <div class="anatomy">
+          <h3>Los grandes focos de emisiones del hogar</h3>
+          <ol>
+            <li><strong>Climatización (calefacción y aire)</strong> — hasta un 40% del total. <span class="hint">El foco número uno, con diferencia. Sobre todo la calefacción en invierno.</span></li>
+            <li><strong>Agua caliente sanitaria</strong> — una porción muy grande. <span class="hint">Duchas, grifos: calentar agua consume muchísima energía.</span></li>
+            <li><strong>Grandes electrodomésticos</strong> — nevera, lavadora, secadora, horno. <span class="hint">Los que calientan o enfrían, o funcionan muchas horas.</span></li>
+            <li><strong>El combustible que usas</strong> — gas, gasoil o electricidad. <span class="hint">Quemar gas o gasoil emite directamente; la electricidad depende del mix.</span></li>
+            <li><strong>El transporte asociado</strong> — el coche vinculado a la vivienda. <span class="hint">A menudo el mayor emisor de todos si tiras mucho de coche.</span></li>
+          </ol>
+        </div>
+        
+        <p>Fíjate en lo que <em>no</em> está en esa lista: las pajitas, las bolsas, dejar un cargador enchufado, o no reciclar un envase. No es que esas cosas den igual —está bien hacerlas—, es que su impacto es minúsculo comparado con calentar tu casa con una caldera de gas o hacer 30 km diarios en un coche de gasolina. Es la diferencia entre discutir por céntimos mientras se te escapan los billetes.</p>
+        
+        <div class="callout">
+          <strong>El error de enfoque más común:</strong> mucha gente pone toda su energía moral en gestos de impacto simbólico (la pajita, la bolsa reutilizable) mientras ignora los focos que de verdad pesan (cómo calienta su casa, cómo se desplaza). No es que los gestos pequeños estén mal; es que centrarse solo en ellos da una falsa sensación de estar haciendo lo importante.
+        </div>
+        
+        <h2>Por qué la calefacción manda tanto</h2>
+        
+        <p>La climatización se lleva la palma por una razón física: calentar (o enfriar) un espacio grande requiere muchísima más energía que hacer funcionar aparatos electrónicos. Y en España, buena parte de la calefacción y del agua caliente todavía funciona con <strong>combustibles fósiles</strong> —gas natural, gasoil, butano— que emiten CO2 directamente al quemarse. Más de la mitad de la energía de calefacción en los hogares españoles procede de fósiles. Ahí está el grueso de las emisiones de tu casa.</p>
+        
+        <p>Por eso, si de verdad quieres reducir tu huella, la pregunta más importante no es "¿reciclo bien?", sino "¿cómo caliento mi casa y mi agua, y con qué energía?".</p>
+        
+        <h2>Cómo reducirla de verdad (ordenado por impacto)</h2>
+        
+        <p>Si quieres resultados reales, ataca los focos grandes, en este orden aproximado:</p>
+        
+        <ul>
+          <li><strong>Mejora el aislamiento:</strong> lo que no se escapa no hay que reponerlo. Un buen aislamiento reduce la demanda de calefacción y aire, que es el foco número uno.</li>
+          <li><strong>Cambia la forma de climatizar:</strong> sustituir una caldera de gas o gasoil por una bomba de calor o aerotermia elimina la quema directa de fósiles y es mucho más eficiente.</li>
+          <li><strong>Limpia tu electricidad:</strong> si tu casa funciona con electricidad, de dónde venga esa electricidad lo cambia todo. Con placas solares o una comercializadora 100% renovable, las emisiones de tu consumo eléctrico se desploman.</li>
+          <li><strong>Repiensa el transporte:</strong> el coche vinculado a la casa suele ser un emisor enorme. Menos coche, transporte público, o el salto al eléctrico (mejor si lo cargas con renovable) mueve muchísimo la aguja.</li>
+          <li><strong>Y luego sí, los gestos:</strong> LED, electrodomésticos eficientes, no malgastar. Suman, pero son la guinda, no el pastel.</li>
+        </ul>
+        
+        <div class="callout">
+          <strong>La regla de oro:</strong> lo que más emite es lo que quema combustible o consume mucha energía para dar calor o frío, y el transporte. Ataca eso y reducirás tu huella de verdad. Los pequeños gestos están bien como complemento, pero no son donde se gana la batalla.
+        </div>
+        
+        <h2>El papel de la energía solar</h2>
+        
+        <p>Hay una conexión directa entre reducir tu huella y el autoconsumo. Si electrificas tu casa (aerotermia en vez de gas, coche eléctrico en vez de gasolina) pero sigues comprando esa electricidad de un mix con fósiles, reduces emisiones pero no las eliminas. Si además esa electricidad la produces tú con placas, la huella de tu consumo eléctrico cae casi a cero. Electrificar + producir tu propia energía limpia es la combinación que de verdad transforma la huella de un hogar.</p>
+        
+        <h2>En resumen</h2>
+        
+        <p>La huella de carbono de una casa española (3-5 toneladas de CO2 al año) no sale de las pajitas ni de olvidarte de reciclar un envase: sale sobre todo de la climatización (hasta un 40%), el agua caliente, los grandes electrodomésticos y el transporte asociado, especialmente cuando funcionan con combustibles fósiles. Para reducirla de verdad, ataca esos focos —aislamiento, aerotermia, electricidad limpia, menos coche— y deja los pequeños gestos como complemento. Centrarse en lo simbólico da buena conciencia, pero es en lo grande donde se gana la batalla.</p>
+        
+        <p>Una de las palancas más potentes es producir tu propia electricidad limpia. Si quieres ver cuánto podrías cubrir con placas en tu caso, <a href="/">calcúlalo con tu factura</a>.</p>
+        <div class="cta-block">
+          <p>¿Quieres saber cuánto ahorrarías con placas en tu tejado?</p>
+          <a class="cta" href="/">Calcular mi ahorro</a>
+        </div>
+      </article>
+      <footer>
+        <a href="/blog/">Blog</a>
+        <span> · </span>
+        <a href="/faq.html">Preguntas frecuentes</a>
+        <span> · </span>
+        <a href="/ayudas.html">Ayudas por comunidad</a>
+        <span> · </span>
+        <a href="/privacidad.html">Privacidad</a>
+        <p>SolarVento ofrece estimaciones orientativas basadas en datos oficiales; no sustituyen a un estudio técnico en tu tejado.</p>
+      </footer>
+    </main>
+  </body>
+</html>
