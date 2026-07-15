@@ -1,0 +1,507 @@
+<!doctype html>
+<!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/blog/ — NO EDITAR A MANO -->
+<html lang="ca">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quant duren de debò unes plaques solars? Vida útil, degradació i què passa als 25 anys | SolarVento</title>
+    <meta name="description" content="Quant dura realment una instal·lació solar, què és la degradació anual, què produeixen les plaques després de 25 anys i per què l’inversor és l’únic component que hauràs de canviar. Dades reals, sense màrqueting." />
+    <meta name="keywords" content="quant duren les plaques solars, vida útil plaques solars, degradació panells solars, què passa amb les plaques als 25 anys, garantia plaques solars, quant dura un inversor solar" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://solarvento.es/blog/ca/quant-duren-plaques-solars-vida-util-degradacio-25-anys/" />
+    <link rel="alternate" hreflang="es" href="https://solarvento.es/blog/cuanto-duran-placas-solares/" />
+    <link rel="alternate" hreflang="en" href="https://solarvento.es/blog/en/how-long-do-solar-panels-really-last/" />
+    <link rel="alternate" hreflang="ca" href="https://solarvento.es/blog/ca/quant-duren-plaques-solars-vida-util-degradacio-25-anys/" />
+    <link rel="alternate" hreflang="gl" href="https://solarvento.es/blog/gl/canto-duran-de-verdade-unhas-placas-solares-vida-util-degradacion-25-anos/" />
+    <link rel="alternate" hreflang="eu" href="https://solarvento.es/blog/eu/eguzki-plaken-iraupena-degradazioa-25-urte/" />
+    <link rel="alternate" hreflang="x-default" href="https://solarvento.es/blog/cuanto-duran-placas-solares/" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="ca_ES" />
+    <meta property="og:url" content="https://solarvento.es/blog/ca/quant-duren-plaques-solars-vida-util-degradacio-25-anys/" />
+    <meta property="og:title" content="Quant duren de debò unes plaques solars? Vida útil, degradació i què passa als 25 anys | SolarVento" />
+    <meta property="og:description" content="Quant dura realment una instal·lació solar, què és la degradació anual, què produeixen les plaques després de 25 anys i per què l’inversor és l’únic component que hauràs de canviar. Dades reals, sense màrqueting." />
+    <meta property="og:image" content="https://solarvento.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="article:published_time" content="2026-07-14" />
+    <meta property="article:modified_time" content="2026-07-14" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Quant duren de debò unes plaques solars? Vida útil, degradació i què passa als 25 anys | SolarVento" />
+    <meta name="twitter:description" content="Quant dura realment una instal·lació solar, què és la degradació anual, què produeixen les plaques després de 25 anys i per què l’inversor és l’únic component que hauràs de canviar. Dades reals, sense màrqueting." />
+    <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      (function () {
+        var RAD = Math.PI / 180, TZ = 'Europe/Madrid', LAT = 40.4168, LON = -3.7038
+        function hourInTZ(date) {
+          var p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)
+          function v(t) { return Number(p.find(function (x) { return x.type === t }).value) }
+          return v('hour') + v('minute') / 60
+        }
+        var now = new Date()
+        var jd = now.getTime() / 86400000 + 2440587.5
+        var n = Math.round(jd - 2451545.0 + 0.0008)
+        var jStar = n + -LON / 360
+        var M = (357.5291 + 0.98560028 * jStar) % 360
+        var Mr = M * RAD
+        var C = 1.9148 * Math.sin(Mr) + 0.02 * Math.sin(2 * Mr) + 0.0003 * Math.sin(3 * Mr)
+        var lambda = ((M + C + 180 + 102.9372) % 360) * RAD
+        var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(Mr) - 0.0069 * Math.sin(2 * lambda)
+        var sinDec = Math.sin(lambda) * Math.sin(23.4397 * RAD)
+        var cosDec = Math.cos(Math.asin(sinDec))
+        var cosOmega = (Math.sin(-0.833 * RAD) - Math.sin(LAT * RAD) * sinDec) / (Math.cos(LAT * RAD) * cosDec)
+        var omega = Math.acos(Math.min(1, Math.max(-1, cosOmega))) / RAD
+        function jToDate(j) { return new Date((j - 2440587.5) * 86400000) }
+        var sunrise = hourInTZ(jToDate(jTransit - omega / 360))
+        var sunset = hourInTZ(jToDate(jTransit + omega / 360))
+        var hour = hourInTZ(now)
+        if (!(hour >= sunrise && hour < sunset)) document.documentElement.setAttribute('data-theme', 'night')
+      })()
+    </script>
+    <style>
+      /* Tema del blog = tema de la portada (src/index.css): papel cálido con
+         amanecer, marca en Bricolage Grotesque, botón solar y cards en capas.
+         Única licencia propia del blog: cuerpo serif para lectura larga. */
+      @font-face {
+        font-family: 'Bricolage Grotesque Variable';
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
+      }
+
+      :root {
+        color-scheme: light;
+        /* Tema solar (mismos tokens que la app) */
+        --page: #fbfaf6;
+        --sky-dawn: #fff4de;
+        --sun-400: #fbbf24;
+        --sun-500: #f59e0b;
+        --sun-600: #d97706;
+        --ember: #b45309;
+        --gridline: #ece6d9;
+        /* Categorías del blog (acento; el ámbar de marca sigue dominando) */
+        --cat-guia: #f59e0b;
+        --cat-analisis: #3f7f8f;
+        --cat-divulgacion: #c2703d;
+      }
+      /* Modo noche: mismas variables que :root[data-theme='night'] en la app.
+         Lo activa el script solar del <head> (se pone el sol en España → noche),
+         igual que la portada; el modo claro/oscuro del sistema NO interviene. */
+      :root[data-theme='night'] {
+        color-scheme: dark;
+        --page: #10131a;
+        --sky-dawn: #1b2436; /* resplandor de cielo nocturno en la cabecera */
+        --gridline: #2a2f3a;
+        /* De noche, más claras y desaturadas: los vivos cansan sobre fondo oscuro */
+        --cat-guia: #f0b95d;
+        --cat-analisis: #6bb0be;
+        --cat-divulgacion: #d99668;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        /* Cuerpo serif (lectura larga); titulares y UI en la familia de la app. */
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+        line-height: 1.7;
+        color: #1c1917;
+        /* Amanecer: la página nace en luz cálida y se asienta en papel */
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(255, 243, 220, 0) 420px),
+          var(--page);
+      }
+      h1, h2, .brand { font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif; }
+      h3, .meta, .cta, .cta-block, .cards, footer, .eyebrow, .anatomy li strong {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+      a { color: var(--ember); }
+      a:hover { color: #92400e; }
+      a:focus-visible, .cta:focus-visible {
+        outline: 3px solid var(--sun-500);
+        outline-offset: 2px;
+        border-radius: .15rem;
+      }
+      h1 {
+        font-size: clamp(1.9rem, 4vw, 2.6rem);
+        font-weight: 700;
+        letter-spacing: -.02em;
+        line-height: 1.12;
+        margin: 1.2rem 0 .5rem;
+      }
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 650;
+        letter-spacing: -.01em;
+        line-height: 1.25;
+        margin: 2.2rem 0 .6rem;
+      }
+      h3 { font-size: 1.02rem; margin: 1.4rem 0 .3rem; }
+      p { margin: .55rem 0; }
+      ul, ol { padding-left: 1.4rem; }
+      li { margin: .3rem 0; }
+
+      /* Cabecera: logo + wordmark como en la portada, CTA solar a la derecha */
+      header.site {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gridline);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        font-weight: 700;
+        font-size: 1.35rem;
+        letter-spacing: -.02em;
+        color: #1c1917;
+        text-decoration: none;
+      }
+      .brand b { font-weight: inherit; }
+      .brand span { color: var(--sun-600); }
+      .brand small {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #78716c;
+        align-self: flex-end;
+        margin-bottom: .3rem;
+      }
+
+      /* Botón principal: gradiente solar con texto oscuro (el .btn-solar de la app) */
+      .cta {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--sun-400), var(--sun-500) 55%, var(--sun-600));
+        color: #1c1917;
+        font-weight: 650;
+        font-size: .9rem;
+        padding: .55rem 1rem;
+        border-radius: .75rem;
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 1px 2px rgba(180, 83, 9, .25);
+        transition: box-shadow .15s ease, filter .15s ease;
+      }
+      .cta:hover {
+        color: #1c1917;
+        filter: brightness(1.05);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 3px 10px rgba(217, 119, 6, .35);
+      }
+
+      /* Eyebrow con tick solar (fecha del artículo, etiquetas de sección) */
+      .eyebrow, .meta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        font-weight: 650;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #78716c;
+        margin: 0 0 1.4rem;
+      }
+      .eyebrow::before, .meta::before {
+        content: '';
+        width: .5rem;
+        height: .5rem;
+        border-radius: 9999px;
+        background: radial-gradient(circle at 35% 35%, var(--sun-400), var(--sun-600));
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, .18);
+        flex-shrink: 0;
+      }
+      .lead { font-size: 1.08rem; color: #52514e; }
+
+      /* Selector de idiomas (como FAQ/privacidad): visible, discreto */
+      .langs { font-size: .78rem; color: #78716c; margin: 1rem 0 0;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .langs a { color: #78716c; }
+      .langs strong { color: #1c1917; }
+
+      /* Callout: aviso ámbar (border-amber-200 + bg-amber-50, como en la app) */
+      .callout {
+        border: 1px solid #fde68a;
+        border-left: .3rem solid var(--sun-500);
+        background: #fffbeb;
+        border-radius: .75rem;
+        color: #78350f;
+        padding: .85rem 1.1rem;
+        margin: 1.4rem 0;
+        font-size: .95rem;
+      }
+      .callout strong { color: #92400e; }
+
+      /* Cards: papel sobre papel, borde cálido, profundidad en capas (.card-solar) */
+      .anatomy, .card, .cta-block {
+        background: #fff;
+        border: 1px solid var(--gridline);
+        border-radius: 1rem;
+        box-shadow:
+          0 1px 2px rgba(28, 25, 23, .04),
+          0 6px 16px -8px rgba(120, 90, 20, .08);
+      }
+      .anatomy { padding: 1.1rem 1.25rem; margin: 1.4rem 0; }
+      .anatomy h3 { margin-top: 0; }
+      .anatomy ol { margin: 0; padding-left: 1.3rem; }
+      .anatomy li { margin: .55rem 0; }
+      .anatomy .hint { color: #898781; font-size: .88rem; }
+
+      /* Bloque CTA: card de decisión con el sol encima (.card-hero de la app) */
+      .cta-block {
+        position: relative;
+        overflow: hidden;
+        padding: 1.35rem 1.4rem 1.45rem;
+        margin: 2.2rem 0;
+        text-align: center;
+      }
+      .cta-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--sun-400), var(--sun-600));
+      }
+      .cta-block p { margin: 0 0 .9rem; color: #52514e; }
+      .cta-block .cta { font-size: 1rem; padding: .7rem 1.3rem; }
+
+      /* Índice del blog */
+      .cards { display: grid; gap: 1rem; margin-top: 1.6rem; }
+      .card {
+        padding: 1.15rem 1.3rem;
+        transition: box-shadow .2s ease, transform .2s ease;
+      }
+      .card:hover {
+        box-shadow:
+          0 2px 4px rgba(28, 25, 23, .05),
+          0 16px 32px -12px rgba(120, 90, 20, .14);
+      }
+      .card h2 { margin: 0 0 .35rem; font-size: 1.3rem; }
+      .card h2 a { color: #1c1917; text-decoration: none; }
+      .card h2 a:hover { color: var(--ember); text-decoration: underline; }
+      .card .meta { margin: 0 0 .5rem; }
+      .card p.excerpt {
+        margin: 0;
+        color: #52514e;
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+      }
+
+      /* Categorías: la clase solo fija --cat; etiqueta, punto del eyebrow y borde
+         de card la usan. Sin categoría no existe la clase y nada de esto aplica. */
+      .cat-guia { --cat: var(--cat-guia); }
+      .cat-analisis { --cat: var(--cat-analisis); }
+      .cat-divulgacion { --cat: var(--cat-divulgacion); }
+      .cat-label { color: var(--cat); }
+      article[class*='cat-'] .eyebrow::before {
+        background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--cat) 75%, #fff), var(--cat));
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 18%, transparent);
+      }
+      article[class*='cat-'] > .eyebrow.cat-label { margin: 1.6rem 0 -0.6rem; }
+      .card[class*='cat-'] { border-left: 4px solid var(--cat); }
+
+      footer {
+        margin-top: 3rem;
+        border-top: 1px solid var(--gridline);
+        padding-top: 1rem;
+        font-size: .82rem;
+        color: #78716c;
+      }
+
+      /* Noche: la página se asienta en el azul nocturno de la app y las cards usan
+         la superficie/bordes/sombras de .card-solar en modo noche. */
+      [data-theme='night'] body {
+        color: #e7e5e4;
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(27, 36, 54, 0) 420px),
+          var(--page);
+      }
+      [data-theme='night'] a { color: var(--sun-400); }
+      [data-theme='night'] a:hover { color: #fcd34d; }
+      [data-theme='night'] .brand, [data-theme='night'] .card h2 a { color: #e7e5e4; }
+      [data-theme='night'] .lead,
+      [data-theme='night'] .meta,
+      [data-theme='night'] .eyebrow,
+      [data-theme='night'] .anatomy .hint,
+      [data-theme='night'] .card p.excerpt,
+      [data-theme='night'] .cta-block p,
+      [data-theme='night'] .brand small { color: #a8a29e; }
+      [data-theme='night'] .anatomy,
+      [data-theme='night'] .card,
+      [data-theme='night'] .cta-block {
+        background: #171b23;
+        border-color: #2a2f3a;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, .3),
+          0 6px 16px -8px rgba(0, 0, 0, .5);
+      }
+      [data-theme='night'] .card:hover {
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, .35),
+          0 16px 32px -12px rgba(0, 0, 0, .6);
+      }
+      [data-theme='night'] .card h2 a:hover { color: var(--sun-400); }
+      [data-theme='night'] .langs, [data-theme='night'] .langs a { color: #a8a29e; }
+      [data-theme='night'] .langs strong { color: #e7e5e4; }
+      [data-theme='night'] .callout {
+        background: rgba(245, 158, 11, .12);
+        border-color: rgba(245, 158, 11, .4);
+        border-left-color: var(--sun-500);
+        color: #fde68a;
+      }
+      [data-theme='night'] .callout strong { color: #fde68a; }
+      [data-theme='night'] .cta, [data-theme='night'] .cta:hover { color: #1c1917; }
+      /* El border-color nocturno de .card machacaría el borde de categoría */
+      [data-theme='night'] .card[class*='cat-'] { border-left-color: var(--cat); }
+    </style>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Quant duren de debò unes plaques solars? Vida útil, degradació i què passa als 25 anys",
+  "description": "Quant dura realment una instal·lació solar, què és la degradació anual, què produeixen les plaques després de 25 anys i per què l’inversor és l’únic component que hauràs de canviar. Dades reals, sense màrqueting.",
+  "datePublished": "2026-07-14",
+  "dateModified": "2026-07-14",
+  "inLanguage": "ca",
+  "mainEntityOfPage": "https://solarvento.es/blog/ca/quant-duren-plaques-solars-vida-util-degradacio-25-anys/",
+  "image": "https://solarvento.es/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://solarvento.es/logo-mark.png"
+    }
+  }
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "SolarVento",
+      "item": "https://solarvento.es/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://solarvento.es/blog/ca/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Quant duren de debò unes plaques solars? Vida útil, degradació i què passa als 25 anys",
+      "item": "https://solarvento.es/blog/ca/quant-duren-plaques-solars-vida-util-degradacio-25-anys/"
+    }
+  ]
+}
+    </script>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="site">
+        <a class="brand" href="/blog/ca/">
+          <b>Solar<span>Vento</span></b>
+          <small>Blog</small>
+        </a>
+        <a class="cta" href="/">Calcular el meu estalvi</a>
+      </header>
+      <nav class="langs" aria-label="Idioma"><a href="/blog/cuanto-duran-placas-solares/" hreflang="es" lang="es">Español</a> · <a href="/blog/en/how-long-do-solar-panels-really-last/" hreflang="en" lang="en">English</a> · <strong>Català</strong> · <a href="/blog/gl/canto-duran-de-verdade-unhas-placas-solares-vida-util-degradacion-25-anos/" hreflang="gl" lang="gl">Galego</a> · <a href="/blog/eu/eguzki-plaken-iraupena-degradazioa-25-urte/" hreflang="eu" lang="eu">Euskara</a></nav>
+      <article class="cat-divulgacion">
+        <p class="eyebrow cat-label">DIVULGACIÓN</p>
+        <h1>Quant duren de debò unes plaques solars? Vida útil, degradació i què passa als 25 anys</h1>
+        <p class="meta"><time datetime="2026-07-14">14 de juliol de 2026</time></p>
+        <p class="lead">Quan algú es planteja instal·lar plaques solars, tard o d’hora arriba la pregunta de fons: invertiré diversos milers d’euros en una cosa que diuen que dura 25 anys… és veritat? I què passa exactament el dia que es compleixen aquests 25 anys, s’aturen de cop? La resposta és més tranquil·litzadora del que molta gent es pensa, però té un matís important que gairebé ningú explica bé. Anem a veure les dades reals.</p>
+        
+        <h2>Els "25 anys" no són una data de caducitat</h2>
+        
+        <p>El primer i més important: <strong>els 25 anys que sents pertot arreu no són el moment en què les plaques deixen de funcionar</strong>, sinó el període que solen cobrir les garanties de rendiment. En arribar a aquesta xifra, els panells no s’apaguen ni s’espatllen: continuen produint, només que una mica menys que el primer dia. De fet, una instal·lació de qualitat pot continuar generant energia útil durant 30, 35 o fins i tot 40 anys.</p>
+        
+        <p>La clau és entendre que un panell solar no es “mor”: es va degradant molt a poc a poc. No és un interruptor d’encesa/apagada, és una baixada molt suau.</p>
+        
+        <h2>Què és la degradació (i per què és una bona notícia)</h2>
+        
+        <p>La degradació és la pèrdua de rendiment que pateix un panell cada any. Els panells actuals de qualitat es degraden molt poc: <strong>entre un 0,3% i un 0,7% l’any</strong>. Això vol dir que cada any produeixen aquesta fracció mínima menys que l’anterior.</p>
+        
+        <div class="anatomy">
+          <h3>Què li queda a un panell amb el pas dels anys</h3>
+          <ol>
+            <li><strong>A l’inici</strong> — 100% de la seva capacitat. <span class="hint">Producció nominal del primer any.</span></li>
+            <li><strong>Als 10-12 anys</strong> — al voltant del 90%. <span class="hint">Amb prou feines hauràs notat la diferència.</span></li>
+            <li><strong>Als 25 anys</strong> — aproximadament entre el 80% i el 90%, segons la qualitat. <span class="hint">La garantia típica assegura com a mínim un 80%.</span></li>
+            <li><strong>Als 30 anys i més</strong> — un bon panell pot rondar el 85%. <span class="hint">Continua produint i estalviant, encara que la garantia ja hagi expirat.</span></li>
+          </ol>
+        </div>
+        
+        <p>Posem-hi un exemple concret: si la teva instal·lació produeix 6.000 kWh el primer any, als 25 anys continuarà generant al voltant de 4.800-5.400 kWh. És a dir, continua cobrint la immensa majoria del que cobria al principi. I, en aquell moment, ja farà molts anys que s’haurà amortitzat, així que tota aquesta energia serà estalvi pur.</p>
+        
+        <div class="callout">
+          <strong>La dada que tranquil·litza:</strong> com a referència que això dura de debò, el panell solar més antic del món fa més de 60 anys que funciona. La tecnologia fotovoltaica no té peces mòbils que es desgastin, cosa que la fa enormement duradora i amb molt poques avaries.
+        </div>
+        
+        <h2>El matís que gairebé ningú t’explica: l’inversor</h2>
+        
+        <p>Aquí hi ha la part que molts venedors passen per alt i que convé saber abans d’invertir. Els panells duren 25-30 anys o més, però <strong>l’inversor —l’aparell que converteix l’energia de les plaques en el corrent que fa servir casa teva— dura menys: entre 10 i 15 anys</strong>. Això vol dir que, al llarg de la vida de la teva instal·lació, el més normal és que hagis de canviar l’inversor almenys una vegada.</p>
+        
+        <p>No és una sorpresa desagradable si ho saps d’entrada: és l’únic cost significatiu previsible durant la vida del sistema, i cal incloure’l en els càlculs de rendibilitat perquè siguin honestos. Un càlcul d’amortització que no tingui en compte la substitució de l’inversor t’està pintant un panorama massa bonic.</p>
+        
+        <div class="callout">
+          <strong>Compte en comparar pressupostos:</strong> una calculadora o un instal·lador honest inclou el reemplaçament de l’inversor en els números a llarg termini. Si et presenten una rendibilitat a 25 anys sense mencionar que caldrà canviar l’inversor pel camí, desconfia: els comptes reals ho contemplen. Existeixen microinversors amb una vida més llarga (15-25 anys) com a alternativa, tot i que amb un altre cost.
+        </div>
+        
+        <h2>Què influeix en el fet que durin més o menys</h2>
+        
+        <ul>
+          <li><strong>La qualitat dels panells:</strong> els de gamma alta (Tier 1) es degraden menys (0,3-0,4% anual) i duren més que els barats.</li>
+          <li><strong>El clima:</strong> la calor extrema accelera la degradació (els panells rendeixen pitjor a més de 25°C), i la humitat o la sal marina poden corroir. El clima espanyol, en general, és favorable.</li>
+          <li><strong>Les ombres i la brutícia:</strong> no “maten” el panell, però fan que produeixi menys; una neteja ocasional ajuda.</li>
+          <li><strong>La instal·lació:</strong> un muntatge professional, ben subjectat i ben cablejat, allarga la vida del conjunt.</li>
+        </ul>
+        
+        <h2>I què faig quan passin els 25 anys?</h2>
+        
+        <p>Arribat aquest moment, amb la instal·lació amortitzada de fa temps, tens opcions i cap no passa per llençar res a les escombraries: pots <strong>continuar fent-la servir tal com està</strong> (produeix una mica menys, però produeix i estalvia), <strong>canviar només el que calgui</strong> (potser l’inversor una altra vegada, o algun panell puntual), o <strong>renovar els mòduls</strong> per uns de nous més eficients si vols esprémer la teulada al màxim. L’estructura i el cablejat, si estan ben posats, solen aguantar tant com els panells.</p>
+        
+        <h2>En resum</h2>
+        
+        <p>Les plaques solars duren de debò: 25-30 anys de vida útil garantida i sovint força més, degradant-se molt a poc a poc (0,3-0,7% l’any) fins a quedar-se al voltant del 80-90% de la seva capacitat als 25 anys. No s’apaguen quan s’acaba la garantia; continuen estalviant. L’únic component que hauràs de reemplaçar és l’inversor (cada 10-15 anys), i això cal posar-ho als comptes perquè siguin honestos. Descomptat aquest detall, una instal·lació solar és una de les inversions per a la llar més duradores que existeixen.</p>
+        
+        <p>Si vols una estimació realista —amb la vida útil i el reemplaçament de l’inversor inclosos— del que t’estalviaries, <a href="/">calcula el teu cas amb la teva factura</a>.</p>
+        <div class="cta-block">
+          <p>Vols saber quant estalviaries amb plaques al teu teulat?</p>
+          <a class="cta" href="/">Calcular el meu estalvi</a>
+        </div>
+      </article>
+      <footer>
+        <a href="/blog/ca/">Blog</a>
+        <span> · </span>
+        <a href="/faq-ca.html">Preguntes freqüents</a>
+        <span> · </span>
+        <a href="/ayudas.html">Ajuts per comunitat</a>
+        <span> · </span>
+        <a href="/privacidad-ca.html">Privacitat</a>
+        <p>SolarVento ofereix estimacions orientatives basades en dades oficials; no substitueixen un estudi tècnic al teu teulat.</p>
+      </footer>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,506 @@
+<!doctype html>
+<!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/blog/ — NO EDITAR A MANO -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>How Long Do Solar Panels Really Last? Lifespan, Degradation and What Happens After 25 Years | SolarVento</title>
+    <meta name="description" content="How long a solar installation really lasts, what annual degradation means, what panels produce after 25 years, and why the inverter is the only component you’ll need to replace. Real data, no marketing spin." />
+    <meta name="keywords" content="how long do solar panels last, solar panel lifespan, solar panel degradation, what happens to solar panels after 25 years, solar panel warranty, how long does a solar inverter last" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://solarvento.es/blog/en/how-long-do-solar-panels-really-last/" />
+    <link rel="alternate" hreflang="es" href="https://solarvento.es/blog/cuanto-duran-placas-solares/" />
+    <link rel="alternate" hreflang="en" href="https://solarvento.es/blog/en/how-long-do-solar-panels-really-last/" />
+    <link rel="alternate" hreflang="ca" href="https://solarvento.es/blog/ca/quant-duren-plaques-solars-vida-util-degradacio-25-anys/" />
+    <link rel="alternate" hreflang="gl" href="https://solarvento.es/blog/gl/canto-duran-de-verdade-unhas-placas-solares-vida-util-degradacion-25-anos/" />
+    <link rel="alternate" hreflang="eu" href="https://solarvento.es/blog/eu/eguzki-plaken-iraupena-degradazioa-25-urte/" />
+    <link rel="alternate" hreflang="x-default" href="https://solarvento.es/blog/cuanto-duran-placas-solares/" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="https://solarvento.es/blog/en/how-long-do-solar-panels-really-last/" />
+    <meta property="og:title" content="How Long Do Solar Panels Really Last? Lifespan, Degradation and What Happens After 25 Years | SolarVento" />
+    <meta property="og:description" content="How long a solar installation really lasts, what annual degradation means, what panels produce after 25 years, and why the inverter is the only component you’ll need to replace. Real data, no marketing spin." />
+    <meta property="og:image" content="https://solarvento.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="article:published_time" content="2026-07-14" />
+    <meta property="article:modified_time" content="2026-07-14" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="How Long Do Solar Panels Really Last? Lifespan, Degradation and What Happens After 25 Years | SolarVento" />
+    <meta name="twitter:description" content="How long a solar installation really lasts, what annual degradation means, what panels produce after 25 years, and why the inverter is the only component you’ll need to replace. Real data, no marketing spin." />
+    <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      (function () {
+        var RAD = Math.PI / 180, TZ = 'Europe/Madrid', LAT = 40.4168, LON = -3.7038
+        function hourInTZ(date) {
+          var p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)
+          function v(t) { return Number(p.find(function (x) { return x.type === t }).value) }
+          return v('hour') + v('minute') / 60
+        }
+        var now = new Date()
+        var jd = now.getTime() / 86400000 + 2440587.5
+        var n = Math.round(jd - 2451545.0 + 0.0008)
+        var jStar = n + -LON / 360
+        var M = (357.5291 + 0.98560028 * jStar) % 360
+        var Mr = M * RAD
+        var C = 1.9148 * Math.sin(Mr) + 0.02 * Math.sin(2 * Mr) + 0.0003 * Math.sin(3 * Mr)
+        var lambda = ((M + C + 180 + 102.9372) % 360) * RAD
+        var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(Mr) - 0.0069 * Math.sin(2 * lambda)
+        var sinDec = Math.sin(lambda) * Math.sin(23.4397 * RAD)
+        var cosDec = Math.cos(Math.asin(sinDec))
+        var cosOmega = (Math.sin(-0.833 * RAD) - Math.sin(LAT * RAD) * sinDec) / (Math.cos(LAT * RAD) * cosDec)
+        var omega = Math.acos(Math.min(1, Math.max(-1, cosOmega))) / RAD
+        function jToDate(j) { return new Date((j - 2440587.5) * 86400000) }
+        var sunrise = hourInTZ(jToDate(jTransit - omega / 360))
+        var sunset = hourInTZ(jToDate(jTransit + omega / 360))
+        var hour = hourInTZ(now)
+        if (!(hour >= sunrise && hour < sunset)) document.documentElement.setAttribute('data-theme', 'night')
+      })()
+    </script>
+    <style>
+      /* Tema del blog = tema de la portada (src/index.css): papel cálido con
+         amanecer, marca en Bricolage Grotesque, botón solar y cards en capas.
+         Única licencia propia del blog: cuerpo serif para lectura larga. */
+      @font-face {
+        font-family: 'Bricolage Grotesque Variable';
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
+      }
+
+      :root {
+        color-scheme: light;
+        /* Tema solar (mismos tokens que la app) */
+        --page: #fbfaf6;
+        --sky-dawn: #fff4de;
+        --sun-400: #fbbf24;
+        --sun-500: #f59e0b;
+        --sun-600: #d97706;
+        --ember: #b45309;
+        --gridline: #ece6d9;
+        /* Categorías del blog (acento; el ámbar de marca sigue dominando) */
+        --cat-guia: #f59e0b;
+        --cat-analisis: #3f7f8f;
+        --cat-divulgacion: #c2703d;
+      }
+      /* Modo noche: mismas variables que :root[data-theme='night'] en la app.
+         Lo activa el script solar del <head> (se pone el sol en España → noche),
+         igual que la portada; el modo claro/oscuro del sistema NO interviene. */
+      :root[data-theme='night'] {
+        color-scheme: dark;
+        --page: #10131a;
+        --sky-dawn: #1b2436; /* resplandor de cielo nocturno en la cabecera */
+        --gridline: #2a2f3a;
+        /* De noche, más claras y desaturadas: los vivos cansan sobre fondo oscuro */
+        --cat-guia: #f0b95d;
+        --cat-analisis: #6bb0be;
+        --cat-divulgacion: #d99668;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        /* Cuerpo serif (lectura larga); titulares y UI en la familia de la app. */
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+        line-height: 1.7;
+        color: #1c1917;
+        /* Amanecer: la página nace en luz cálida y se asienta en papel */
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(255, 243, 220, 0) 420px),
+          var(--page);
+      }
+      h1, h2, .brand { font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif; }
+      h3, .meta, .cta, .cta-block, .cards, footer, .eyebrow, .anatomy li strong {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+      a { color: var(--ember); }
+      a:hover { color: #92400e; }
+      a:focus-visible, .cta:focus-visible {
+        outline: 3px solid var(--sun-500);
+        outline-offset: 2px;
+        border-radius: .15rem;
+      }
+      h1 {
+        font-size: clamp(1.9rem, 4vw, 2.6rem);
+        font-weight: 700;
+        letter-spacing: -.02em;
+        line-height: 1.12;
+        margin: 1.2rem 0 .5rem;
+      }
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 650;
+        letter-spacing: -.01em;
+        line-height: 1.25;
+        margin: 2.2rem 0 .6rem;
+      }
+      h3 { font-size: 1.02rem; margin: 1.4rem 0 .3rem; }
+      p { margin: .55rem 0; }
+      ul, ol { padding-left: 1.4rem; }
+      li { margin: .3rem 0; }
+
+      /* Cabecera: logo + wordmark como en la portada, CTA solar a la derecha */
+      header.site {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gridline);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        font-weight: 700;
+        font-size: 1.35rem;
+        letter-spacing: -.02em;
+        color: #1c1917;
+        text-decoration: none;
+      }
+      .brand b { font-weight: inherit; }
+      .brand span { color: var(--sun-600); }
+      .brand small {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #78716c;
+        align-self: flex-end;
+        margin-bottom: .3rem;
+      }
+
+      /* Botón principal: gradiente solar con texto oscuro (el .btn-solar de la app) */
+      .cta {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--sun-400), var(--sun-500) 55%, var(--sun-600));
+        color: #1c1917;
+        font-weight: 650;
+        font-size: .9rem;
+        padding: .55rem 1rem;
+        border-radius: .75rem;
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 1px 2px rgba(180, 83, 9, .25);
+        transition: box-shadow .15s ease, filter .15s ease;
+      }
+      .cta:hover {
+        color: #1c1917;
+        filter: brightness(1.05);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 3px 10px rgba(217, 119, 6, .35);
+      }
+
+      /* Eyebrow con tick solar (fecha del artículo, etiquetas de sección) */
+      .eyebrow, .meta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        font-weight: 650;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #78716c;
+        margin: 0 0 1.4rem;
+      }
+      .eyebrow::before, .meta::before {
+        content: '';
+        width: .5rem;
+        height: .5rem;
+        border-radius: 9999px;
+        background: radial-gradient(circle at 35% 35%, var(--sun-400), var(--sun-600));
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, .18);
+        flex-shrink: 0;
+      }
+      .lead { font-size: 1.08rem; color: #52514e; }
+
+      /* Selector de idiomas (como FAQ/privacidad): visible, discreto */
+      .langs { font-size: .78rem; color: #78716c; margin: 1rem 0 0;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .langs a { color: #78716c; }
+      .langs strong { color: #1c1917; }
+
+      /* Callout: aviso ámbar (border-amber-200 + bg-amber-50, como en la app) */
+      .callout {
+        border: 1px solid #fde68a;
+        border-left: .3rem solid var(--sun-500);
+        background: #fffbeb;
+        border-radius: .75rem;
+        color: #78350f;
+        padding: .85rem 1.1rem;
+        margin: 1.4rem 0;
+        font-size: .95rem;
+      }
+      .callout strong { color: #92400e; }
+
+      /* Cards: papel sobre papel, borde cálido, profundidad en capas (.card-solar) */
+      .anatomy, .card, .cta-block {
+        background: #fff;
+        border: 1px solid var(--gridline);
+        border-radius: 1rem;
+        box-shadow:
+          0 1px 2px rgba(28, 25, 23, .04),
+          0 6px 16px -8px rgba(120, 90, 20, .08);
+      }
+      .anatomy { padding: 1.1rem 1.25rem; margin: 1.4rem 0; }
+      .anatomy h3 { margin-top: 0; }
+      .anatomy ol { margin: 0; padding-left: 1.3rem; }
+      .anatomy li { margin: .55rem 0; }
+      .anatomy .hint { color: #898781; font-size: .88rem; }
+
+      /* Bloque CTA: card de decisión con el sol encima (.card-hero de la app) */
+      .cta-block {
+        position: relative;
+        overflow: hidden;
+        padding: 1.35rem 1.4rem 1.45rem;
+        margin: 2.2rem 0;
+        text-align: center;
+      }
+      .cta-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--sun-400), var(--sun-600));
+      }
+      .cta-block p { margin: 0 0 .9rem; color: #52514e; }
+      .cta-block .cta { font-size: 1rem; padding: .7rem 1.3rem; }
+
+      /* Índice del blog */
+      .cards { display: grid; gap: 1rem; margin-top: 1.6rem; }
+      .card {
+        padding: 1.15rem 1.3rem;
+        transition: box-shadow .2s ease, transform .2s ease;
+      }
+      .card:hover {
+        box-shadow:
+          0 2px 4px rgba(28, 25, 23, .05),
+          0 16px 32px -12px rgba(120, 90, 20, .14);
+      }
+      .card h2 { margin: 0 0 .35rem; font-size: 1.3rem; }
+      .card h2 a { color: #1c1917; text-decoration: none; }
+      .card h2 a:hover { color: var(--ember); text-decoration: underline; }
+      .card .meta { margin: 0 0 .5rem; }
+      .card p.excerpt {
+        margin: 0;
+        color: #52514e;
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+      }
+
+      /* Categorías: la clase solo fija --cat; etiqueta, punto del eyebrow y borde
+         de card la usan. Sin categoría no existe la clase y nada de esto aplica. */
+      .cat-guia { --cat: var(--cat-guia); }
+      .cat-analisis { --cat: var(--cat-analisis); }
+      .cat-divulgacion { --cat: var(--cat-divulgacion); }
+      .cat-label { color: var(--cat); }
+      article[class*='cat-'] .eyebrow::before {
+        background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--cat) 75%, #fff), var(--cat));
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 18%, transparent);
+      }
+      article[class*='cat-'] > .eyebrow.cat-label { margin: 1.6rem 0 -0.6rem; }
+      .card[class*='cat-'] { border-left: 4px solid var(--cat); }
+
+      footer {
+        margin-top: 3rem;
+        border-top: 1px solid var(--gridline);
+        padding-top: 1rem;
+        font-size: .82rem;
+        color: #78716c;
+      }
+
+      /* Noche: la página se asienta en el azul nocturno de la app y las cards usan
+         la superficie/bordes/sombras de .card-solar en modo noche. */
+      [data-theme='night'] body {
+        color: #e7e5e4;
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(27, 36, 54, 0) 420px),
+          var(--page);
+      }
+      [data-theme='night'] a { color: var(--sun-400); }
+      [data-theme='night'] a:hover { color: #fcd34d; }
+      [data-theme='night'] .brand, [data-theme='night'] .card h2 a { color: #e7e5e4; }
+      [data-theme='night'] .lead,
+      [data-theme='night'] .meta,
+      [data-theme='night'] .eyebrow,
+      [data-theme='night'] .anatomy .hint,
+      [data-theme='night'] .card p.excerpt,
+      [data-theme='night'] .cta-block p,
+      [data-theme='night'] .brand small { color: #a8a29e; }
+      [data-theme='night'] .anatomy,
+      [data-theme='night'] .card,
+      [data-theme='night'] .cta-block {
+        background: #171b23;
+        border-color: #2a2f3a;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, .3),
+          0 6px 16px -8px rgba(0, 0, 0, .5);
+      }
+      [data-theme='night'] .card:hover {
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, .35),
+          0 16px 32px -12px rgba(0, 0, 0, .6);
+      }
+      [data-theme='night'] .card h2 a:hover { color: var(--sun-400); }
+      [data-theme='night'] .langs, [data-theme='night'] .langs a { color: #a8a29e; }
+      [data-theme='night'] .langs strong { color: #e7e5e4; }
+      [data-theme='night'] .callout {
+        background: rgba(245, 158, 11, .12);
+        border-color: rgba(245, 158, 11, .4);
+        border-left-color: var(--sun-500);
+        color: #fde68a;
+      }
+      [data-theme='night'] .callout strong { color: #fde68a; }
+      [data-theme='night'] .cta, [data-theme='night'] .cta:hover { color: #1c1917; }
+      /* El border-color nocturno de .card machacaría el borde de categoría */
+      [data-theme='night'] .card[class*='cat-'] { border-left-color: var(--cat); }
+    </style>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How Long Do Solar Panels Really Last? Lifespan, Degradation and What Happens After 25 Years",
+  "description": "How long a solar installation really lasts, what annual degradation means, what panels produce after 25 years, and why the inverter is the only component you’ll need to replace. Real data, no marketing spin.",
+  "datePublished": "2026-07-14",
+  "dateModified": "2026-07-14",
+  "inLanguage": "en",
+  "mainEntityOfPage": "https://solarvento.es/blog/en/how-long-do-solar-panels-really-last/",
+  "image": "https://solarvento.es/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://solarvento.es/logo-mark.png"
+    }
+  }
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "SolarVento",
+      "item": "https://solarvento.es/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://solarvento.es/blog/en/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "How Long Do Solar Panels Really Last? Lifespan, Degradation and What Happens After 25 Years",
+      "item": "https://solarvento.es/blog/en/how-long-do-solar-panels-really-last/"
+    }
+  ]
+}
+    </script>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="site">
+        <a class="brand" href="/blog/en/">
+          <b>Solar<span>Vento</span></b>
+          <small>Blog</small>
+        </a>
+        <a class="cta" href="/">Calculate my savings</a>
+      </header>
+      <nav class="langs" aria-label="Language"><a href="/blog/cuanto-duran-placas-solares/" hreflang="es" lang="es">Español</a> · <strong>English</strong> · <a href="/blog/ca/quant-duren-plaques-solars-vida-util-degradacio-25-anys/" hreflang="ca" lang="ca">Català</a> · <a href="/blog/gl/canto-duran-de-verdade-unhas-placas-solares-vida-util-degradacion-25-anos/" hreflang="gl" lang="gl">Galego</a> · <a href="/blog/eu/eguzki-plaken-iraupena-degradazioa-25-urte/" hreflang="eu" lang="eu">Euskara</a></nav>
+      <article class="cat-divulgacion">
+        <p class="eyebrow cat-label">DIVULGACIÓN</p>
+        <h1>How Long Do Solar Panels Really Last? Lifespan, Degradation and What Happens After 25 Years</h1>
+        <p class="meta"><time datetime="2026-07-14">14 July 2026</time></p>
+        <p class="lead">When someone starts thinking about installing solar panels, sooner or later the big question comes up: I’m going to invest several thousand euros in something they say lasts 25 years… is that really true? And what exactly happens the day those 25 years are up — do the panels suddenly switch off? The answer is more reassuring than many people think, but there’s an important detail that almost nobody explains properly. Let’s look at the real data.</p>
+        
+        <h2>The “25 years” are not an expiry date</h2>
+        
+        <p>First and most important: <strong>the 25 years you hear everywhere are not the point when the panels stop working</strong>, but the period usually covered by performance warranties. When they reach that age, panels don’t switch off or break down: they keep producing, just a little less than on day one. In fact, a quality installation can continue generating useful energy for 30, 35 or even 40 years.</p>
+        
+        <p>The key is understanding that a solar panel doesn’t “die”: it degrades very gradually. It’s not an on/off switch; it’s a very gentle slope.</p>
+        
+        <h2>What degradation is — and why it’s good news</h2>
+        
+        <p>Degradation is the loss of performance a panel experiences each year. Today’s quality panels degrade very little: <strong>between 0.3% and 0.7% per year</strong>. That means each year they produce that tiny fraction less than the year before.</p>
+        
+        <div class="anatomy">
+          <h3>What a panel has left as the years go by</h3>
+          <ol>
+            <li><strong>At the start</strong> — 100% of its capacity. <span class="hint">Nominal production in the first year.</span></li>
+            <li><strong>After 10-12 years</strong> — around 90%. <span class="hint">You’ve barely noticed the difference.</span></li>
+            <li><strong>After 25 years</strong> — around 80-90%, depending on quality. <span class="hint">The typical warranty guarantees at least 80%.</span></li>
+            <li><strong>After 30 years and beyond</strong> — a good panel can still be around 85%. <span class="hint">It keeps producing and saving you money, even after the warranty has expired.</span></li>
+          </ol>
+        </div>
+        
+        <p>Let’s put that into a concrete example: if your installation produces 6,000 kWh in the first year, after 25 years it will still be generating around 4,800-5,400 kWh. In other words, it still covers the vast majority of what it covered at the beginning. And by then it will have paid for itself many years earlier, so all that energy is pure savings.</p>
+        
+        <div class="callout">
+          <strong>The reassuring fact:</strong> as proof that this technology really does last, the world’s oldest solar panel has been working for more than 60 years. Photovoltaic technology has no moving parts to wear out, which makes it extremely durable and prone to very few faults.
+        </div>
+        
+        <h2>The caveat almost nobody tells you about: the inverter</h2>
+        
+        <p>Here’s the part many salespeople gloss over, and it’s worth knowing before you invest. Panels last 25-30 years or more, but <strong>the inverter — the device that converts the energy from the panels into the electricity your home uses — lasts less: between 10 and 15 years</strong>. That means that, over the lifetime of your installation, you should normally expect to replace the inverter at least once.</p>
+        
+        <p>It’s not an unpleasant surprise if you know it in advance: it’s the only significant foreseeable cost over the system’s lifetime, and it needs to be included in profitability calculations if they’re going to be honest. A payback calculation that doesn’t include inverter replacement is painting too rosy a picture.</p>
+        
+        <div class="callout">
+          <strong>Watch out when comparing quotes:</strong> an honest calculator or installer includes inverter replacement in the long-term figures. If they show you a 25-year return without mentioning that the inverter will need replacing along the way, be wary: real calculations factor it in. Microinverters with a longer lifespan (15-25 years) do exist as an alternative, although they come with a different cost.</div>
+        
+        <h2>What affects whether they last more or less</h2>
+        
+        <ul>
+          <li><strong>Panel quality:</strong> high-end panels (Tier 1) degrade less (0.3-0.4% per year) and last longer than cheaper ones.</li>
+          <li><strong>Climate:</strong> extreme heat speeds up degradation (panels perform worse above 25°C), and humidity or sea salt can cause corrosion. The Spanish climate is generally favourable.</li>
+          <li><strong>Shade and dirt:</strong> they don’t “kill” the panel, but they do make it produce less; occasional cleaning helps.</li>
+          <li><strong>Installation quality:</strong> a professional installation, securely mounted and properly wired, extends the life of the whole system.</li>
+        </ul>
+        
+        <h2>So what should I do after 25 years?</h2>
+        
+        <p>When that moment comes, with the installation paid off long before, you have options — and none of them involve throwing everything away: you can <strong>keep using it as it is</strong> (it produces a bit less, but it still produces and saves money), <strong>replace only what’s needed</strong> (perhaps the inverter again, or the odd individual panel), or <strong>upgrade the modules</strong> to newer, more efficient ones if you want to get the maximum out of your roof. The mounting structure and wiring, if installed properly, usually last as long as the panels.</p>
+        
+        <h2>In short</h2>
+        
+        <p>Solar panels really do last: 25-30 years of guaranteed useful life and often quite a bit more, degrading very gradually (0.3-0.7% per year) until they’re at around 80-90% of their capacity after 25 years. They don’t switch off when the warranty ends; they keep saving you money. The only component you’ll need to replace is the inverter (every 10-15 years), and that needs to be included in the figures for them to be honest. Once that detail is accounted for, a solar installation is one of the most durable home investments you can make.</p>
+        
+        <p>If you want a realistic estimate — including useful life and inverter replacement — of how much you could save, <a href="/">calculate your case with your bill</a>.</p>
+        <div class="cta-block">
+          <p>Want to know how much you could save with solar panels on your roof?</p>
+          <a class="cta" href="/">Calculate my savings</a>
+        </div>
+      </article>
+      <footer>
+        <a href="/blog/en/">Blog</a>
+        <span> · </span>
+        <a href="/faq-en.html">FAQ</a>
+        <span> · </span>
+        <a href="/ayudas.html">Subsidies by region</a>
+        <span> · </span>
+        <a href="/privacidad-en.html">Privacy</a>
+        <p>SolarVento provides indicative estimates based on official data; they are no substitute for a technical survey of your roof.</p>
+      </footer>
+    </main>
+  </body>
+</html>
