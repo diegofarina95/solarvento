@@ -1,218 +1,96 @@
 #!/usr/bin/env bash
 #
-# deploy.sh — Despliegue SEGURO de SolarVento desde este equipo (DEV) a producción.
+# deploy.sh — Despliegue LOCAL de SolarVento.
 #
-# Filosofía dev/prod: este equipo es DEV (aquí se edita y prueba); el servidor
-# 10.10.1.38 es PROD. Este script hace que un despliegue roto NO tumbe prod:
+# Esta máquina es el PRIMARIO desde el 2026-07-14: el server 10.10.1.38 se
+# abandonó por caerse cada pocos días. Ya NO hay servidor remoto; "desplegar"
+# aquí significa:
 #
-#   1. Gate local: build del frontend + import del backend (+ tests si hay).
-#      Si algo falla aquí, NO se toca prod.
-#   2. Snapshot en prod (commit git) como punto de rollback.
-#   3. rsync local -> prod (con exclusiones, sin --delete).
-#   4. build + import-check en prod. Si fallan: rollback y NO se reinicia
-#      (prod sigue sirviendo la versión anterior, intacta).
-#   5. restart + health-check con reintentos. Si la salud no da 200:
-#      ROLLBACK AUTOMÁTICO a la versión anterior (reset + rebuild + restart).
-#   6. Solo si todo va bien: commit del estado desplegado en prod.
+#   1. Gate: build del frontend + import del backend + tests. Si algo falla,
+#      NO se toca la app viva (sigue sirviendo la versión anterior).
+#   2. Reconstruir el dist/ limpio (aparta los borradores del blog, purga
+#      public/blog y reconstruye) — reutiliza publish-local-failover.sh.
+#   3. Reiniciar solvento-app (uvicorn :8120) para recoger los cambios de
+#      backend.
+#   4. Health-check en :8120 con reintentos.
+#
+# La app la sirve solvento-app y la publica solarvento.es vía el Worker de
+# Cloudflare → Funnel de Tailscale. El blog se auto-refresca aparte con
+# solvento-failover-sync tras cada publicación del portal.
 #
 # Uso:
-#   scripts/deploy.sh --dry-run       # solo muestra qué cambiaría (no toca prod)
-#   scripts/deploy.sh                 # despliega (pide confirmación)
-#   scripts/deploy.sh --yes           # despliega sin preguntar
-#   scripts/deploy.sh --allow-dirty   # continúa aunque prod tenga ediciones directas
-#
-# Guarda anti-pisotones: si el árbol git de PROD tiene cambios sin commitear
-# (alguien editó en el servidor), el deploy ABORTA: ese trabajo no existe en
-# local y el rsync lo pisaría. Recupéralo a local primero.
+#   scripts/deploy.sh            # gate + rebuild + restart (pide confirmación)
+#   scripts/deploy.sh --yes      # sin preguntar
+#   scripts/deploy.sh --check    # SOLO el gate (no reconstruye ni reinicia)
 #
 set -euo pipefail
 
-# --- localización del proyecto y .env ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-ENV_FILE="$ROOT_DIR/.env"
 cd "$ROOT_DIR"
+# node vía fnm (los servicios --user no heredan el PATH del shell interactivo)
+export PATH="$(ls -d "$HOME"/.local/share/fnm/node-versions/*/installation/bin 2>/dev/null | sort | tail -1):$PATH"
 
-# --- colores / logging ---
 if [ -t 1 ]; then C_G=$'\e[32m'; C_Y=$'\e[33m'; C_R=$'\e[31m'; C_B=$'\e[1m'; C_0=$'\e[0m'; else C_G=; C_Y=; C_R=; C_B=; C_0=; fi
 info() { printf '%s==>%s %s\n' "$C_B" "$C_0" "$*"; }
 ok()   { printf '%s✓%s %s\n' "$C_G" "$C_0" "$*"; }
 warn() { printf '%s!%s %s\n' "$C_Y" "$C_0" "$*"; }
 die()  { printf '%s✗ %s%s\n' "$C_R" "$*" "$C_0" >&2; exit 1; }
 
-# --- flags ---
-DRY_RUN=0; ASSUME_YES=0; ALLOW_DIRTY=0
+CHECK_ONLY=0; ASSUME_YES=0
 for a in "$@"; do
   case "$a" in
-    --dry-run)     DRY_RUN=1 ;;
-    --yes|-y)      ASSUME_YES=1 ;;
-    --allow-dirty) ALLOW_DIRTY=1 ;;
+    --check)  CHECK_ONLY=1 ;;
+    --yes|-y) ASSUME_YES=1 ;;
     *) die "Flag desconocido: $a" ;;
   esac
 done
 
-# --- leer .env (formato "CLAVE: valor") ---
-[ -f "$ENV_FILE" ] || die "No encuentro .env en $ENV_FILE"
-get_env() { grep -iE "^$1[[:space:]]*:" "$ENV_FILE" | head -1 | sed 's/^[^:]*:[[:space:]]*//'; }
-SSH_ADDRESS="$(get_env SSH_ADDRESS)"
-SSH_PORT="$(get_env SSH_PORT)"
-SSH_USER="$(get_env SSH_USER)"
-SSH_PASSWORD="$(get_env SSH_PASSWORD)"
-REMOTE_PATH="$(get_env PATH)"
-[ -n "$SSH_ADDRESS" ] && [ -n "$SSH_USER" ] && [ -n "$REMOTE_PATH" ] || die "Faltan claves en .env (SSH_ADDRESS/SSH_USER/PATH)"
-SSH_PORT="${SSH_PORT:-22}"
-command -v sshpass >/dev/null || die "sshpass no instalado"
-command -v rsync   >/dev/null || die "rsync no instalado"
-
-# --- helpers remotos ---
-SSH_OPTS=(-o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 -p "$SSH_PORT")
-rsh() { sshpass -p "$SSH_PASSWORD" ssh "${SSH_OPTS[@]}" "$SSH_USER@$SSH_ADDRESS" "$@"; }
-# ejecuta un comando remoto con sudo usando la misma contraseña por stdin
-rsudo() { rsh "echo '$SSH_PASSWORD' | sudo -S -p '' $*"; }
-
-SERVICE="solvento-backend"
-HEALTH="http://127.0.0.1:8000/api/health"
-EXCLUDES=(--exclude='.git' --exclude='.venv' --exclude='node_modules' --exclude='dist' \
-          --exclude='__pycache__' --exclude='*.pyc' --exclude='.env' --exclude='*.db' \
-          --exclude='.claude' --exclude='.pytest_cache' --exclude='*.egg-info' --exclude='.taller')
+SERVICE="solvento-app"
+HEALTH="http://127.0.0.1:8120/api/health"
 
 # ============================================================
-# 0) GUARDA — ¿prod tiene ediciones directas sin commitear?
-#    (Incidente 2026-07-06: una feature de privacidad editada a mano en prod
-#    fue pisada por el rsync. Si el árbol de prod no está limpio, hay trabajo
-#    que NO existe en local: recupéralo antes de desplegar.)
+# 1) GATE — si esto falla, la app viva ni se entera
 # ============================================================
-info "Comprobando que prod no tiene ediciones directas sin commitear"
-DIRTY="$(rsh "cd '$REMOTE_PATH' && git status --porcelain" 2>/dev/null || true)"
-if [ -n "$DIRTY" ]; then
-  printf '%s\n' "$DIRTY" | head -20
-  if [ "$ALLOW_DIRTY" -eq 1 ]; then
-    warn "Prod tiene ediciones directas; continúo por --allow-dirty (el snapshot pre-deploy las preservará en git)"
-  else
-    die "PROD tiene ediciones directas sin commitear (lista arriba). Tráelas a local antes de desplegar, o relanza con --allow-dirty para continuar (quedarán en el snapshot git de prod, pero el rsync puede pisarlas en el árbol)."
-  fi
-else
-  ok "Árbol de prod limpio"
-fi
-
-# ============================================================
-# 1) GATE LOCAL — si esto falla, prod ni se entera
-# ============================================================
-info "Gate local (DEV): build de frontend + import de backend"
-( cd frontend && npm run build ) >/dev/null 2>&1 || die "Build del frontend FALLA en local. Aborto (prod intacto)."
-ok "Frontend construye en local"
-
-# Exporta las dependencias PINNEADAS del uv.lock a un requirements que viaja
-# por rsync: prod no tiene uv, pero su pip puede instalar exactamente lo mismo.
-UV_BIN="$(command -v uv || echo "$HOME/.local/bin/uv")"
-[ -x "$UV_BIN" ] || die "No encuentro uv (necesario para exportar las dependencias del backend)."
-( cd backend && "$UV_BIN" export --frozen --no-dev --no-emit-project --format requirements-txt \
-    -o requirements.prod.txt --quiet ) || die "uv export falló. Aborto (prod intacto)."
-ok "Dependencias del backend exportadas (requirements.prod.txt)"
+info "Gate: build del frontend"
+( cd frontend && npm run build ) >/dev/null 2>&1 || die "Build del frontend FALLA. Aborto (app intacta)."
+ok "Frontend construye"
 
 if [ -x backend/.venv/bin/python ]; then
   backend/.venv/bin/python -c "import sys; sys.path.insert(0,'backend'); import app.main" 2>/dev/null \
-    || die "import app.main FALLA en local. Aborto (prod intacto)."
-  ok "Backend importa en local"
+    || die "import app.main FALLA. Aborto (app intacta)."
+  ok "Backend importa"
   if backend/.venv/bin/python -c "import pytest" 2>/dev/null; then
-    ( cd backend && .venv/bin/python -m pytest tests -q -m "not integration" ) || die "Tests de backend FALLAN. Aborto."
+    ( cd backend && .venv/bin/python -m pytest tests -q -m "not integration" ) >/dev/null 2>&1 \
+      || die "Tests de backend FALLAN. Aborto (app intacta)."
     ok "Tests de backend pasan"
   else
-    warn "pytest no está en el venv local; me salto los tests de backend"
+    warn "pytest no está en el venv; me salto los tests"
   fi
 else
-  warn "No hay backend/.venv local; me salto el import-check local"
+  warn "No hay backend/.venv; me salto el import-check y los tests"
 fi
 
-# ============================================================
-# 2) DRY-RUN rsync (siempre se muestra)
-# ============================================================
-info "Diferencias que se enviarían a PROD ($SSH_USER@$SSH_ADDRESS:$REMOTE_PATH):"
-sshpass -p "$SSH_PASSWORD" rsync -az --itemize-changes --dry-run "${EXCLUDES[@]}" \
-  -e "ssh ${SSH_OPTS[*]}" ./ "$SSH_USER@$SSH_ADDRESS:$REMOTE_PATH/" \
-  | grep -vE '^\.d\.\.t\.\.\.\.\.\. ' || true
-
-if [ "$DRY_RUN" -eq 1 ]; then ok "Dry-run completado. No se ha tocado prod."; exit 0; fi
+if [ "$CHECK_ONLY" -eq 1 ]; then ok "Gate OK. No se ha tocado la app (--check)."; exit 0; fi
 
 if [ "$ASSUME_YES" -ne 1 ]; then
-  printf '%s¿Desplegar a PROD? [y/N] %s' "$C_Y" "$C_0"; read -r ans
+  printf '%s¿Reconstruir dist y reiniciar %s? [y/N] %s' "$C_Y" "$SERVICE" "$C_0"; read -r ans
   case "$ans" in y|Y|yes|si|s) ;; *) die "Cancelado por el usuario."; esac
 fi
 
 # ============================================================
-# 3) SNAPSHOT en prod (punto de rollback)
+# 2) Reconstruir dist limpio (borradores apartados) y 3) reiniciar
 # ============================================================
-info "Snapshot de rollback en prod"
-rsh "cd '$REMOTE_PATH' && git add -A && (git commit -q -m 'pre-deploy snapshot' || true)"
-PREV="$(rsh "cd '$REMOTE_PATH' && git rev-parse HEAD" | tr -d '[:space:]')"
-[ -n "$PREV" ] || die "No pude capturar el commit de rollback en prod."
-ok "Punto de rollback: $PREV"
+info "Reconstruyendo dist/ solo con lo publicado"
+scripts/publish-local-failover.sh || die "El rebuild del dist FALLA. Aborto (app intacta)."
 
-rollback() {
-  warn "ROLLBACK -> $PREV (reset + clean + rebuild + restart)"
-  rsh "cd '$REMOTE_PATH' && git reset --hard '$PREV' && git clean -fd" || true
-  rsh "cd '$REMOTE_PATH/frontend' && npm run build" >/dev/null 2>&1 || warn "rebuild en rollback dio error"
-  rsudo "systemctl restart $SERVICE" || true
-}
-
-# ============================================================
-# 4) rsync -> prod
-# ============================================================
-info "Enviando cambios a prod (rsync, sin --delete)"
-sshpass -p "$SSH_PASSWORD" rsync -az "${EXCLUDES[@]}" \
-  -e "ssh ${SSH_OPTS[*]}" ./ "$SSH_USER@$SSH_ADDRESS:$REMOTE_PATH/" || { rollback; die "rsync falló; revertido."; }
-ok "Archivos sincronizados"
-
-# ============================================================
-# 5) dependencias + build + import-check en prod (SIN reiniciar todavía)
-# ============================================================
-info "Sincronizando dependencias del backend en prod (pip, pinneadas del lock)"
-if ! rsh "cd '$REMOTE_PATH/backend' && .venv/bin/pip install -q -r requirements.prod.txt" >/dev/null 2>&1; then
-  rollback; die "pip install FALLA en prod. Revertido; el servicio seguía con la versión anterior."
-fi
-ok "Dependencias del backend al día en prod"
-
-info "Build de frontend en prod"
-if ! rsh "cd '$REMOTE_PATH/frontend' && npm run build" >/dev/null 2>&1; then
-  rollback; die "Build FALLA en prod. Revertido; el servicio seguía con la versión anterior."
-fi
-ok "Frontend construido en prod"
-
-info "Import-check de backend en prod"
-if ! rsh "cd '$REMOTE_PATH/backend' && .venv/bin/python -c 'import app.main'" >/dev/null 2>&1; then
-  rollback; die "import app.main FALLA en prod. Revertido; servicio intacto."
-fi
-ok "Backend importa en prod"
-
-# La redacción de PII de fotos/escaneos depende del OCR: si no carga en prod,
-# la capa de privacidad quedaría INERTE en silencio (todo iría a OpenAI sin
-# tapar). Gate duro: sin OCR no hay deploy.
-info "Comprobando que el OCR de redacción carga en prod"
-if ! rsh "cd '$REMOTE_PATH/backend' && .venv/bin/python -c 'from app import ocr_redact; import sys; sys.exit(0 if ocr_redact._get_ocr() is not None else 1)'" >/dev/null 2>&1; then
-  rollback; die "El OCR de redacción NO carga en prod. Revertido; servicio intacto."
-fi
-ok "OCR de redacción disponible en prod"
-
-# ============================================================
-# 6) restart + health-check con reintentos (+ rollback auto)
-# ============================================================
 info "Reiniciando $SERVICE"
-rsudo "systemctl restart $SERVICE" || { rollback; die "restart falló; revertido."; }
+systemctl --user restart "$SERVICE" || die "restart de $SERVICE falló."
 
+# ============================================================
+# 4) Health-check con reintentos
+# ============================================================
 info "Health-check ($HEALTH)"
-# curl reintenta en el propio remoto (sin sleep en el shell local): tolera el
-# arranque de uvicorn tras el restart.
-code="$(rsh "curl -s --retry 10 --retry-delay 1 --retry-all-errors -o /dev/null -w '%{http_code}' '$HEALTH'" 2>/dev/null | tr -d '[:space:]' || true)"
-if [ "$code" != "200" ]; then
-  rollback
-  # revalidar tras rollback
-  code2="$(rsh "curl -s -o /dev/null -w '%{http_code}' '$HEALTH'" 2>/dev/null | tr -d '[:space:]' || true)"
-  die "Salud tras deploy = '$code'. ROLLBACK aplicado (salud tras revertir = '$code2')."
-fi
-ok "Salud 200 — despliegue vivo"
-
-# ============================================================
-# 7) commit del estado desplegado
-# ============================================================
-rsh "cd '$REMOTE_PATH' && git add -A && (git commit -q -m 'deploy: sync desde dev (auto)' || true)"
-ok "Despliegue completado y verificado en prod."
+code="$(curl -s --retry 10 --retry-delay 1 --retry-all-errors -o /dev/null -w '%{http_code}' "$HEALTH" 2>/dev/null | tr -d '[:space:]' || true)"
+[ "$code" = "200" ] || die "Salud tras el restart = '$code' (esperaba 200). Revisa: journalctl --user -u $SERVICE -n50"
+ok "Salud 200 — despliegue local vivo."

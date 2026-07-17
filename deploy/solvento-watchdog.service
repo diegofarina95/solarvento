@@ -1,6 +1,9 @@
 [Unit]
-Description=Vigilante de SolarVento (salud local y publica)
+# Vigilante de salud del PRIMARIO (esta máquina de dev; prod 10.10.1.38
+# abandonado el 2026-07-14). Reinicia solvento-app si :8120 no responde y avisa
+# al journal si solarvento.es cae con la app local sana. Servicio --user.
+Description=SolarVento — vigilante de salud (local :8120 y público solarvento.es)
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/solvento-watchdog.sh
+ExecStart=/home/diego/taller-projects/solvento/scripts/health-watchdog.sh

@@ -1,0 +1,9 @@
+name = "solarvento-failover"
+main = "worker.js"
+compatibility_date = "2026-07-01"
+
+# La Route intercepta solarvento.es ANTES del túnel muerto y sirve desde el
+# funnel de la máquina de dev. No toca el DNS ni el Funnel de diegofarina.com.
+routes = [
+  { pattern = "solarvento.es/*", zone_name = "solarvento.es" },
+]

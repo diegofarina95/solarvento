@@ -1,9 +1,10 @@
 [Unit]
-Description=Vigilante de SolarVento cada 2 minutos
+Description=SolarVento — vigilante de salud cada 2 minutos
 
 [Timer]
 OnBootSec=2min
 OnUnitActiveSec=2min
+Persistent=true
 
 [Install]
 WantedBy=timers.target

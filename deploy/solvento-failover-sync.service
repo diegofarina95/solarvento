@@ -1,0 +1,15 @@
+[Unit]
+# Auto-publica al dist/ local que sirve solvento-app tras cada commit del portal
+# del blog. Camino normal y único de publicación desde el 2026-07-14 (prod
+# 10.10.1.38 abandonado). Nombre "failover" heredado del incidente 2026-07-11.
+Description=SolarVento — auto-refresh del dist local (publicación del blog)
+After=network-online.target solvento-portal.service
+
+[Service]
+Type=simple
+ExecStart=/home/diego/taller-projects/solvento/scripts/failover-sync-watch.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

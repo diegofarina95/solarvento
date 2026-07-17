@@ -1,0 +1,17 @@
+[Unit]
+# App SolarVento — PRIMARIO desde el 2026-07-14 (el server de prod 10.10.1.38 se
+# abandonó por caerse cada pocos días). Sirve la app completa (SPA + API + blog)
+# por uvicorn en 127.0.0.1:8120 (solo local); solarvento.es la publica vía el
+# Worker de Cloudflare → Funnel de Tailscale. Vigilada por solvento-watchdog.
+Description=SolarVento — app (primario)
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/diego/taller-projects/solvento/backend
+ExecStart=/home/diego/taller-projects/solvento/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8120
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
