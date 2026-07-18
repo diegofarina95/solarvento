@@ -14,7 +14,6 @@ const Results = lazy(() => import('./components/Results'))
 import { createI18n, LANGUAGE_OPTIONS } from './i18n/translations'
 import {
   COUNTRY_MAP_CENTERS,
-  COUNTRY_OPTIONS,
   isSupportedEuropeanLocation,
   normalizeCountryCode,
 } from './pricing/countries'
@@ -73,7 +72,6 @@ export default function App() {
   )
   const [position, setPosition] = useState(INITIAL_POSITION)
   const [locationLabel, setLocationLabel] = useState(null)
-  const [countryCode, setCountryCode] = useState('ES')
   // 'initial' | 'manual' (usuario) | 'bill' (detectada de la factura)
   const [locationSource, setLocationSource] = useState('initial')
   // Sugerencia de ubicación de la factura cuando el usuario ya puso una a mano
@@ -125,10 +123,9 @@ export default function App() {
     }
   }, [results, error])
 
-  function handleLocationSelect({ lat, lon, label, countryCode: detectedCountry }) {
+  function handleLocationSelect({ lat, lon, label }) {
     setPosition({ lat, lon })
     setLocationLabel(label ?? null)
-    if (detectedCountry) setCountryCode(normalizeCountryCode(detectedCountry))
     setLocationSource('manual')
     setBillLocationSuggestion(null)
   }
@@ -168,7 +165,6 @@ export default function App() {
   }
 
   function applyLocationTarget(target) {
-    if (target.country) setCountryCode(target.country)
     setPosition(target.position)
     setLocationLabel(target.label ?? null)
     setLocationSource('bill')
@@ -196,7 +192,8 @@ export default function App() {
         lat: position.lat,
         lon: position.lon,
         peak_power_kwp: requireLocaleNumber(form.peakPower, t('form.peakPower'), t),
-        country_code: countryCode,
+        // Solo operamos en España: el país es siempre ES (sin selector).
+        country_code: 'ES',
         auto_size_power: Boolean(form.autoSize),
         ...(form.autoSize ? { sizing_bias: Number(form.sizingBias ?? 0) } : {}),
         ...(postalCode ? { postal_code: postalCode } : {}),
@@ -448,23 +445,6 @@ export default function App() {
                 </span>
               </div>
             )}
-            <label className="mt-3 block">
-              <span className="mb-1 block text-sm font-medium text-stone-700">
-                {t('countries.label')}
-              </span>
-              <select
-                value={countryCode}
-                onChange={(e) => setCountryCode(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
-              >
-                {COUNTRY_OPTIONS.map((code) => (
-                  <option key={code} value={code}>
-                    {t(`countries.${code}`)}
-                  </option>
-                ))}
-              </select>
-              <span className="mt-1 block text-xs text-stone-500">{t('countries.hint')}</span>
-            </label>
           </div>
 
           <div className="card-solar p-4">
