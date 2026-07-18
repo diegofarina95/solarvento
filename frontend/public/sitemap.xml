@@ -24,11 +24,16 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
-  <url><loc>https://solarvento.es/blog/</loc><lastmod>2026-07-15</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/en/</loc><lastmod>2026-07-15</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/ca/</loc><lastmod>2026-07-15</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/gl/</loc><lastmod>2026-07-15</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solarvento.es/blog/eu/</loc><lastmod>2026-07-15</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/</loc><lastmod>2026-07-18</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/en/</loc><lastmod>2026-07-18</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/ca/</loc><lastmod>2026-07-18</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/gl/</loc><lastmod>2026-07-18</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/eu/</loc><lastmod>2026-07-18</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solarvento.es/blog/autoconsumo-con-o-sin-excedentes/</loc><lastmod>2026-07-18</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/en/solar-self-consumption-with-or-without-surplus/</loc><lastmod>2026-07-18</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/ca/autoconsum-amb-excedents-o-sense-que-et-conve/</loc><lastmod>2026-07-18</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/gl/autoconsumo-con-ou-sen-excedentes-cal-che-conven/</loc><lastmod>2026-07-18</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://solarvento.es/blog/eu/soberakinekin-edo-soberakinik-gabe-autokontsumoa/</loc><lastmod>2026-07-18</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://solarvento.es/blog/huella-carbono-casa/</loc><lastmod>2026-07-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://solarvento.es/blog/en/your-homes-carbon-footprint-where-it-really-comes-from/</loc><lastmod>2026-07-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://solarvento.es/blog/ca/empremta-carboni-casa-teva-don-surt/</loc><lastmod>2026-07-15</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
