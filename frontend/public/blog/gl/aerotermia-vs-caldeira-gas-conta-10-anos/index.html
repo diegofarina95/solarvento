@@ -1,0 +1,512 @@
+<!doctype html>
+<!-- GENERADO por frontend/scripts/generate-static-pages.mjs a partir de frontend/content/blog/ — NO EDITAR A MANO -->
+<html lang="gl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aerotermia vs caldeira de gas: a conta a 10 anos | SolarVento</title>
+    <meta name="description" content="Comparativa honesta entre aerotermia e caldeira de gas en España con números reais: canto custa cada unha, canto aforras ao ano, en cantos anos se amortiza o cambio e cando NON compensa cambiar. Datos de 2026." />
+    <meta name="keywords" content="aerotermia vs caldeira de gas, aerotermia ou caldeira de gas cal convén, aforro con aerotermia, amortización da aerotermia, cambiar caldeira de gas por aerotermia, paga a pena a aerotermia" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://solarvento.es/blog/gl/aerotermia-vs-caldeira-gas-conta-10-anos/" />
+    <link rel="alternate" hreflang="es" href="https://solarvento.es/blog/aerotermia-vs-caldera-gas/" />
+    <link rel="alternate" hreflang="en" href="https://solarvento.es/blog/en/heat-pump-vs-gas-boiler-10-year-cost-breakdown/" />
+    <link rel="alternate" hreflang="ca" href="https://solarvento.es/blog/ca/aerotermia-vs-caldera-de-gas-compte-a-10-anys/" />
+    <link rel="alternate" hreflang="gl" href="https://solarvento.es/blog/gl/aerotermia-vs-caldeira-gas-conta-10-anos/" />
+    <link rel="alternate" hreflang="eu" href="https://solarvento.es/blog/eu/aerotermia-vs-gas-galdara-10-urteko-kalkulua/" />
+    <link rel="alternate" hreflang="x-default" href="https://solarvento.es/blog/aerotermia-vs-caldera-gas/" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="SolarVento" />
+    <meta property="og:locale" content="gl_ES" />
+    <meta property="og:url" content="https://solarvento.es/blog/gl/aerotermia-vs-caldeira-gas-conta-10-anos/" />
+    <meta property="og:title" content="Aerotermia vs caldeira de gas: a conta a 10 anos | SolarVento" />
+    <meta property="og:description" content="Comparativa honesta entre aerotermia e caldeira de gas en España con números reais: canto custa cada unha, canto aforras ao ano, en cantos anos se amortiza o cambio e cando NON compensa cambiar. Datos de 2026." />
+    <meta property="og:image" content="https://solarvento.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="article:published_time" content="2026-07-18" />
+    <meta property="article:modified_time" content="2026-07-18" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Aerotermia vs caldeira de gas: a conta a 10 anos | SolarVento" />
+    <meta name="twitter:description" content="Comparativa honesta entre aerotermia e caldeira de gas en España con números reais: canto custa cada unha, canto aforras ao ano, en cantos anos se amortiza o cambio e cando NON compensa cambiar. Datos de 2026." />
+    <meta name="twitter:image" content="https://solarvento.es/og-image.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      (function () {
+        var RAD = Math.PI / 180, TZ = 'Europe/Madrid', LAT = 40.4168, LON = -3.7038
+        function hourInTZ(date) {
+          var p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)
+          function v(t) { return Number(p.find(function (x) { return x.type === t }).value) }
+          return v('hour') + v('minute') / 60
+        }
+        var now = new Date()
+        var jd = now.getTime() / 86400000 + 2440587.5
+        var n = Math.round(jd - 2451545.0 + 0.0008)
+        var jStar = n + -LON / 360
+        var M = (357.5291 + 0.98560028 * jStar) % 360
+        var Mr = M * RAD
+        var C = 1.9148 * Math.sin(Mr) + 0.02 * Math.sin(2 * Mr) + 0.0003 * Math.sin(3 * Mr)
+        var lambda = ((M + C + 180 + 102.9372) % 360) * RAD
+        var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(Mr) - 0.0069 * Math.sin(2 * lambda)
+        var sinDec = Math.sin(lambda) * Math.sin(23.4397 * RAD)
+        var cosDec = Math.cos(Math.asin(sinDec))
+        var cosOmega = (Math.sin(-0.833 * RAD) - Math.sin(LAT * RAD) * sinDec) / (Math.cos(LAT * RAD) * cosDec)
+        var omega = Math.acos(Math.min(1, Math.max(-1, cosOmega))) / RAD
+        function jToDate(j) { return new Date((j - 2440587.5) * 86400000) }
+        var sunrise = hourInTZ(jToDate(jTransit - omega / 360))
+        var sunset = hourInTZ(jToDate(jTransit + omega / 360))
+        var hour = hourInTZ(now)
+        if (!(hour >= sunrise && hour < sunset)) document.documentElement.setAttribute('data-theme', 'night')
+      })()
+    </script>
+    <style>
+      /* Tema del blog = tema de la portada (src/index.css): papel cálido con
+         amanecer, marca en Bricolage Grotesque, botón solar y cards en capas.
+         Única licencia propia del blog: cuerpo serif para lectura larga. */
+      @font-face {
+        font-family: 'Bricolage Grotesque Variable';
+        font-style: normal;
+        font-weight: 200 800;
+        font-display: swap;
+        src: url('/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
+      }
+
+      :root {
+        color-scheme: light;
+        /* Tema solar (mismos tokens que la app) */
+        --page: #fbfaf6;
+        --sky-dawn: #fff4de;
+        --sun-400: #fbbf24;
+        --sun-500: #f59e0b;
+        --sun-600: #d97706;
+        --ember: #b45309;
+        --gridline: #ece6d9;
+        /* Categorías del blog (acento; el ámbar de marca sigue dominando) */
+        --cat-guia: #f59e0b;
+        --cat-analisis: #3f7f8f;
+        --cat-divulgacion: #c2703d;
+      }
+      /* Modo noche: mismas variables que :root[data-theme='night'] en la app.
+         Lo activa el script solar del <head> (se pone el sol en España → noche),
+         igual que la portada; el modo claro/oscuro del sistema NO interviene. */
+      :root[data-theme='night'] {
+        color-scheme: dark;
+        --page: #10131a;
+        --sky-dawn: #1b2436; /* resplandor de cielo nocturno en la cabecera */
+        --gridline: #2a2f3a;
+        /* De noche, más claras y desaturadas: los vivos cansan sobre fondo oscuro */
+        --cat-guia: #f0b95d;
+        --cat-analisis: #6bb0be;
+        --cat-divulgacion: #d99668;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        /* Cuerpo serif (lectura larga); titulares y UI en la familia de la app. */
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+        line-height: 1.7;
+        color: #1c1917;
+        /* Amanecer: la página nace en luz cálida y se asienta en papel */
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(255, 243, 220, 0) 420px),
+          var(--page);
+      }
+      h1, h2, .brand { font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif; }
+      h3, .meta, .cta, .cta-block, .cards, footer, .eyebrow, .anatomy li strong {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .wrap { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+      a { color: var(--ember); }
+      a:hover { color: #92400e; }
+      a:focus-visible, .cta:focus-visible {
+        outline: 3px solid var(--sun-500);
+        outline-offset: 2px;
+        border-radius: .15rem;
+      }
+      h1 {
+        font-size: clamp(1.9rem, 4vw, 2.6rem);
+        font-weight: 700;
+        letter-spacing: -.02em;
+        line-height: 1.12;
+        margin: 1.2rem 0 .5rem;
+      }
+      h2 {
+        font-size: 1.4rem;
+        font-weight: 650;
+        letter-spacing: -.01em;
+        line-height: 1.25;
+        margin: 2.2rem 0 .6rem;
+      }
+      h3 { font-size: 1.02rem; margin: 1.4rem 0 .3rem; }
+      p { margin: .55rem 0; }
+      ul, ol { padding-left: 1.4rem; }
+      li { margin: .3rem 0; }
+
+      /* Cabecera: logo + wordmark como en la portada, CTA solar a la derecha */
+      header.site {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gridline);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        font-weight: 700;
+        font-size: 1.35rem;
+        letter-spacing: -.02em;
+        color: #1c1917;
+        text-decoration: none;
+      }
+      .brand b { font-weight: inherit; }
+      .brand span { color: var(--sun-600); }
+      .brand small {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #78716c;
+        align-self: flex-end;
+        margin-bottom: .3rem;
+      }
+
+      /* Botón principal: gradiente solar con texto oscuro (el .btn-solar de la app) */
+      .cta {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--sun-400), var(--sun-500) 55%, var(--sun-600));
+        color: #1c1917;
+        font-weight: 650;
+        font-size: .9rem;
+        padding: .55rem 1rem;
+        border-radius: .75rem;
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 1px 2px rgba(180, 83, 9, .25);
+        transition: box-shadow .15s ease, filter .15s ease;
+      }
+      .cta:hover {
+        color: #1c1917;
+        filter: brightness(1.05);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, .35),
+          0 3px 10px rgba(217, 119, 6, .35);
+      }
+
+      /* Eyebrow con tick solar (fecha del artículo, etiquetas de sección) */
+      .eyebrow, .meta {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .78rem;
+        font-weight: 650;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #78716c;
+        margin: 0 0 1.4rem;
+      }
+      .eyebrow::before, .meta::before {
+        content: '';
+        width: .5rem;
+        height: .5rem;
+        border-radius: 9999px;
+        background: radial-gradient(circle at 35% 35%, var(--sun-400), var(--sun-600));
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, .18);
+        flex-shrink: 0;
+      }
+      .lead { font-size: 1.08rem; color: #52514e; }
+
+      /* Selector de idiomas (como FAQ/privacidad): visible, discreto */
+      .langs { font-size: .78rem; color: #78716c; margin: 1rem 0 0;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .langs a { color: #78716c; }
+      .langs strong { color: #1c1917; }
+
+      /* Callout: aviso ámbar (border-amber-200 + bg-amber-50, como en la app) */
+      .callout {
+        border: 1px solid #fde68a;
+        border-left: .3rem solid var(--sun-500);
+        background: #fffbeb;
+        border-radius: .75rem;
+        color: #78350f;
+        padding: .85rem 1.1rem;
+        margin: 1.4rem 0;
+        font-size: .95rem;
+      }
+      .callout strong { color: #92400e; }
+
+      /* Cards: papel sobre papel, borde cálido, profundidad en capas (.card-solar) */
+      .anatomy, .card, .cta-block {
+        background: #fff;
+        border: 1px solid var(--gridline);
+        border-radius: 1rem;
+        box-shadow:
+          0 1px 2px rgba(28, 25, 23, .04),
+          0 6px 16px -8px rgba(120, 90, 20, .08);
+      }
+      .anatomy { padding: 1.1rem 1.25rem; margin: 1.4rem 0; }
+      .anatomy h3 { margin-top: 0; }
+      .anatomy ol { margin: 0; padding-left: 1.3rem; }
+      .anatomy li { margin: .55rem 0; }
+      .anatomy .hint { color: #898781; font-size: .88rem; }
+
+      /* Bloque CTA: card de decisión con el sol encima (.card-hero de la app) */
+      .cta-block {
+        position: relative;
+        overflow: hidden;
+        padding: 1.35rem 1.4rem 1.45rem;
+        margin: 2.2rem 0;
+        text-align: center;
+      }
+      .cta-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--sun-400), var(--sun-600));
+      }
+      .cta-block p { margin: 0 0 .9rem; color: #52514e; }
+      .cta-block .cta { font-size: 1rem; padding: .7rem 1.3rem; }
+
+      /* Índice del blog */
+      .cards { display: grid; gap: 1rem; margin-top: 1.6rem; }
+      .card {
+        padding: 1.15rem 1.3rem;
+        transition: box-shadow .2s ease, transform .2s ease;
+      }
+      .card:hover {
+        box-shadow:
+          0 2px 4px rgba(28, 25, 23, .05),
+          0 16px 32px -12px rgba(120, 90, 20, .14);
+      }
+      .card h2 { margin: 0 0 .35rem; font-size: 1.3rem; }
+      .card h2 a { color: #1c1917; text-decoration: none; }
+      .card h2 a:hover { color: var(--ember); text-decoration: underline; }
+      .card .meta { margin: 0 0 .5rem; }
+      .card p.excerpt {
+        margin: 0;
+        color: #52514e;
+        font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+      }
+
+      /* Categorías: la clase solo fija --cat; etiqueta, punto del eyebrow y borde
+         de card la usan. Sin categoría no existe la clase y nada de esto aplica. */
+      .cat-guia { --cat: var(--cat-guia); }
+      .cat-analisis { --cat: var(--cat-analisis); }
+      .cat-divulgacion { --cat: var(--cat-divulgacion); }
+      .cat-label { color: var(--cat); }
+      article[class*='cat-'] .eyebrow::before {
+        background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--cat) 75%, #fff), var(--cat));
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 18%, transparent);
+      }
+      article[class*='cat-'] > .eyebrow.cat-label { margin: 1.6rem 0 -0.6rem; }
+      .card[class*='cat-'] { border-left: 4px solid var(--cat); }
+
+      footer {
+        margin-top: 3rem;
+        border-top: 1px solid var(--gridline);
+        padding-top: 1rem;
+        font-size: .82rem;
+        color: #78716c;
+      }
+
+      /* Noche: la página se asienta en el azul nocturno de la app y las cards usan
+         la superficie/bordes/sombras de .card-solar en modo noche. */
+      [data-theme='night'] body {
+        color: #e7e5e4;
+        background:
+          linear-gradient(to bottom, var(--sky-dawn) 0, rgba(27, 36, 54, 0) 420px),
+          var(--page);
+      }
+      [data-theme='night'] a { color: var(--sun-400); }
+      [data-theme='night'] a:hover { color: #fcd34d; }
+      [data-theme='night'] .brand, [data-theme='night'] .card h2 a { color: #e7e5e4; }
+      [data-theme='night'] .lead,
+      [data-theme='night'] .meta,
+      [data-theme='night'] .eyebrow,
+      [data-theme='night'] .anatomy .hint,
+      [data-theme='night'] .card p.excerpt,
+      [data-theme='night'] .cta-block p,
+      [data-theme='night'] .brand small { color: #a8a29e; }
+      [data-theme='night'] .anatomy,
+      [data-theme='night'] .card,
+      [data-theme='night'] .cta-block {
+        background: #171b23;
+        border-color: #2a2f3a;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, .3),
+          0 6px 16px -8px rgba(0, 0, 0, .5);
+      }
+      [data-theme='night'] .card:hover {
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, .35),
+          0 16px 32px -12px rgba(0, 0, 0, .6);
+      }
+      [data-theme='night'] .card h2 a:hover { color: var(--sun-400); }
+      [data-theme='night'] .langs, [data-theme='night'] .langs a { color: #a8a29e; }
+      [data-theme='night'] .langs strong { color: #e7e5e4; }
+      [data-theme='night'] .callout {
+        background: rgba(245, 158, 11, .12);
+        border-color: rgba(245, 158, 11, .4);
+        border-left-color: var(--sun-500);
+        color: #fde68a;
+      }
+      [data-theme='night'] .callout strong { color: #fde68a; }
+      [data-theme='night'] .cta, [data-theme='night'] .cta:hover { color: #1c1917; }
+      /* El border-color nocturno de .card machacaría el borde de categoría */
+      [data-theme='night'] .card[class*='cat-'] { border-left-color: var(--cat); }
+    </style>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Aerotermia vs caldeira de gas: a conta a 10 anos",
+  "description": "Comparativa honesta entre aerotermia e caldeira de gas en España con números reais: canto custa cada unha, canto aforras ao ano, en cantos anos se amortiza o cambio e cando NON compensa cambiar. Datos de 2026.",
+  "datePublished": "2026-07-18",
+  "dateModified": "2026-07-18",
+  "inLanguage": "gl",
+  "mainEntityOfPage": "https://solarvento.es/blog/gl/aerotermia-vs-caldeira-gas-conta-10-anos/",
+  "image": "https://solarvento.es/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SolarVento",
+    "url": "https://solarvento.es/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://solarvento.es/logo-mark.png"
+    }
+  }
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "SolarVento",
+      "item": "https://solarvento.es/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://solarvento.es/blog/gl/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Aerotermia vs caldeira de gas: a conta a 10 anos",
+      "item": "https://solarvento.es/blog/gl/aerotermia-vs-caldeira-gas-conta-10-anos/"
+    }
+  ]
+}
+    </script>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="site">
+        <a class="brand" href="/blog/gl/">
+          <b>Solar<span>Vento</span></b>
+          <small>Blog</small>
+        </a>
+        <a class="cta" href="/">Calcular o meu aforro</a>
+      </header>
+      <nav class="langs" aria-label="Idioma"><a href="/blog/aerotermia-vs-caldera-gas/" hreflang="es" lang="es">Español</a> · <a href="/blog/en/heat-pump-vs-gas-boiler-10-year-cost-breakdown/" hreflang="en" lang="en">English</a> · <a href="/blog/ca/aerotermia-vs-caldera-de-gas-compte-a-10-anys/" hreflang="ca" lang="ca">Català</a> · <strong>Galego</strong> · <a href="/blog/eu/aerotermia-vs-gas-galdara-10-urteko-kalkulua/" hreflang="eu" lang="eu">Euskara</a></nav>
+      <article class="cat-analisis">
+        <p class="eyebrow cat-label">ANÁLISIS</p>
+        <h1>Aerotermia vs caldeira de gas: a conta a 10 anos</h1>
+        <p class="meta"><time datetime="2026-07-18">18 de xullo de 2026</time></p>
+        <p class="lead">A aerotermia converteuse na gran alternativa á caldeira de gas, impulsada pola fin progresiva dos combustibles fósiles e polas axudas. Pero, máis alá da moda, a pregunta que importa é se compensa economicamente. Imos facer a conta a 10 anos con números reais de 2026, sen propaganda verde: canto custa, canto aforra, cando se paga soa e —o máis honesto— cando NON paga a pena cambiar.</p>
+        
+        <h2>A diferenza de fondo: eficiencia</h2>
+        
+        <p>Para entender por que a aerotermia aforra, hai que ver como funciona cada sistema. Unha caldeira de gas de condensación moderna é moi eficiente no seu: por cada kWh de gas que queima, entrega entre 0,92 e 0,98 kWh de calor. Nunca pasa do 100%, porque non pode dar máis calor ca a enerxía que queima.</p>
+        
+        <p>A aerotermia xoga noutra liga, porque non “queima” nada: extrae calor do aire exterior e lévao á túa casa. Por iso o seu rendemento mídese en COP, e aquí está a maxia: <strong>por cada kWh de electricidade que consome, entrega entre 3 e 4,5 kWh de calor</strong>. É dicir, é de 3 a 4 veces máis eficiente. Ese multiplicador é a clave de todo o aforro.</p>
+        
+        <div class="callout">
+          <strong>A conta rápida da eficiencia:</strong> quentar a mesma casa custa bastante menos con aerotermia porque, aínda que a electricidade sexa máis cara por kWh ca o gas, necesitas 3-4 veces menos enerxía para producir a mesma calor. Esa vantaxe compensa de sobra a diferenza de prezo entre electricidade e gas.
+        </div>
+        
+        <h2>A conta económica a 10 anos</h2>
+        
+        <p>Imos aos números concretos, para unha vivenda unifamiliar tipo:</p>
+        
+        <div class="anatomy">
+          <h3>Aerotermia vs caldeira de gas: os números de 2026</h3>
+          <ol>
+            <li><strong>Custo de instalación</strong> — caldeira de gas: 2.500-4.500 €. Aerotermia: 8.000-15.000 €. <span class="hint">A aerotermia custa 2-3 veces máis de entrada.</span></li>
+            <li><strong>Custo anual de calefacción</strong> — gas: ~1.000-1.100 €/ano. Aerotermia: ~380-450 €/ano. <span class="hint">A aerotermia gasta un 40-60% menos en funcionamento.</span></li>
+            <li><strong>Aforro anual</strong> — entre 600 e 1.000 € ao ano fronte ao gas. <span class="hint">Máis en zonas frías con moita calefacción.</span></li>
+            <li><strong>Amortización do cambio</strong> — 7-10 anos sen axudas; 4-6 anos con subvencións e deducións. <span class="hint">As axudas aceleran moito o retorno.</span></li>
+            <li><strong>Vida útil</strong> — 15-20 anos. <span class="hint">Tras amortizar, son 10 anos ou máis de aforro puro.</span></li>
+          </ol>
+        </div>
+        
+        <p>A conclusión da conta a 10 anos é clara: nunha vivenda con calefacción de uso habitual, a aerotermia amortízase dentro da súa vida útil (máis rápido con axudas) e, a partir de aí, xera aforro neto durante anos. Ademais, elimina a queima de gas —co que baixan as túas emisións— e engade refrixeración no verán, algo que a caldeira non dá.</p>
+        
+        <h2>O factor que o cambia todo: a túa zona climática</h2>
+        
+        <p>O aforro non é igual en toda España, e ser honesto con isto importa:</p>
+        
+        <ul>
+          <li><strong>Zonas frías (meseta, interior norte):</strong> moita demanda de calefacción, así que a maior eficiencia da aerotermia nótase máis e amortiza antes, malia que o frío extremo lle reste algo de rendemento.</li>
+          <li><strong>Zonas temperadas e costeiras (mediterráneo):</strong> menos calefacción, así que o aforro en calor é menor, pero compénsase coa refrixeración no verán e cun COP altísimo (as temperaturas rara vez baixan de 0°C, que é cando a aerotermia perde eficiencia).</li>
+        </ul>
+        
+        <h2>Cando NON compensa cambiar (a parte honesta)</h2>
+        
+        <p>Aquí está o que moitos vendedores non che din. A aerotermia non sempre é a decisión correcta:</p>
+        
+        <div class="callout">
+          <strong>Casos nos que é mellor NON cambiar (aínda):</strong> se a túa caldeira de gas é recente (menos de 5 anos) e funciona ben, cambiala só por eficiencia alonga a amortización a 10-15 anos e rara vez compensa: o máis sensato —económica e ambientalmente— é amortizar a caldeira que xa tes e cambiar ao final da súa vida. Tampouco compensa nunha segunda residencia de uso ocasional (o aforro é proporcional ao uso), nin se a túa casa está moi mal illada (a aerotermia rende peor con radiadores de alta temperatura e mal illamento; primeiro illa).
+        </div>
+        
+        <p>O momento ideal para dar o salto é cando a túa caldeira actual chega ao final da súa vida e toca cambiala de todos os xeitos: aí a comparación xa non é “gas novo vs aerotermia”, senón que vas investir si ou si, e a aerotermia é a opción con mellor retorno a longo prazo.</p>
+        
+        <h2>A combinación gañadora: aerotermia + solar</h2>
+        
+        <p>Hai unha sinerxía que dispara a rendibilidade. Como a aerotermia funciona con electricidade, se esa electricidade a produces ti con paneis solares, o seu custo de funcionamento derrúbase. Nas horas centrais do día, co sol producindo, a aerotermia funciona case de balde. Combinar ambas pode levar o aforro conxunto (fronte a caldeira de gas + electricidade da rede) por riba de 1.500 € ao ano e, de paso, sobe a cualificación enerxética da túa casa, dando acceso a máis deducións.</p>
+        
+        <div class="callout">
+          <strong>O apunte fiscal:</strong> en 2026 a aerotermia dá acceso a axudas (Next Generation, ata 3.000 € por equipo), deducións no IRPF por mellora da eficiencia (ata o 40% se acreditas a mellora) e bonificacións do IBI en moitos concellos. Contar con esas axudas na conta pode reducir á metade o investimento inicial e acurtar moito a amortización.
+        </div>
+        
+        <h2>En resumo</h2>
+        
+        <p>A aerotermia é de 3 a 4 veces máis eficiente ca unha caldeira de gas, aforra entre 600 e 1.000 € ao ano nunha vivenda de uso habitual, e amortízase en 7-10 anos (4-6 con axudas), cunha vida útil de 15-20 anos. Compensa especialmente en zonas frías, cando a túa caldeira chega ao final da súa vida, e aínda máis combinada con paneis solares. NON compensa cambiar unha caldeira recente que funciona ben, nin en segundas residencias de pouco uso, nin sen arranxar antes un mal illamento. Con eses matices claros, para a maioría dos fogares que se formulan renovar o seu sistema de calefacción, a aerotermia é a aposta máis rendible a dez anos.</p>
+        
+        <p>Se estás pensando en combinar aerotermia con autoconsumo solar, podes facer unha estimación do aforro solar no teu caso: <a href="/">calcúlao coa túa factura</a> e valora o conxunto.</p>
+        <div class="cta-block">
+          <p>Queres saber canto aforrarías con placas no teu tellado?</p>
+          <a class="cta" href="/">Calcular o meu aforro</a>
+        </div>
+      </article>
+      <footer>
+        <a href="/blog/gl/">Blog</a>
+        <span> · </span>
+        <a href="/faq-gl.html">Preguntas frecuentes</a>
+        <span> · </span>
+        <a href="/ayudas.html">Axudas por comunidade</a>
+        <span> · </span>
+        <a href="/privacidad-gl.html">Privacidade</a>
+        <p>SolarVento ofrece estimacións orientativas baseadas en datos oficiais; non substitúen un estudo técnico no teu tellado.</p>
+      </footer>
+    </main>
+  </body>
+</html>
