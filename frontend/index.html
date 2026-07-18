@@ -26,6 +26,34 @@
       crossorigin="anonymous"
     ></script>
 
+    <!-- Funding Choices (CMP de Google): define window.googlefc y sirve el
+         mensaje RGPD de consentimiento. El mensaje se crea y PUBLICA en
+         AdSense → Privacidad y mensajes → RGPD. Sin esto, el botón "Configurar
+         cookies" del pie no tendría CMP al que llamar. -->
+    <script
+      async
+      src="https://fundingchoicesmessages.google.com/i/pub-9951922085596728?ers=1"
+    ></script>
+    <script>
+      ;(function () {
+        function signalGooglefcPresent() {
+          if (!window.frames['googlefcPresent']) {
+            if (document.body) {
+              const iframe = document.createElement('iframe')
+              iframe.style =
+                'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'
+              iframe.style.display = 'none'
+              iframe.name = 'googlefcPresent'
+              document.body.appendChild(iframe)
+            } else {
+              setTimeout(signalGooglefcPresent, 0)
+            }
+          }
+        }
+        signalGooglefcPresent()
+      })()
+    </script>
+
     <!-- Primary meta -->
     <title>Calculadora de placas y baterías con tu factura | SolarVento</title>
     <meta

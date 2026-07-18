@@ -78,6 +78,10 @@ export default function App() {
   const [billLocationSuggestion, setBillLocationSuggestion] = useState(null)
   const [postalCode, setPostalCode] = useState(null)
   const [advanced, setAdvanced] = useState(false)
+  // El botón "Configurar cookies" solo se muestra cuando el CMP de Google
+  // (Funding Choices) ha resuelto el consentimiento; así nunca es un control
+  // muerto si aún no hay mensaje RGPD publicado o el usuario está fuera de ámbito.
+  const [cmpReady, setCmpReady] = useState(false)
   const [form, setForm] = useState({
     peakPower: '5',
     tilt: '30',
@@ -122,6 +126,47 @@ export default function App() {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [results, error])
+
+  // El botón "Configurar cookies" delega en el CMP de Google (Funding Choices,
+  // cargado en index.html). Solo debe verse cuando hay un mensaje de
+  // consentimiento REAL que reabrir. Nos apoyamos en la API estándar IAB TCF v2
+  // (window.__tcfapi) y activamos el botón únicamente cuando el CMP está CARGADO
+  // y el RGPD aplica. Mientras no haya un mensaje RGPD publicado en AdSense, el
+  // CMP no carga (getTCData falla) y el botón no se muestra: así nunca es un
+  // control muerto.
+  useEffect(() => {
+    let listenerId = null
+    let attached = false
+    function onTcData(tcData, success) {
+      if (success && tcData) {
+        listenerId = tcData.listenerId
+        // Solo hay algo que "configurar" cuando existe un mensaje RGPD real: eso
+        // se refleja en un consent string (tcString) no vacío. cmpStatus
+        // 'loaded' + gdprApplies se cumplen aunque NO haya mensaje publicado
+        // (stub de Funding Choices), así que no bastan para mostrar el botón.
+        if (tcData.gdprApplies && tcData.tcString) setCmpReady(true)
+      }
+    }
+    function attach() {
+      if (attached || typeof window.__tcfapi !== 'function') return
+      attached = true
+      window.__tcfapi('addEventListener', 2, onTcData)
+    }
+    attach()
+    // __tcfapi puede aparecer cuando termina de cargar Funding Choices.
+    const poll = setInterval(() => {
+      attach()
+      if (attached) clearInterval(poll)
+    }, 500)
+    const stop = setTimeout(() => clearInterval(poll), 20000)
+    return () => {
+      clearInterval(poll)
+      clearTimeout(stop)
+      if (listenerId != null && typeof window.__tcfapi === 'function') {
+        window.__tcfapi('removeEventListener', 2, () => {}, listenerId)
+      }
+    }
+  }, [])
 
   function handleLocationSelect({ lat, lon, label }) {
     setPosition({ lat, lon })
@@ -584,14 +629,18 @@ export default function App() {
         <a href={`/privacidad${language === 'es' ? '' : `-${language}`}.html`} className="underline hover:text-stone-700">
           {t('app.privacyPolicy')}
         </a>
-        <span className="mx-2">·</span>
-        <button
-          type="button"
-          onClick={() => window.googlefc?.showRevocationMessage?.()}
-          className="underline hover:text-stone-700"
-        >
-          {t('app.manageCookies')}
-        </button>
+        {cmpReady && (
+          <>
+            <span className="mx-2">·</span>
+            <button
+              type="button"
+              onClick={() => window.googlefc?.showRevocationMessage?.()}
+              className="underline hover:text-stone-700"
+            >
+              {t('app.manageCookies')}
+            </button>
+          </>
+        )}
         <span className="mx-2">·</span>
         <span>© SolarVento</span>
       </footer>
