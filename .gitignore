@@ -30,3 +30,6 @@ backend/requirements.prod.txt
 
 # Estado local de wrangler (worker de failover)
 deploy/failover-worker/.wrangler/
+
+# Config local de Claude Code (permisos de esta máquina)
+.claude/
